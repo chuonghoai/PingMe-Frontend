@@ -1,0 +1,87 @@
+import { StyleSheet } from "react-native";
+
+// Bảng màu đồng bộ GoGo
+export const COLORS = {
+  white: "#FFFFFF",
+  amberGold: "#F5A623",
+  darkAmber: "#D48806",
+  lightYellow: "#FFF0D4",
+  lightGray: "#F8F9FA",
+  borderColor: "#EEEEEE",
+};
+
+export const styles = StyleSheet.create({
+  container: { flexGrow: 1, backgroundColor: COLORS.lightGray },
+  header: {
+    alignItems: "center",
+    paddingVertical: 40,
+    backgroundColor: COLORS.white,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.borderColor,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  avatarContainer: {
+    padding: 4,
+    borderRadius: 60,
+    backgroundColor: COLORS.white,
+    borderWidth: 3,
+    borderColor: COLORS.amberGold,
+    marginBottom: 16,
+    shadowColor: COLORS.darkAmber,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 5,
+  },
+  avatar: { width: 100, height: 100, borderRadius: 50 },
+  name: {
+    fontSize: 24,
+    fontWeight: "800",
+    color: COLORS.darkAmber,
+    marginBottom: 4,
+  },
+  email: { fontSize: 16, color: "#666" },
+  infoSection: {
+    backgroundColor: COLORS.white,
+    marginTop: 20,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: COLORS.borderColor,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: COLORS.darkAmber,
+    marginBottom: 16,
+    marginTop: 10,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  infoRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingVertical: 14,
+    alignItems: "center",
+  },
+  infoRowColumn: {
+    flexDirection: "column",
+    paddingVertical: 14,
+  },
+  infoLabel: { fontSize: 16, color: "#666", marginBottom: 4 },
+  infoValue: { fontSize: 16, fontWeight: "600", color: "#333" },
+  bioValue: {
+    fontSize: 15,
+    color: "#444",
+    fontStyle: "italic",
+    lineHeight: 22,
+    marginTop: 4,
+  },
+  divider: { height: 1, backgroundColor: COLORS.borderColor },
+  actionSection: { padding: 20, marginTop: 10 },
+});
