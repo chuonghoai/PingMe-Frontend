@@ -1,46 +1,48 @@
 import { Platform, StyleSheet } from "react-native";
 
-// Bảng màu mở rộng cho giao diện chat hiện đại
 export const COLORS = {
   white: "#FFFFFF",
-  amberGold: "#F5A623", // Màu chủ đạo của mình
-  darkAmber: "#D48806", // Màu nhấn đậm
-  lightYellow: "#FFF9ED", // Nền chat sáng, ngả vàng kem rất nhẹ (tinh tế hơn)
-  borderColor: "#F0F0F0", // Viền nhạt hơn
-  inputBackground: "#F2F3F5", // Nền xám rất nhạt cho ô nhập liệu (kiểu Messenger)
-  iconGray: "#8E8E93", // Màu xám cho các icon tiện ích (ảnh, video)
+  amberGold: "#F5A623",
+  darkAmber: "#D48806",
+  lightYellow: "#FFFDF9", // Đổi màu nền sáng hơn một chút cho sang trọng
+  borderColor: "#EAEAEA",
+  inputBackground: "#F2F3F5",
+  iconGray: "#8E8E93",
+  iconActive: "#F5A623", // Vàng hổ phách cho icon đang hoạt động
   textMain: "#1C1C1E",
+  textSub: "#8E8E93",
 };
 
 export const styles = StyleSheet.create({
   // --- TỔNG THỂ ---
   container: {
     flex: 1,
-    backgroundColor: COLORS.lightYellow, // Nền sáng sủa, sạch sẽ hơn
+    backgroundColor: COLORS.lightYellow,
   },
 
-  // --- HEADER ---
+  // --- HEADER CHUYÊN NGHIỆP ---
   headerContainer: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 12,
+    paddingTop: Platform.OS === "ios" ? 50 : 20, // Xử lý SafeArea
+    paddingBottom: 12,
     paddingHorizontal: 16,
     backgroundColor: COLORS.white,
-    // Bóng đổ nhẹ thay vì viền cứng
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 3,
-    zIndex: 10, // Đảm bảo header nổi lên trên danh sách chat
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.borderColor,
+    zIndex: 10,
   },
   backButton: {
-    marginRight: 12,
-    padding: 4,
+    padding: 8,
+    marginRight: 8,
+    marginLeft: -8, // Kéo nhẹ sang trái cho cân
   },
-  backIconChar: {
-    fontSize: 24,
-    color: COLORS.amberGold,
+  headerAvatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: COLORS.inputBackground,
+    marginRight: 12,
   },
   headerTitleContainer: {
     flex: 1,
@@ -51,10 +53,28 @@ export const styles = StyleSheet.create({
     fontWeight: "700",
     color: COLORS.textMain,
   },
+  headerStatusContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 2,
+  },
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#34C759", // Màu xanh lá online
+    marginRight: 6,
+  },
   headerStatus: {
     fontSize: 12,
-    color: COLORS.iconGray,
-    marginTop: 2,
+    color: COLORS.textSub,
+  },
+  headerActions: {
+    flexDirection: "row",
+  },
+  headerIconButton: {
+    padding: 8,
+    marginLeft: 8,
   },
 
   // --- DANH SÁCH TIN NHẮN ---
@@ -63,29 +83,28 @@ export const styles = StyleSheet.create({
     paddingVertical: 20,
   },
   messageBubble: {
-    maxWidth: "75%", // Thu hẹp lại một chút cho gọn
+    maxWidth: "75%",
     paddingHorizontal: 16,
     paddingVertical: 12,
-    borderRadius: 20, // Bo tròn nhiều hơn, trông hiện đại hơn
+    borderRadius: 20,
     marginBottom: 10,
-    // Bóng đổ rất nhẹ
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 3,
-    elevation: 2,
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
-  // Tin nhắn của mình (Bên phải, màu Vàng)
   myMessage: {
     backgroundColor: COLORS.amberGold,
     alignSelf: "flex-end",
-    borderBottomRightRadius: 4, // Tạo hiệu ứng "đuôi" tin nhắn
+    borderBottomRightRadius: 4,
   },
-  // Tin nhắn người ta (Bên trái, màu Trắng)
   theirMessage: {
     backgroundColor: COLORS.white,
     alignSelf: "flex-start",
-    borderBottomLeftRadius: 4, // Tạo hiệu ứng "đuôi" tin nhắn
+    borderBottomLeftRadius: 4,
+    borderWidth: 1,
+    borderColor: COLORS.borderColor,
   },
   messageText: {
     fontSize: 16,
@@ -93,90 +112,65 @@ export const styles = StyleSheet.create({
     lineHeight: 22,
   },
   myMessageText: {
-    color: COLORS.white, // Chữ trắng trên nền vàng
+    color: COLORS.white,
   },
   timeText: {
     fontSize: 11,
-    color: COLORS.iconGray,
     alignSelf: "flex-end",
-    marginTop: 6,
-    marginBottom: -4, // Kéo sát xuống góc
+    marginTop: 4,
+  },
+  theirTimeText: {
+    color: COLORS.textSub,
   },
   myTimeText: {
-    color: "rgba(255,255,255,0.8)",
+    color: "rgba(255,255,255,0.7)",
   },
 
-  // --- THANH NHẬP LIỆU (MỚI & CẢI TIẾN) ---
+  // --- THANH NHẬP LIỆU ---
   inputContainer: {
     flexDirection: "row",
-    alignItems: "flex-end", // Căn dưới để khi input nhiều dòng thì các nút vẫn ở đáy
+    alignItems: "flex-end",
     paddingHorizontal: 12,
     paddingVertical: 10,
+    paddingBottom: Platform.OS === "ios" ? 30 : 10, // Kéo lên trên iOS
     backgroundColor: COLORS.white,
     borderTopWidth: 1,
     borderColor: COLORS.borderColor,
-    // Bóng đổ ngược lên trên
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 5,
   },
-  // Cụm nút media bên trái (Ảnh, Video)
   mediaButtonsContainer: {
     flexDirection: "row",
-    marginBottom: 10, // Căn chỉnh với chiều cao của input
-    marginRight: 8,
+    alignItems: "center",
+    marginBottom: 8, // Căn giữa với ô input dòng đầu
   },
   mediaButton: {
-    padding: 6,
+    padding: 8,
     marginRight: 4,
   },
-  mediaIconChar: {
-    fontSize: 24, // Kích thước icon (tạm dùng emoji)
-    // color: COLORS.iconGray, // Nếu dùng icon thật thì set màu ở đây
-  },
-
-  // Bao bọc TextInput và nút Sticker
   inputWrapper: {
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: COLORS.inputBackground,
-    borderRadius: 24, // Bo tròn mạnh
+    borderRadius: 24,
     paddingHorizontal: 12,
-    minHeight: 44, // Chiều cao tối thiểu
-    marginRight: 8,
+    minHeight: 40,
+    maxHeight: 120, // Không cho phình to quá mức
   },
   textInput: {
     flex: 1,
     fontSize: 16,
     color: COLORS.textMain,
-    paddingVertical: 8,
-    paddingRight: 8, // Để không đè lên nút sticker
-    maxHeight: 100, // Giới hạn chiều cao khi nhập nhiều dòng
-    ...(Platform.OS === "android" ? { padding: 0 } : {}), // Fix lỗi padding trên Android
+    paddingVertical: 10,
+    paddingRight: 8,
+    ...(Platform.OS === "android" ? { padding: 0 } : {}),
+    ...(Platform.OS === "web" ? ({ outlineStyle: "none" } as any) : {}),
   },
   stickerButton: {
     padding: 4,
-    justifyContent: "center",
-    alignItems: "center",
   },
-  stickerIconChar: {
-    fontSize: 28,
-    // color: COLORS.iconGray, // Tạm dùng emoji
-  },
-
-  // Nút gửi
   sendBtn: {
-    marginBottom: 8, // Căn chỉnh với input
-    padding: 6,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  sendBtnText: {
-    color: COLORS.amberGold,
-    fontWeight: "800",
-    fontSize: 17,
+    marginBottom: 8,
+    padding: 8,
+    marginLeft: 4,
   },
 });

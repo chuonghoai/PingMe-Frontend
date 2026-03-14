@@ -1,4 +1,4 @@
-import { ChatProvider } from "@/src/features/chat/hooks/ChatContext";
+import { ChatProvider } from "@/src/features/chat/store/ChatContext";
 import { Stack } from "expo-router";
 import { UserProvider } from "../src/store/UserContext";
 

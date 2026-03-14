@@ -1,12 +1,13 @@
-import { StyleSheet } from "react-native";
+import { Platform, StyleSheet } from "react-native";
 
-// Bảng màu đồng bộ của dự án GoGo
 export const COLORS = {
   white: "#FFFFFF",
   amberGold: "#F5A623",
   darkAmber: "#D48806",
-  lightYellow: "#FFE5B4",
-  mapBackground: "#F8F9FA", // Xám trắng rất nhạt, tạo cảm giác bản đồ sạch sẽ
+  lightYellow: "#FFFDF9",
+  mapBackground: "#E8EAED",
+  textMain: "#1C1C1E",
+  textSub: "#8E8E93",
 };
 
 export const styles = StyleSheet.create({
@@ -14,61 +15,142 @@ export const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.white,
   },
-  // Style cho phần giả lập bản đồ chiếm toàn màn hình
+  // --- KHU VỰC BẢN ĐỒ ---
   mapPlaceholder: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: COLORS.mapBackground,
     justifyContent: "center",
     alignItems: "center",
   },
-  mapIcon: {
-    fontSize: 54, // Tăng nhẹ kích thước icon bản đồ
-    marginBottom: 12,
+  radarCircleBase: {
+    position: "absolute",
+    backgroundColor: "rgba(245, 166, 35, 0.15)",
+  },
+  mapIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: COLORS.white,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: COLORS.darkAmber,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 8,
+    marginBottom: 20,
+    zIndex: 2,
   },
   mapText: {
-    fontSize: 18,
+    fontSize: 22,
     fontWeight: "800",
-    color: COLORS.darkAmber, // Đổi màu text bản đồ sang tone vàng sậm
+    color: COLORS.textMain,
+    letterSpacing: 0.5,
   },
   mapSubText: {
-    fontSize: 14,
-    color: "#888",
+    fontSize: 15,
+    color: COLORS.textSub,
     marginTop: 8,
     fontStyle: "italic",
   },
-  // Style chung cho các nút bấm nổi (Floating Button)
-  floatingBtn: {
+
+  // --- CỤM TOP BAR (MỚI) ---
+  topBarContainer: {
     position: "absolute",
+    left: 0,
+    right: 0,
+    paddingHorizontal: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    zIndex: 10,
+  },
+  // Dùng chung cho cả nút Profile và Thông báo
+  topRoundBtn: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: COLORS.white,
     justifyContent: "center",
     alignItems: "center",
-    // Chuyển bóng đổ từ đen sang màu vàng sậm để tạo hiệu ứng "phát sáng" đồng bộ
+    borderWidth: 1.5,
+    borderColor: COLORS.white,
     shadowColor: COLORS.darkAmber,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 10,
   },
-  // Style riêng cho nút Profile
-  profileBtn: {
-    left: 20,
-    width: 52,
+  notiDot: {
+    position: "absolute",
+    top: 12,
+    right: 14,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: "#FF3B30",
+    borderWidth: 1.5,
+    borderColor: COLORS.white,
+  },
+  searchBarWrapper: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: COLORS.white,
     height: 52,
     borderRadius: 26,
-    backgroundColor: COLORS.white,
-    borderWidth: 1.5,
-    borderColor: COLORS.lightYellow, // Viền mỏng màu vàng kem cho tinh tế
+    marginHorizontal: 12, // Tạo khoảng cách với 2 nút 2 bên
+    paddingHorizontal: 16,
+    shadowColor: COLORS.darkAmber,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 10,
   },
-  // Style riêng cho nút Chat
+  searchInput: {
+    flex: 1,
+    marginLeft: 8,
+    fontSize: 15,
+    color: COLORS.textMain,
+    ...(Platform.OS === "web" ? ({ outlineStyle: "none" } as any) : {}), // Chống viền đen trên Web
+  },
+
+  // --- NÚT CHAT (DƯỚI CÙNG) ---
+  floatingBtnWrapper: {
+    position: "absolute",
+    zIndex: 10,
+  },
   chatBtn: {
-    alignSelf: "center",
-    width: 76, // Tăng thêm kích thước để làm nút trung tâm
+    width: 76,
     height: 76,
     borderRadius: 38,
-    backgroundColor: COLORS.amberGold, // Đổi màu nền sang Vàng Hổ Phách
-    borderWidth: 4, // Thêm viền dày màu vàng kem tạo hiệu ứng nổi khối 3D
-    borderColor: COLORS.lightYellow,
+    backgroundColor: COLORS.amberGold,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 4,
+    borderColor: "rgba(255, 255, 255, 0.6)",
+    shadowColor: COLORS.darkAmber,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 10,
   },
-  stickerIcon: {
-    fontSize: 24,
+  chatBadge: {
+    position: "absolute",
+    top: 0,
+    right: 0,
+    backgroundColor: "#FF3B30",
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 2,
+    borderColor: COLORS.white,
+  },
+  chatBadgeText: {
+    color: COLORS.white,
+    fontSize: 12,
+    fontWeight: "bold",
   },
 });

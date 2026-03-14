@@ -1,26 +1,54 @@
 import { StyleSheet } from "react-native";
 
-// Bảng màu đồng bộ GoGo
 export const COLORS = {
   white: "#FFFFFF",
   amberGold: "#F5A623",
   darkAmber: "#D48806",
-  lightYellow: "#FFE5B4",
-  lightGray: "#F5F5F5",
-  borderColor: "#EEEEEE",
+  lightYellow: "#FFFDF9",
+  lightGray: "#F2F3F5",
+  borderColor: "#EAEAEA",
   textMain: "#1C1C1E",
   textSub: "#8E8E93",
+  onlineGreen: "#34C759",
 };
 
 export const styles = StyleSheet.create({
-  container: {
+  overlay: {
     flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.4)",
+    justifyContent: "flex-end",
+  },
+  bottomSheet: {
+    height: "75%",
     backgroundColor: COLORS.white,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+    elevation: 20,
+    overflow: "hidden",
+    display: "flex",
+    flexDirection: "column",
   },
 
-  // --- KHU VỰC SEARCH (ĐÃ BỎ TITLE) ---
+  // Thanh nắm kéo (Khu vực cảm biến vuốt)
+  dragHandleContainer: {
+    height: 40, // Đủ rộng để ngón tay dễ chạm vào
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: COLORS.white,
+  },
+  dragHandle: {
+    width: 44,
+    height: 5,
+    backgroundColor: "#DDDDDD",
+    borderRadius: 3,
+  },
+  // Đã xóa hoàn toàn class closeBtn
+
   headerContainer: {
-    paddingTop: 16, // Bạn có thể tăng lên 24 nếu thấy nó quá sát viền trên (notch)
     paddingHorizontal: 16,
     paddingBottom: 16,
     backgroundColor: COLORS.white,
@@ -39,52 +67,57 @@ export const styles = StyleSheet.create({
     borderRadius: 20,
     paddingHorizontal: 14,
     marginRight: 12,
-    height: 42,
+    height: 44,
   },
   searchIcon: {
-    fontSize: 16,
     marginRight: 8,
   },
   searchInput: {
     flex: 1,
     fontSize: 16,
     color: COLORS.textMain,
+    paddingVertical: 10,
   },
-
-  // Nút Add Friend hình tròn
   addFriendBtn: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: COLORS.amberGold,
     justifyContent: "center",
     alignItems: "center",
     shadowColor: COLORS.darkAmber,
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 4,
-  },
-  addFriendIcon: {
-    color: COLORS.white,
-    fontSize: 24,
-    fontWeight: "600",
-    lineHeight: 28,
+    shadowRadius: 5,
+    elevation: 6,
   },
 
-  // --- KHU VỰC DANH SÁCH CHAT ---
   chatItem: {
     flexDirection: "row",
     paddingHorizontal: 16,
     paddingVertical: 12,
     alignItems: "center",
   },
+  avatarContainer: {
+    position: "relative",
+    marginRight: 16,
+  },
   avatar: {
     width: 56,
     height: 56,
     borderRadius: 28,
-    marginRight: 16,
     backgroundColor: COLORS.lightGray,
+  },
+  onlineBadge: {
+    position: "absolute",
+    bottom: 2,
+    right: 2,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: COLORS.onlineGreen,
+    borderWidth: 2,
+    borderColor: COLORS.white,
   },
   chatInfo: {
     flex: 1,
@@ -97,16 +130,17 @@ export const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 6,
+    alignItems: "center",
   },
   chatName: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: "700",
     color: COLORS.textMain,
     flex: 1,
     marginRight: 8,
   },
   chatTime: {
-    fontSize: 13,
+    fontSize: 12,
     color: COLORS.textSub,
   },
   chatFooter: {
@@ -126,11 +160,12 @@ export const styles = StyleSheet.create({
   },
   unreadBadge: {
     backgroundColor: "#FF3B30",
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 10,
-    minWidth: 20,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: 12,
+    minWidth: 24,
     alignItems: "center",
+    justifyContent: "center",
   },
   unreadText: {
     color: COLORS.white,
@@ -140,10 +175,12 @@ export const styles = StyleSheet.create({
   emptyContainer: {
     padding: 40,
     alignItems: "center",
+    justifyContent: "center",
+    marginTop: 40,
   },
   emptyText: {
     color: COLORS.textSub,
-    fontStyle: "italic",
-    fontSize: 15,
+    fontSize: 16,
+    marginTop: 12,
   },
 });
