@@ -10,37 +10,70 @@ import { COLORS, styles } from "./VerifyEmailScreen.styles";
 
 export const VerifyEmailScreen = () => {
   const router = useRouter();
-  // Lấy email được truyền từ màn hình Register sang (nếu có)
-  const { email } = useLocalSearchParams<{ email: string }>();
+
+  // SỬA Ở ĐÂY: Hứng thêm biến `password` từ màn hình trước truyền sang
+  const { email, password } = useLocalSearchParams<{
+    email: string;
+    password?: string;
+  }>();
+
   const [isLoading, setIsLoading] = useState(false);
   const [otp, setOtp] = useState("");
   const [isResending, setIsResending] = useState(false);
 
-  const handleVerify = () => {
-    if (otp.length < 4) {
+  const handleVerify = async () => {
+    // 1. Kiểm tra đầu vào cơ bản
+    if (!otp || otp.length < 4) {
+      Alert.alert("Lỗi", "Vui lòng nhập mã OTP hợp lệ");
       return;
     }
-    router.replace("/(onboarding)/profile-setup");
+
+    if (!password) {
+      Alert.alert("Lỗi", "Không tìm thấy mật khẩu. Vui lòng đăng ký lại.");
+      return;
+    }
+
+    // 2. Gọi API Register
+    try {
+      setIsLoading(true);
+      const response: any = await authApi.register({
+        email: email,
+        otp: otp,
+        password: password,
+      });
+
+      if (response.success) {
+        Alert.alert("Thành công", "Đăng ký tài khoản thành công!");
+
+        // 3. ĐIỀU HƯỚNG & TRUYỀN EMAIL: Chuyển sang bước tạo Profile kèm theo email
+        router.replace({
+          pathname: "/(onboarding)/profile-setup",
+          params: { email: email },
+        });
+      }
+    } catch (error: any) {
+      Alert.alert("Đăng ký thất bại", error.toString());
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Resend OTP
   const handleResendOtp = async () => {
     setIsResending(true);
     try {
-      setIsLoading(true);
       const response: any = await authApi.sendOtp(email);
       if (response.success)
         Alert.alert("Thành công", "Mã OTP đã được gửi đến email của bạn");
     } catch (error: any) {
       Alert.alert("Lỗi", error.toString());
     } finally {
-      setIsLoading(false);
+      setIsResending(false);
     }
   };
 
   return (
     <View style={styles.container}>
-      {/* Khối Logo GoGo đồng bộ */}
       <View style={styles.logoContainer}>
         <View style={styles.logoRow}>
           <Text style={styles.logoTextMain}>Go</Text>
@@ -66,9 +99,11 @@ export const VerifyEmailScreen = () => {
         style={{ textAlign: "center", fontSize: 20, letterSpacing: 5 }}
       />
 
+      {/* SỬA NÚT BẤM: Thêm trạng thái isLoading */}
       <Button
-        title="Xác thực"
+        title={isLoading ? "Đang xác thực..." : "Xác thực"}
         onPress={handleVerify}
+        disabled={isLoading}
         style={{ marginTop: 20, backgroundColor: COLORS.amberGold }}
       />
 
