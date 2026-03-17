@@ -4,17 +4,16 @@ import { Alert, Text, TouchableOpacity, View } from "react-native";
 import { Button } from "../../../components/Button/Button";
 import { Input } from "../../../components/Input/Input";
 
-// Nạp Styles và Bảng màu từ file bên ngoài vào
 import { authApi } from "@/src/services/authApi";
 import { COLORS, styles } from "./VerifyEmailScreen.styles";
 
 export const VerifyEmailScreen = () => {
   const router = useRouter();
 
-  // SỬA Ở ĐÂY: Hứng thêm biến `password` từ màn hình trước truyền sang
-  const { email, password } = useLocalSearchParams<{
+  const { email, password, action } = useLocalSearchParams<{
     email: string;
     password?: string;
+    action?: string;
   }>();
 
   const [isLoading, setIsLoading] = useState(false);
@@ -22,33 +21,36 @@ export const VerifyEmailScreen = () => {
   const [isResending, setIsResending] = useState(false);
 
   const handleVerify = async () => {
-    // 1. Kiểm tra đầu vào cơ bản
     if (!otp || otp.length < 4) {
       Alert.alert("Lỗi", "Vui lòng nhập mã OTP hợp lệ");
       return;
     }
 
-    if (!password) {
-      Alert.alert("Lỗi", "Không tìm thấy mật khẩu. Vui lòng đăng ký lại.");
+    if (action === "reset") {
+      router.push({
+        pathname: "/(auth)/reset-password",
+        params: { email, otp },
+      });
       return;
     }
 
-    // 2. Gọi API Register
+    if (!password) {
+      Alert.alert(
+        "Lỗi",
+        "Không tìm thấy mật khẩu. Vui lòng quay lại màn hình đăng ký.",
+      );
+      return;
+    }
+
     try {
       setIsLoading(true);
-      const response: any = await authApi.register({
-        email: email,
-        otp: otp,
-        password: password,
-      });
+      const response: any = await authApi.register({ email, otp, password });
 
       if (response.success) {
         Alert.alert("Thành công", "Đăng ký tài khoản thành công!");
-
-        // 3. ĐIỀU HƯỚNG & TRUYỀN EMAIL: Chuyển sang bước tạo Profile kèm theo email
         router.replace({
           pathname: "/(onboarding)/profile-setup",
-          params: { email: email },
+          params: { email },
         });
       }
     } catch (error: any) {
@@ -62,9 +64,12 @@ export const VerifyEmailScreen = () => {
   const handleResendOtp = async () => {
     setIsResending(true);
     try {
-      const response: any = await authApi.sendOtp(email);
-      if (response.success)
-        Alert.alert("Thành công", "Mã OTP đã được gửi đến email của bạn");
+      const res: any =
+        action === "reset"
+          ? await authApi.forgotPassword(email)
+          : await authApi.sendOtp(email);
+
+      if (res.success) Alert.alert("Thành công", "Mã OTP đã được gửi lại");
     } catch (error: any) {
       Alert.alert("Lỗi", error.toString());
     } finally {
