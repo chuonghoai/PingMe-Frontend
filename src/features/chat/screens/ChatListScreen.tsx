@@ -19,9 +19,21 @@ import { COLORS, styles } from "./ChatListScreen.styles";
 export const ChatListScreen = () => {
   const router = useRouter();
 
-  const { conversations, isLoadingConversations, loadConversations } =
-    useContext(ChatContext);
-  const { userProfile } = useUser(); // Lấy thông tin user đang đăng nhập
+  const handleClose = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/(main)/home');
+    }
+  };
+
+  const {
+    conversations,
+    isLoadingConversations,
+    loadConversations,
+    onlineUsers,
+  } = useContext(ChatContext);
+  const { userProfile } = useUser();
 
   const formatTime = (dateString: string) => {
     if (!dateString) return "";
@@ -39,21 +51,29 @@ export const ChatListScreen = () => {
   };
 
   const renderItem = ({ item }: { item: any }) => {
-    const isGroup = item.type === 'GROUP';
-    
-    const otherParticipant = item.participants?.find((p: any) => p.userId !== userProfile?.userId) 
-                             || item.participants?.[0];
+    const isGroup = item.type === "GROUP";
 
-    const displayName = isGroup 
-      ? item.name 
-      : (otherParticipant?.user?.fullname || otherParticipant?.fullname || 'Người dùng');
-      
-    const displayAvatar = isGroup 
-      ? 'https://ui-avatars.com/api/?name=Group&background=random' 
-      : (otherParticipant?.user?.avatarUrl || otherParticipant?.avatarUrl || 'https://ui-avatars.com/api/?name=User');
+    const otherParticipant =
+      item.participants?.find((p: any) => p.userId !== userProfile?.userId) ||
+      item.participants?.[0];
+
+    const displayName = isGroup
+      ? item.name
+      : otherParticipant?.user?.fullname ||
+        otherParticipant?.fullname ||
+        "Người dùng ẩn danh";
+
+    const displayAvatar = isGroup
+      ? "https://ui-avatars.com/api/?name=Group&background=random"
+      : otherParticipant?.user?.avatarUrl ||
+        otherParticipant?.avatarUrl ||
+        "https://ui-avatars.com/api/?name=User";
 
     const snippet = item.lastMessageSnippet || "Chưa có tin nhắn nào";
     const hasUnread = item.unreadCount > 0;
+
+    // KIỂM TRA TRẠNG THÁI ONLINE
+    const isOnline = onlineUsers.includes(otherParticipant?.userId);
 
     return (
       <TouchableOpacity
@@ -62,6 +82,13 @@ export const ChatListScreen = () => {
       >
         <View style={styles.avatarContainer}>
           <Image source={{ uri: displayAvatar }} style={styles.avatar} />
+
+          {/* RENDER CHẤM ONLINE/OFFLINE (Chỉ áp dụng cho Chat 1-1) */}
+          {!isGroup && (
+            <View
+              style={[styles.onlineBadge, !isOnline && styles.offlineBadge]}
+            />
+          )}
         </View>
 
         <View style={styles.chatInfo}>
@@ -99,7 +126,7 @@ export const ChatListScreen = () => {
       {/* TẮT HEADER MẶC ĐỊNH CỦA EXPO ROUTER */}
       <Stack.Screen options={{ headerShown: false }} />
 
-      <TouchableWithoutFeedback onPress={() => router.back()}>
+      <TouchableWithoutFeedback onPress={handleClose}>
         <View style={{ flex: 1 }} />
       </TouchableWithoutFeedback>
 

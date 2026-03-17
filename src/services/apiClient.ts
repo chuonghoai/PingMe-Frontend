@@ -1,4 +1,4 @@
-/* eslint-disable react-hooks/rules-of-hooks */
+ 
 import axios from "axios";
 import { router } from "expo-router";
 import * as SecureStore from "expo-secure-store";
@@ -12,7 +12,7 @@ const getBaseUrl = () => {
   return "http://localhost:3000";
 };
 
-const BASE_URL = getBaseUrl();
+export const BASE_URL = getBaseUrl();
 
 // Khởi tạo một instance của Axios
 export const apiClient = axios.create({
