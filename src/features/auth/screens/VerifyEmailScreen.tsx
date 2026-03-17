@@ -1,33 +1,41 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from "react";
-import { Text, TouchableOpacity, View } from "react-native";
+import { Alert, Text, TouchableOpacity, View } from "react-native";
 import { Button } from "../../../components/Button/Button";
 import { Input } from "../../../components/Input/Input";
 
 // Nạp Styles và Bảng màu từ file bên ngoài vào
+import { authApi } from "@/src/services/authApi";
 import { COLORS, styles } from "./VerifyEmailScreen.styles";
 
 export const VerifyEmailScreen = () => {
   const router = useRouter();
   // Lấy email được truyền từ màn hình Register sang (nếu có)
   const { email } = useLocalSearchParams<{ email: string }>();
-
+  const [isLoading, setIsLoading] = useState(false);
   const [otp, setOtp] = useState("");
   const [isResending, setIsResending] = useState(false);
 
   const handleVerify = () => {
     if (otp.length < 4) {
-      // Logic validate độ dài OTP
       return;
     }
-    // Mock xác thực thành công, chuyển sang thiết lập Profile
     router.replace("/(onboarding)/profile-setup");
   };
 
-  const handleResendOtp = () => {
+  // Resend OTP
+  const handleResendOtp = async () => {
     setIsResending(true);
-    // Mock API gửi lại OTP
-    setTimeout(() => setIsResending(false), 2000);
+    try {
+      setIsLoading(true);
+      const response: any = await authApi.sendOtp(email);
+      if (response.success)
+        Alert.alert("Thành công", "Mã OTP đã được gửi đến email của bạn");
+    } catch (error: any) {
+      Alert.alert("Lỗi", error.toString());
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

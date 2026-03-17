@@ -13,19 +13,20 @@ import { Input } from "../../../components/Input/Input";
 
 // Nạp Styles và Bảng màu từ file bên ngoài vào
 import { COLORS, styles } from "./RegisterScreen.styles";
+import { authApi } from "@/src/services/authApi";
 
 export const RegisterScreen = () => {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
     if (!email.trim() || !password.trim() || !confirmPassword.trim()) {
       Alert.alert("Lỗi", "Vui lòng nhập đầy đủ thông tin!");
       return;
     }
-
     if (password !== confirmPassword) {
       Alert.alert(
         "Lỗi",
@@ -34,10 +35,23 @@ export const RegisterScreen = () => {
       return;
     }
 
-    router.push({
-      pathname: "/(auth)/verify-email",
-      params: { email: email },
-    });
+    try {
+      setIsLoading(true);
+      const response: any = await authApi.sendOtp(email);
+      
+      if (response.success) {
+        Alert.alert('Thành công', 'Mã OTP đã được gửi đến email của bạn');
+        
+        router.push({
+          pathname: '/(auth)/verify-email',
+          params: { email: email }
+        });
+      }
+    } catch (error: any) {
+      Alert.alert('Lỗi', error.toString());
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

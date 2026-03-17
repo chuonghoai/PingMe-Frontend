@@ -2,31 +2,56 @@ import { useRouter } from "expo-router";
 import React from "react";
 import {
   Image,
+  Platform,
   ScrollView,
   Text,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 // Import dàn Icon xịn xò
+import { authApi } from "@/src/services/authApi";
+import * as SecureStore from "expo-secure-store";
 import {
   Activity,
   Edit3,
   LogOut,
   Mail,
   MapPin,
-  User
+  User,
 } from "lucide-react-native";
 import { useUser } from "../../../store/UserContext";
-
 import { COLORS, styles } from "./ProfileScreen.styles";
 
 export const ProfileScreen = () => {
   const router = useRouter();
   const { userProfile, logout } = useUser();
 
-  const handleLogout = () => {
-    logout();
-    router.replace("/(auth)/login");
+  const handleLogout = async () => {
+    try {
+      const refreshToken =
+        Platform.OS === "web"
+          ? localStorage.getItem("refreshToken") || ""
+          : (await SecureStore.getItemAsync("refreshToken")) || "";
+
+      if (refreshToken) {
+        authApi.logout(refreshToken).catch((err) => {
+          console.log("Lỗi thu hồi token ngầm (có thể token đã hết hạn):", err);
+        });
+      }
+
+      if (Platform.OS === "web") {
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+      } else {
+        await SecureStore.deleteItemAsync("accessToken");
+        await SecureStore.deleteItemAsync("refreshToken");
+      }
+
+      router.replace("/(auth)/login");
+    } catch (error) {
+      console.error("Lỗi đăng xuất:", error);
+      router.replace("/(auth)/login");
+    }
   };
 
   return (
