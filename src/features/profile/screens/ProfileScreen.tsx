@@ -47,6 +47,7 @@ export const ProfileScreen = () => {
         await SecureStore.deleteItemAsync("refreshToken");
       }
 
+      logout();
       router.replace("/(auth)/login");
     } catch (error) {
       console.error("Lỗi đăng xuất:", error);

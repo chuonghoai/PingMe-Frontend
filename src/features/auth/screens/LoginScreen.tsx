@@ -13,9 +13,11 @@ import {
 import { Button } from "../../../components/Button/Button";
 import { Input } from "../../../components/Input/Input";
 import { COLORS, styles } from "./LoginScreen.styles";
+import { useUser } from "@/src/store/UserContext";
 
 export const LoginScreen = () => {
   const router = useRouter();
+  const { updateUserProfile } = useUser();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
@@ -44,11 +46,24 @@ export const LoginScreen = () => {
           localStorage.setItem("accessToken", response.data.accessToken);
           localStorage.setItem("refreshToken", response.data.refreshToken);
         } else {
-          await SecureStore.setItem("accessToken", response.data.accessToken);
-          await SecureStore.setItem("refreshToken", response.data.refreshToken);
+          await SecureStore.setItemAsync(
+            "accessToken",
+            response.data.accessToken,
+          );
+          await SecureStore.setItemAsync(
+            "refreshToken",
+            response.data.refreshToken,
+          );
         }
+        
+        updateUserProfile({
+          userId: response.data.user.userId,
+          email: response.data.user.email,
+        });
 
         Alert.alert("Thành công", "Đăng nhập thành công!");
+        const _accTK = localStorage.getItem("accessToken");
+        console.log(_accTK);
         router.replace("/(main)/home");
       }
     } catch (error: any) {
