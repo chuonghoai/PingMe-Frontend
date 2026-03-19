@@ -1,89 +1,118 @@
-import { Stack, useRouter } from "expo-router";
-import React, { useRef, useState } from "react";
+import { useUser } from "@/src/store/UserContext"; // Lấy UserContext để biết "Mình là ai"
+import { Stack, useRouter } from "expo-router"; // Thêm Stack
+import { Search, UserPlus } from "lucide-react-native";
+import React, { useContext } from "react";
 import {
+  ActivityIndicator,
   FlatList,
   Image,
-  KeyboardAvoidingView,
-  PanResponder, // <-- Import thêm PanResponder để bắt sự kiện vuốt
-  Platform,
-  StyleSheet,
+  RefreshControl,
   Text,
   TextInput,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   View,
 } from "react-native";
-// Đã xóa nút X khỏi danh sách import
-import { MessageSquareOff, Search, UserPlus } from "lucide-react-native";
-import { useChat } from "../store/ChatContext";
-
+import { ChatContext } from "../store/ChatContext";
 import { COLORS, styles } from "./ChatListScreen.styles";
 
 export const ChatListScreen = () => {
   const router = useRouter();
-  const [searchQuery, setSearchQuery] = useState("");
 
-  const { chatList } = useChat();
+  const handleClose = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/(main)/home');
+    }
+  };
 
-  const filteredChatList = chatList.filter((chat: any) =>
-    chat.name.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
+  const {
+    conversations,
+    isLoadingConversations,
+    loadConversations,
+    onlineUsers,
+  } = useContext(ChatContext);
+  const { userProfile } = useUser();
 
-  // --- CẢM BIẾN VUỐT (SWIPE TO DISMISS) ---
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: (_, gestureState) => {
-        // Chỉ kích hoạt cảm biến khi người dùng vuốt theo chiều dọc (tránh nhầm lẫn với vuốt ngang)
-        return Math.abs(gestureState.dy) > Math.abs(gestureState.dx);
-      },
-      onPanResponderRelease: (_, gestureState) => {
-        // Nếu ngón tay kéo xuống dưới hơn 50px -> Đóng màn hình
-        if (gestureState.dy > 50) {
-          router.back();
-        }
-      },
-    }),
-  ).current;
+  const formatTime = (dateString: string) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    const now = new Date();
+    const isToday =
+      date.getDate() === now.getDate() &&
+      date.getMonth() === now.getMonth() &&
+      date.getFullYear() === now.getFullYear();
 
-  const renderItem = ({ item, index }: { item: any; index: number }) => {
-    const isOnline = item.unread > 0 || index % 3 === 0;
+    if (isToday) {
+      return `${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}`;
+    }
+    return `${date.getDate().toString().padStart(2, "0")}/${(date.getMonth() + 1).toString().padStart(2, "0")}`;
+  };
+
+  const renderItem = ({ item }: { item: any }) => {
+    const isGroup = item.type === "GROUP";
+
+    const otherParticipant =
+      item.participants?.find((p: any) => p.userId !== userProfile?.userId) ||
+      item.participants?.[0];
+
+    const displayName = isGroup
+      ? item.name
+      : otherParticipant?.user?.fullname ||
+        otherParticipant?.fullname ||
+        "Người dùng ẩn danh";
+
+    const displayAvatar = isGroup
+      ? "https://ui-avatars.com/api/?name=Group&background=random"
+      : otherParticipant?.user?.avatarUrl ||
+        otherParticipant?.avatarUrl ||
+        "https://ui-avatars.com/api/?name=User";
+
+    const snippet = item.lastMessageSnippet || "Chưa có tin nhắn nào";
+    const hasUnread = item.unreadCount > 0;
+
+    // KIỂM TRA TRẠNG THÁI ONLINE
+    const isOnline = onlineUsers.includes(otherParticipant?.userId);
 
     return (
       <TouchableOpacity
         style={styles.chatItem}
-        activeOpacity={0.6}
-        onPress={() =>
-          router.push({
-            pathname: "/(main)/chat/[id]" as any,
-            params: { id: item.id, name: item.name },
-          })
-        }
+        onPress={() => router.replace(`/(main)/chat/${item.id}`)}
       >
         <View style={styles.avatarContainer}>
-          <Image source={{ uri: item.avatar }} style={styles.avatar} />
-          {isOnline && <View style={styles.onlineBadge} />}
+          <Image source={{ uri: displayAvatar }} style={styles.avatar} />
+
+          {/* RENDER CHẤM ONLINE/OFFLINE (Chỉ áp dụng cho Chat 1-1) */}
+          {!isGroup && (
+            <View
+              style={[styles.onlineBadge, !isOnline && styles.offlineBadge]}
+            />
+          )}
         </View>
 
         <View style={styles.chatInfo}>
           <View style={styles.chatHeader}>
             <Text style={styles.chatName} numberOfLines={1}>
-              {item.name}
+              {displayName}
             </Text>
-            <Text style={styles.chatTime}>{item.time}</Text>
+            <Text style={styles.chatTime}>
+              {formatTime(item.lastMessageAt)}
+            </Text>
           </View>
+
           <View style={styles.chatFooter}>
             <Text
-              style={[
-                styles.lastMessage,
-                item.unread > 0 && styles.unreadMessage,
-              ]}
+              style={[styles.lastMessage, hasUnread && styles.unreadMessage]}
               numberOfLines={1}
             >
-              {item.lastMessage}
+              {snippet}
             </Text>
-            {item.unread > 0 && (
+            {hasUnread && (
               <View style={styles.unreadBadge}>
-                <Text style={styles.unreadText}>{item.unread}</Text>
+                <Text style={styles.unreadText}>
+                  {item.unreadCount > 99 ? "99+" : item.unreadCount}
+                </Text>
               </View>
             )}
           </View>
@@ -94,69 +123,68 @@ export const ChatListScreen = () => {
 
   return (
     <View style={styles.overlay}>
+      {/* TẮT HEADER MẶC ĐỊNH CỦA EXPO ROUTER */}
       <Stack.Screen options={{ headerShown: false }} />
 
-      {/* Nền đen mờ bấm vào sẽ đóng Chat */}
-      <TouchableOpacity
-        style={StyleSheet.absoluteFill}
-        activeOpacity={1}
-        onPress={() => router.back()}
-      />
+      <TouchableWithoutFeedback onPress={handleClose}>
+        <View style={{ flex: 1 }} />
+      </TouchableWithoutFeedback>
 
-      {/* Cửa sổ Chat (Bottom Sheet) */}
-      <KeyboardAvoidingView
-        style={styles.bottomSheet}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-      >
-        {/* Thanh kéo nhỏ (Đã gắn cảm biến vuốt panHandlers) */}
-        <View style={styles.dragHandleContainer} {...panResponder.panHandlers}>
+      <View style={styles.bottomSheet}>
+        <View style={styles.dragHandleContainer}>
           <View style={styles.dragHandle} />
         </View>
 
-        {/* KHU VỰC SEARCH & ADD FRIEND */}
         <View style={styles.headerContainer}>
           <View style={styles.searchRow}>
             <View style={styles.searchInputWrapper}>
-              <View style={styles.searchIcon}>
-                <Search size={20} color={COLORS.textSub} />
-              </View>
+              <Search
+                size={20}
+                color={COLORS.textSub}
+                style={styles.searchIcon}
+              />
               <TextInput
                 style={styles.searchInput}
-                placeholder="Tìm kiếm bạn bè..."
+                placeholder="Tìm kiếm"
                 placeholderTextColor={COLORS.textSub}
-                value={searchQuery}
-                onChangeText={setSearchQuery}
               />
             </View>
-
-            <TouchableOpacity
-              style={styles.addFriendBtn}
-              activeOpacity={0.8}
-              onPress={() => alert("Chuyển sang màn hình Tìm kiếm / Kết bạn")}
-            >
-              <UserPlus size={22} color={COLORS.white} />
+            <TouchableOpacity style={styles.addFriendBtn}>
+              <UserPlus size={20} color={COLORS.white} />
             </TouchableOpacity>
           </View>
         </View>
 
-        {/* DANH SÁCH CHAT */}
-        <FlatList
-          style={{ flex: 1 }}
-          data={filteredChatList}
-          keyExtractor={(item) => item.id}
-          renderItem={renderItem}
-          contentContainerStyle={{ paddingVertical: 8, paddingBottom: 24 }}
-          showsVerticalScrollIndicator={false}
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <MessageSquareOff size={48} color={COLORS.borderColor} />
-              <Text style={styles.emptyText}>
-                Không tìm thấy cuộc trò chuyện nào
-              </Text>
-            </View>
-          }
-        />
-      </KeyboardAvoidingView>
+        {isLoadingConversations && conversations?.length === 0 ? (
+          <ActivityIndicator
+            size="large"
+            color={COLORS.amberGold}
+            style={{ marginTop: 40 }}
+          />
+        ) : (
+          <FlatList
+            data={conversations}
+            keyExtractor={(item) => item.id}
+            renderItem={renderItem}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingBottom: 20 }}
+            ListEmptyComponent={
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>
+                  Bạn chưa có cuộc trò chuyện nào.
+                </Text>
+              </View>
+            }
+            refreshControl={
+              <RefreshControl
+                refreshing={isLoadingConversations}
+                onRefresh={loadConversations}
+                colors={[COLORS.amberGold]}
+              />
+            }
+          />
+        )}
+      </View>
     </View>
   );
 };

@@ -10,6 +10,7 @@ export const COLORS = {
   textMain: "#1C1C1E",
   textSub: "#8E8E93",
   onlineGreen: "#34C759",
+  offlineGray: "#A0A0A0",
 };
 
 export const styles = StyleSheet.create({
@@ -118,6 +119,9 @@ export const styles = StyleSheet.create({
     backgroundColor: COLORS.onlineGreen,
     borderWidth: 2,
     borderColor: COLORS.white,
+  },
+  offlineBadge: {
+    backgroundColor: COLORS.offlineGray, // Ghi đè màu nền thành xám
   },
   chatInfo: {
     flex: 1,

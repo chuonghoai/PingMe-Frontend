@@ -1,54 +1,94 @@
 import { StyleSheet } from "react-native";
 
-// Bảng màu đồng bộ
 export const COLORS = {
+  primary: "#1877F2",
+  amberGold: "#FFC107",
+  background: "#F0F2F5",
+  text: "#1C1E21",
+  textMuted: "#65676B",
   white: "#FFFFFF",
-  amberGold: "#F5A623",
-  darkAmber: "#D48806",
+  border: "#CCD0D5",
 };
 
 export const styles = StyleSheet.create({
   container: {
-    flexGrow: 1,
-    padding: 20,
+    flex: 1,
+    padding: 24,
     backgroundColor: COLORS.white,
     justifyContent: "center",
   },
-  // Styles cho Logo
-  logoContainer: {
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  logoRow: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  logoTextMain: {
-    fontSize: 48,
-    fontWeight: "900",
-    color: COLORS.darkAmber,
-    fontStyle: "italic",
-    letterSpacing: -2,
-    textShadowColor: "rgba(245, 166, 35, 0.3)",
-    textShadowOffset: { width: 2, height: 4 },
-    textShadowRadius: 8,
-  },
-  logoTextSecondary: {
-    fontSize: 48,
-    fontWeight: "900",
-    color: COLORS.amberGold,
-    fontStyle: "italic",
-    marginLeft: -4,
-  },
   title: {
-    fontSize: 26,
+    fontSize: 28,
     fontWeight: "bold",
-    color: COLORS.darkAmber, // Đổi màu title thành vàng sậm
-    marginBottom: 8,
+    color: COLORS.text,
+    marginBottom: 10,
   },
   subtitle: {
-    fontSize: 16,
-    color: "#666",
+    fontSize: 15,
+    color: COLORS.textMuted,
     marginBottom: 30,
+    lineHeight: 22,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: COLORS.text,
+    marginBottom: 6,
+    marginTop: 10,
+  },
+
+  // Nút nhấn giả lập ô Input để mở Popup
+  selectorBox: {
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    backgroundColor: COLORS.background,
+    marginBottom: 15,
+  },
+  selectorText: {
+    fontSize: 16,
+    color: COLORS.text,
+  },
+
+  // Khung Modal cho Chọn Giới tính
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: COLORS.white,
+    borderRadius: 12,
+    width: "100%",
+    padding: 20,
+    elevation: 5,
+    shadowColor: "#000",
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginBottom: 15,
+    color: COLORS.text,
+  },
+  modalItem: {
+    paddingVertical: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.background,
+  },
+  modalItemText: {
+    fontSize: 16,
+    textAlign: "center",
+    color: COLORS.text,
+  },
+  modalItemTextSelected: {
+    color: COLORS.primary,
+    fontWeight: "bold",
   },
 });

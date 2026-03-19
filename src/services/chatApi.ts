@@ -20,23 +20,17 @@ export interface ChatMessage {
 // --- 2. GOM NHÓM CÁC HÀM GỌI API ---
 export const chatApi = {
   // Lấy danh sách các cuộc trò chuyện hiển thị ở ChatListScreen
-  getChatRooms: async (): Promise<ChatListItem[]> => {
-    const response = await apiClient.get<ChatListItem[]>("/chats/rooms");
-    return response.data;
+  getConversations: async () => {
+    return apiClient.get("/conversations");
   },
 
-  // Lấy lịch sử tin nhắn của một phòng cụ thể (Phân trang - Pagination)
-  getMessagesByRoom: async (
-    roomId: string,
-    page: number = 0,
-    size: number = 20,
-  ): Promise<ChatMessage[]> => {
-    const response = await apiClient.get<ChatMessage[]>(
-      `/chats/rooms/${roomId}/messages`,
-      {
-        params: { page, size },
-      },
+  getMessages: async (conversationId: string, page = 1, limit = 20) => {
+    return apiClient.get(
+      `/messages/${conversationId}?page=${page}&limit=${limit}`,
     );
-    return response.data;
   },
+
+  getMessageContext: async (conversationId: string, messageId: string) => {
+    return apiClient.get(`/messages/${conversationId}/context/${messageId}`);
+  }
 };

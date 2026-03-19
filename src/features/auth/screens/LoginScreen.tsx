@@ -1,21 +1,81 @@
+import { authApi } from "@/src/services/authApi";
 import { useRouter } from "expo-router";
+import * as SecureStore from "expo-secure-store";
 import React, { useState } from "react";
-import { Platform, Switch, Text, TouchableOpacity, View } from "react-native";
+import {
+  Alert,
+  Platform,
+  Switch,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { Button } from "../../../components/Button/Button";
 import { Input } from "../../../components/Input/Input";
-
-// Nạp Styles và Bảng màu từ file bên ngoài vào
 import { COLORS, styles } from "./LoginScreen.styles";
+import { useUser } from "@/src/store/UserContext";
 
 export const LoginScreen = () => {
   const router = useRouter();
+  const { updateUserProfile } = useUser();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = () => {
-    // Tạm thời mock thành công chuyển thẳng vào Home
-    router.replace("/(main)/home");
+  const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert("Lỗi", "Vui lòng nhập email và mật khẩu");
+      return;
+    }
+
+    if (!isValidEmail(email)) {
+      Alert.alert("Lỗi", "Email không hợp lệ");
+      window.alert("Email không hợp lệ");
+      console.log("Email không hợp lệ");
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      const response: any = await authApi.login({ email, password });
+      console.log(response);
+
+      if (response.success) {
+        if (Platform.OS === "web") {
+          localStorage.setItem("accessToken", response.data.accessToken);
+          localStorage.setItem("refreshToken", response.data.refreshToken);
+        } else {
+          await SecureStore.setItemAsync(
+            "accessToken",
+            response.data.accessToken,
+          );
+          await SecureStore.setItemAsync(
+            "refreshToken",
+            response.data.refreshToken,
+          );
+        }
+        
+        updateUserProfile({
+          userId: response.data.user.userId,
+          email: response.data.user.email,
+        });
+
+        Alert.alert("Thành công", "Đăng nhập thành công!");
+        const _accTK = localStorage.getItem("accessToken");
+        console.log(_accTK);
+        router.replace("/(main)/home");
+      }
+    } catch (error: any) {
+      Alert.alert("Đăng nhập thất bại", error.toString());
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // validate email
+  const isValidEmail = (email: string) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   };
 
   return (

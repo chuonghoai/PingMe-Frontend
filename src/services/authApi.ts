@@ -1,6 +1,6 @@
 import { apiClient } from "./apiClient";
 
-// --- 1. ĐỊNH NGHĨA KIỂU DỮ LIỆU GỬI ĐI (REQUEST) ---
+// DTO request
 export interface LoginRequest {
   email: string;
   password: string;
@@ -16,12 +16,11 @@ export interface VerifyOtpRequest {
   otp: string;
 }
 
-// --- 2. ĐỊNH NGHĨA KIỂU DỮ LIỆU NHẬN VỀ (RESPONSE) ---
+// DTO response
 export interface AuthResponse {
   token: string;
   userId: string;
   email: string;
-  // Bạn có thể tùy chỉnh thêm dựa vào DTO của Spring Boot trả về
 }
 
 export interface AddProfileRequest {
@@ -31,32 +30,50 @@ export interface AddProfileRequest {
   phone: string;
   gender: string;
   dob: string;
-  bio?: string; // Optional (Có thể thêm sau)
+  bio?: string;
 }
 
-// --- 3. GOM NHÓM CÁC HÀM GỌI API ---
+// API call
 export const authApi = {
-  login: async (data: LoginRequest): Promise<AuthResponse> => {
-    // Gọi POST tới endpoint /auth/login của Spring Boot
-    const response = await apiClient.post<AuthResponse>("/auth/login", data);
-    return response.data;
+  login: async (data: {
+    email: string;
+    password: string;
+    rememberMe?: boolean;
+  }) => {
+    return apiClient.post("/auth/login", data);
   },
 
-  register: async (data: RegisterRequest): Promise<void> => {
-    await apiClient.post("/auth/register", data);
+  sendOtp: async (email: string) => {
+    return apiClient.post("/email/otp", { email });
   },
 
-  verifyOtp: async (data: VerifyOtpRequest): Promise<boolean> => {
-    const response = await apiClient.post<boolean>("/auth/verify-otp", data);
-    return response.data;
+  register: async (data: { email: string; otp: string; password: string }) => {
+    return apiClient.post("/auth/register", data);
   },
 
-  resendOtp: async (email: string): Promise<void> => {
-    await apiClient.post("/auth/resend-otp", { email });
+  addProfile: async (data: {
+    email: string;
+    fullname: string;
+    phone: string;
+    gender: string;
+    dob: string;
+  }) => {
+    return apiClient.post("/auth/add-profile", data);
   },
 
-  addProfile: async (data: AddProfileRequest): Promise<void> => {
-    // Gọi POST tới endpoint /auth/add-profile
-    await apiClient.post("/auth/add-profile", data);
+  forgotPassword: async (email: string) => {
+    return apiClient.post("/auth/forgot-password", { email });
+  },
+
+  resetPassword: async (data: {
+    email: string;
+    otp: string;
+    newPassword: string;
+  }) => {
+    return apiClient.post("/auth/reset-password", data);
+  },
+
+  logout: async (refreshToken: string) => {
+    return apiClient.post("/auth/logout", { refreshToken });
   },
 };
