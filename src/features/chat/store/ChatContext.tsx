@@ -39,7 +39,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     // Tải danh sách chat
     loadConversations();
 
-    // Lắng nghe sự kiện
+    // Sự kiện ai đó online
     const handleUserOnline = (data: { userId: string }) => {
       console.log("🔥 Ai đó vừa online:", data.userId);
       setOnlineUsers((prev) => {
@@ -48,6 +48,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
       });
     };
 
+    // Sự kiện ai đó offline
     const handleUserOffline = (data: { userId: string; lastActiveAt: any }) => {
       console.log("💤 Ai đó vừa offline:", data.userId);
       setOnlineUsers((prev) => prev.filter((id) => id !== data.userId));
@@ -58,15 +59,23 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
       setOnlineUsers(users);
     };
 
+    const handleSyncChatList = () => {
+      loadConversations();
+    };
+
     socketService.on("user_online", handleUserOnline);
     socketService.on("user_offline", handleUserOffline);
     socketService.on("online_users_list", handleOnlineUsersList);
+    socketService.on("new_message", handleSyncChatList);
+    socketService.on("message_sent_success", handleSyncChatList);
 
     // Dọn dẹp listener khi đăng xuất
     return () => {
       socketService.off("user_online", handleUserOnline);
       socketService.off("user_offline", handleUserOffline);
       socketService.off("online_users_list", handleOnlineUsersList);
+      socketService.on("new_message", handleSyncChatList);
+      socketService.on("message_sent_success", handleSyncChatList);
     };
   }, [userProfile?.userId]);
 

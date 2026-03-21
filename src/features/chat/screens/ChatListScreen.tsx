@@ -23,7 +23,7 @@ export const ChatListScreen = () => {
     if (router.canGoBack()) {
       router.back();
     } else {
-      router.replace('/(main)/home');
+      router.replace("/(main)/home");
     }
   };
 
@@ -78,7 +78,12 @@ export const ChatListScreen = () => {
     return (
       <TouchableOpacity
         style={styles.chatItem}
-        onPress={() => router.replace(`/(main)/chat/${item.id}`)}
+        onPress={() =>
+          router.push({
+            pathname: "/(main)/chat/[id]",
+            params: { id: item.id, name: displayName },
+          })
+        }
       >
         <View style={styles.avatarContainer}>
           <Image source={{ uri: displayAvatar }} style={styles.avatar} />
