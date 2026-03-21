@@ -60,6 +60,7 @@ export const ChatRoomScreen = () => {
   useEffect(() => {
     if (id) {
       fetchMessages();
+      socketService.emit("mark_read", { conversationId: id });
     }
   }, [id]);
 
@@ -80,10 +81,12 @@ export const ChatRoomScreen = () => {
   // 2. LẮNG NGHE PHẢN HỒI GỬI TIN NHẮN TỪ SOCKET
   useEffect(() => {
     const handleMessageSuccess = (data: any) => {
-      // Tìm tin nhắn tạm (dựa vào temporaryId) và thay thế bằng data thật từ Backend
+      const realMessage = data.message || data;
       setMessages((prev) =>
         prev.map((msg) =>
-          msg.id === data.temporaryId ? { ...data, isTemporary: false } : msg,
+          msg.id === data.temporaryId
+            ? { ...msg, ...realMessage, isTemporary: false }
+            : msg,
         ),
       );
     };
@@ -95,9 +98,13 @@ export const ChatRoomScreen = () => {
     };
 
     const handleNewMessage = (data: any) => {
-      // Kiểm tra xem tin nhắn tới có đúng thuộc phòng chat hiện tại không
-      if (data.conversationId === id) {
-        setMessages((prev) => [data, ...prev]);
+      const realMessage = data.message || data;
+      const messageSenderId = realMessage.sender?.id || realMessage.senderId;
+      if (messageSenderId === userProfile?.userId) return;
+
+      if (realMessage.conversationId === id) {
+        setMessages((prev) => [realMessage, ...prev]);
+        socketService.emit("mark_read", { conversationId: id });
       }
     };
 
@@ -205,7 +212,10 @@ export const ChatRoomScreen = () => {
   };
 
   const renderMessage = ({ item }: { item: any }) => {
-    const isMe = item.sender?.id === userProfile?.userId;
+    const messageSenderId =
+      item.sender?.id || item.senderId || item.sender?.userId;
+    const isMe = messageSenderId === userProfile?.userId;
+    const displayContent = item.content || item.message?.content || "";
 
     return (
       <View
@@ -215,7 +225,7 @@ export const ChatRoomScreen = () => {
         ]}
       >
         <Text style={[styles.messageText, isMe ? styles.myMessageText : {}]}>
-          {item.content}
+          {displayContent}
         </Text>
 
         <View
