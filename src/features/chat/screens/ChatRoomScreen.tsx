@@ -37,6 +37,15 @@ export const ChatRoomScreen = () => {
   const [messages, setMessages] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  const showMessage = (title: string, message: string) => {
+    if (Platform.OS === "web") {
+      window.alert(`${title}: ${message}`);
+      return;
+    }
+
+    Alert.alert(title, message);
+  };
+
   // Ref quản lý trạng thái typing
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [isTyping, setIsTyping] = useState(false);
@@ -80,7 +89,7 @@ export const ChatRoomScreen = () => {
     };
 
     const handleMessageError = (data: any) => {
-      Alert.alert("Lỗi", "Lỗi mạng, vui lòng kiểm tra lại.");
+      showMessage("Loi", "Loi mang, vui long kiem tra lai.");
       // Xóa tin nhắn tạm khỏi danh sách vì gửi thất bại
       setMessages((prev) => prev.filter((msg) => msg.id !== data.temporaryId));
     };

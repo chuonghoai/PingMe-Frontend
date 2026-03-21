@@ -1,3 +1,4 @@
+import { authApi } from "@/src/services/authApi";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -10,9 +11,6 @@ import {
 } from "react-native";
 import { Button } from "../../../components/Button/Button";
 import { Input } from "../../../components/Input/Input";
-
-// Nạp Styles và Bảng màu từ file bên ngoài vào
-import { authApi } from "@/src/services/authApi";
 import { COLORS, styles } from "./RegisterScreen.styles";
 
 export const RegisterScreen = () => {
@@ -22,56 +20,56 @@ export const RegisterScreen = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleRegister = async () => {
-    if (!email.trim() || !password.trim() || !confirmPassword.trim()) {
-      Alert.alert("Lỗi", "Vui lòng nhập đầy đủ thông tin!");
-      window.alert("Vui lòng nhập đầy đủ thông tin!");
-      return;
-    }
-    if (password !== confirmPassword) {
-      Alert.alert(
-        "Lỗi",
-        "Mật khẩu xác nhận không khớp. Vui lòng kiểm tra lại!",
-      );
-      window.alert("Mật khẩu xác nhận không khớp. Vui lòng kiểm tra lại");
-      return;
-    }
-    if (!isValidEmail(email)) {
-      Alert.alert("Lỗi", "Email không hợp lệ");
-      window.alert("Email không hợp lệ");
-      console.log("Email không hợp lệ");
+  const showMessage = (title: string, message: string) => {
+    if (Platform.OS === "web") {
+      window.alert(`${title}: ${message}`);
       return;
     }
 
-    console.log("Mã OTP đang được gửi");
+    Alert.alert(title, message);
+  };
+
+  const handleRegister = async () => {
+    if (!email.trim() || !password.trim() || !confirmPassword.trim()) {
+      showMessage("Loi", "Vui long nhap day du thong tin!");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      showMessage("Loi", "Mat khau xac nhan khong khop. Vui long kiem tra lai!");
+      return;
+    }
+
+    if (!isValidEmail(email)) {
+      showMessage("Loi", "Email khong hop le");
+      console.log("Email khong hop le");
+      return;
+    }
 
     try {
       setIsLoading(true);
       const response: any = await authApi.sendOtp(email);
-      console.log("OTP da duoc gui thanh cong");
 
       if (response.success) {
-        Alert.alert("Thành công", "Mã OTP đã được gửi đến email của bạn");
-        window.alert("Mã OTP đã được gửi đến email của bạn");
+        showMessage("Thanh cong", "Ma OTP da duoc gui den email cua ban");
 
         router.push({
           pathname: "/(auth)/verify-email",
           params: {
-            email: email,
-            password: password,
+            email,
+            password,
           },
         });
       }
     } catch (error: any) {
-      Alert.alert("Lỗi", error.toString());
+      showMessage("Loi", error.toString());
     } finally {
       setIsLoading(false);
     }
   };
 
-  // validate email
-  const isValidEmail = (email: string) => {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const isValidEmail = (value: string) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
   };
 
   return (
@@ -80,7 +78,6 @@ export const RegisterScreen = () => {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <ScrollView contentContainerStyle={styles.container}>
-        {/* Khối Logo GoGo */}
         <View style={styles.logoContainer}>
           <View style={styles.logoRow}>
             <Text style={styles.logoTextMain}>Go</Text>
@@ -88,11 +85,11 @@ export const RegisterScreen = () => {
           </View>
         </View>
 
-        <Text style={styles.title}>Đăng ký tài khoản</Text>
+        <Text style={styles.title}>Dang ky tai khoan</Text>
 
         <Input
           label="Email"
-          placeholder="Nhập email"
+          placeholder="Nhap email"
           value={email}
           onChangeText={setEmail}
           keyboardType="email-address"
@@ -100,29 +97,28 @@ export const RegisterScreen = () => {
         />
 
         <Input
-          label="Mật khẩu"
-          placeholder="Tạo mật khẩu"
+          label="Mat khau"
+          placeholder="Tao mat khau"
           value={password}
           onChangeText={setPassword}
           secureTextEntry
         />
 
         <Input
-          label="Xác nhận mật khẩu"
-          placeholder="Nhập lại mật khẩu"
+          label="Xac nhan mat khau"
+          placeholder="Nhap lai mat khau"
           value={confirmPassword}
           onChangeText={setConfirmPassword}
           secureTextEntry
         />
 
-        {/* Tùy chỉnh màu sắc nút bấm cho khớp tone vàng */}
         <Button
-          title="Tiếp tục"
+          title={isLoading ? "Dang gui..." : "Tiep tuc"}
           onPress={handleRegister}
           style={{ marginTop: 20, backgroundColor: COLORS.amberGold }}
         />
         <Button
-          title="Đã có tài khoản? Đăng nhập"
+          title="Da co tai khoan? Dang nhap"
           variant="outline"
           onPress={() => router.back()}
           style={{ borderColor: COLORS.amberGold }}

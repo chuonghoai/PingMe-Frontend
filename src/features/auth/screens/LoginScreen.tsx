@@ -1,6 +1,8 @@
+/* eslint-disable import/no-unresolved */
 import { authApi } from "@/src/services/authApi";
+import { useUser } from "@/src/store/UserContext";
+import { getAccessToken, setTokens } from "@/src/utils/tokenStorage";
 import { useRouter } from "expo-router";
-import * as SecureStore from "expo-secure-store";
 import React, { useState } from "react";
 import {
   Alert,
@@ -13,7 +15,6 @@ import {
 import { Button } from "../../../components/Button/Button";
 import { Input } from "../../../components/Input/Input";
 import { COLORS, styles } from "./LoginScreen.styles";
-import { useUser } from "@/src/store/UserContext";
 
 export const LoginScreen = () => {
   const router = useRouter();
@@ -23,64 +24,58 @@ export const LoginScreen = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  const showMessage = (title: string, message: string) => {
+    if (Platform.OS === "web") {
+      window.alert(`${title}: ${message}`);
+      return;
+    }
+
+    Alert.alert(title, message);
+  };
+
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert("Lỗi", "Vui lòng nhập email và mật khẩu");
+      showMessage("Loi", "Vui long nhap email va mat khau");
       return;
     }
 
     if (!isValidEmail(email)) {
-      Alert.alert("Lỗi", "Email không hợp lệ");
-      window.alert("Email không hợp lệ");
-      console.log("Email không hợp lệ");
+      showMessage("Loi", "Email khong hop le");
+      console.log("Email khong hop le");
       return;
     }
 
     try {
       setIsLoading(true);
-      const response: any = await authApi.login({ email, password });
+      const response: any = await authApi.login({ email, password, rememberMe });
       console.log(response);
 
       if (response.success) {
-        if (Platform.OS === "web") {
-          localStorage.setItem("accessToken", response.data.accessToken);
-          localStorage.setItem("refreshToken", response.data.refreshToken);
-        } else {
-          await SecureStore.setItemAsync(
-            "accessToken",
-            response.data.accessToken,
-          );
-          await SecureStore.setItemAsync(
-            "refreshToken",
-            response.data.refreshToken,
-          );
-        }
-        
+        await setTokens(response.data.accessToken, response.data.refreshToken);
+
         updateUserProfile({
           userId: response.data.user.userId,
           email: response.data.user.email,
         });
 
-        Alert.alert("Thành công", "Đăng nhập thành công!");
-        const _accTK = localStorage.getItem("accessToken");
-        console.log(_accTK);
+        showMessage("Thanh cong", "Dang nhap thanh cong!");
+        const accessToken = await getAccessToken();
+        console.log(accessToken);
         router.replace("/(main)/home");
       }
     } catch (error: any) {
-      Alert.alert("Đăng nhập thất bại", error.toString());
+      showMessage("Dang nhap that bai", error.toString());
     } finally {
       setIsLoading(false);
     }
   };
 
-  // validate email
-  const isValidEmail = (email: string) => {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const isValidEmail = (value: string) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
   };
 
   return (
     <View style={styles.container}>
-      {/* Khối Logo GoGo ở trên cùng */}
       <View style={styles.logoContainer}>
         <View style={styles.logoRow}>
           <Text style={styles.logoTextMain}>Go</Text>
@@ -88,19 +83,19 @@ export const LoginScreen = () => {
         </View>
       </View>
 
-      <Text style={styles.title}>Đăng nhập</Text>
+      <Text style={styles.title}>Dang nhap</Text>
 
       <Input
         label="Email"
-        placeholder="Nhập email của bạn"
+        placeholder="Nhap email cua ban"
         value={email}
         onChangeText={setEmail}
         keyboardType="email-address"
         autoCapitalize="none"
       />
       <Input
-        label="Mật khẩu"
-        placeholder="Nhập mật khẩu"
+        label="Mat khau"
+        placeholder="Nhap mat khau"
         value={password}
         onChangeText={setPassword}
         secureTextEntry
@@ -114,22 +109,22 @@ export const LoginScreen = () => {
             trackColor={{ false: "#767577", true: COLORS.amberGold }}
             thumbColor={Platform.OS === "android" ? "#f4f3f4" : undefined}
           />
-          <Text style={styles.rememberText}>Nhớ mật khẩu</Text>
+          <Text style={styles.rememberText}>Nho mat khau</Text>
         </View>
         <TouchableOpacity
           onPress={() => router.push("/(auth)/forgot-password")}
         >
-          <Text style={styles.forgotText}>Quên mật khẩu?</Text>
+          <Text style={styles.forgotText}>Quen mat khau?</Text>
         </TouchableOpacity>
       </View>
 
       <Button
-        title="Đăng nhập"
+        title={isLoading ? "Dang nhap..." : "Dang nhap"}
         onPress={handleLogin}
         style={{ backgroundColor: COLORS.amberGold }}
       />
       <Button
-        title="Chưa có tài khoản? Đăng ký ngay"
+        title="Chua co tai khoan? Dang ky ngay"
         variant="outline"
         onPress={() => router.push("/(auth)/register")}
         style={{ borderColor: COLORS.amberGold }}
