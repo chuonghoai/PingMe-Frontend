@@ -5,9 +5,11 @@ import * as SecureStore from "expo-secure-store";
 import { Platform } from "react-native";
 
 const getBaseUrl = () => {
-  // if (process.env.EXPO_PUBLIC_API_URL) return process.env.EXPO_PUBLIC_API_URL;
-  if (Platform.OS === "android") {
+  if (process.env.EXPO_PUBLIC_API_URL) {
     return process.env.EXPO_PUBLIC_API_URL;
+  }
+  if (Platform.OS === "android") {
+    return "http://10.0.2.2:3000";
   }
   return "http://localhost:3000";
 };
@@ -67,14 +69,16 @@ apiClient.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
+    const isUnauthorized = error.response && error.response.status === 401;
+    const isUserNotFound = error.response && error.response.status === 404 && originalRequest.url?.includes("/users/me");
+
     if (
-      error.response &&
-      error.response.status === 401 &&
+      (isUnauthorized || isUserNotFound) &&
       !originalRequest._retry &&
       !originalRequest.url?.includes("/auth/login")
     ) {
       originalRequest._retry = true;
-      console.log("Token hết hạn hoặc không hợp lệ. Thực hiện xóa token...");
+      console.log("Token hết hạn hoặc user không tồn tại. Thực hiện xóa token...");
 
       await removeToken();
       router.replace("/(auth)/login");

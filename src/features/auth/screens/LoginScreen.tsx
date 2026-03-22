@@ -31,7 +31,6 @@ export const LoginScreen = () => {
 
     if (!isValidEmail(email)) {
       Alert.alert("Lỗi", "Email không hợp lệ");
-      window.alert("Email không hợp lệ");
       console.log("Email không hợp lệ");
       return;
     }
@@ -62,8 +61,6 @@ export const LoginScreen = () => {
         });
 
         Alert.alert("Thành công", "Đăng nhập thành công!");
-        const _accTK = localStorage.getItem("accessToken");
-        console.log(_accTK);
         router.replace("/(main)/home");
       }
     } catch (error: any) {

@@ -25,7 +25,6 @@ export const RegisterScreen = () => {
   const handleRegister = async () => {
     if (!email.trim() || !password.trim() || !confirmPassword.trim()) {
       Alert.alert("Lỗi", "Vui lòng nhập đầy đủ thông tin!");
-      window.alert("Vui lòng nhập đầy đủ thông tin!");
       return;
     }
     if (password !== confirmPassword) {
@@ -33,12 +32,10 @@ export const RegisterScreen = () => {
         "Lỗi",
         "Mật khẩu xác nhận không khớp. Vui lòng kiểm tra lại!",
       );
-      window.alert("Mật khẩu xác nhận không khớp. Vui lòng kiểm tra lại");
       return;
     }
     if (!isValidEmail(email)) {
       Alert.alert("Lỗi", "Email không hợp lệ");
-      window.alert("Email không hợp lệ");
       console.log("Email không hợp lệ");
       return;
     }
@@ -52,7 +49,6 @@ export const RegisterScreen = () => {
 
       if (response.success) {
         Alert.alert("Thành công", "Mã OTP đã được gửi đến email của bạn");
-        window.alert("Mã OTP đã được gửi đến email của bạn");
 
         router.push({
           pathname: "/(auth)/verify-email",
