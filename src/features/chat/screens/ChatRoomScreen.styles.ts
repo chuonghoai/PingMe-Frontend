@@ -11,6 +11,10 @@ export const COLORS = {
   iconActive: "#F5A623", // Vàng hổ phách cho icon đang hoạt động
   textMain: "#1C1C1E",
   textSub: "#8E8E93",
+  bgDarker: "#F5F6F8",
+  borderLight: "#E5E7EB",
+  errorRed: "#FF3B30",
+  bgDark: "#111827",
 };
 
 export const styles = StyleSheet.create({
