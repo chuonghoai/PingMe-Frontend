@@ -1,9 +1,9 @@
+import { CameraView, PermissionStatus, useCameraPermissions } from 'expo-camera';
+import { AlertTriangle, Mic, MicOff, Phone, PhoneOff, SwitchCamera, Video, VideoOff } from "lucide-react-native";
 import React, { useEffect } from "react";
-import { View, Text, Image, TouchableOpacity, SafeAreaView, StatusBar, ActivityIndicator, StyleSheet } from "react-native";
-import { Mic, MicOff, Video, VideoOff, PhoneOff, Phone, SwitchCamera, AlertTriangle } from "lucide-react-native";
+import { ActivityIndicator, Image, SafeAreaView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useCallController } from "../hooks/useCallController";
-import { styles, COLORS } from "./CallScreen.styles";
-import { CameraView, useCameraPermissions, PermissionStatus } from 'expo-camera'; 
+import { COLORS, styles } from "./CallScreen.styles";
 
 export const CallScreen = () => {
   const {
@@ -38,34 +38,40 @@ export const CallScreen = () => {
   };
 
   // 1. GIAO DIỆN NGƯỜI NHẬN - LÚC ĐANG ĐỔ CHUÔNG
-  if (isIncoming && status === "ringing") {
+  if (isIncoming && (status === "ringing" || status === "rejected")) {
     return (
       <SafeAreaView style={styles.container}>
         <StatusBar barStyle="light-content" />
-        
+
         <View style={[styles.infoContainer, { top: "25%" }]}>
           <Image source={{ uri: avatarUrl }} style={styles.avatarBig} />
           <Text style={styles.nameText}>{fullname}</Text>
           <Text style={styles.statusText}>
-            {isVideoCall ? "Cuộc gọi Video đến" : "Cuộc gọi Thoại đến"}
+            {/* Đổi text nếu trạng thái là rejected */}
+            {status === "rejected"
+              ? "Đã từ chối cuộc gọi"
+              : (isVideoCall ? "Cuộc gọi Video đến" : "Cuộc gọi Thoại đến")}
           </Text>
         </View>
 
-        <View style={styles.controlsContainer}>
-          <View style={{ alignItems: "center" }}>
-            <TouchableOpacity style={styles.dangerBtn} onPress={rejectCall}>
-              <PhoneOff size={30} color={COLORS.white} />
-            </TouchableOpacity>
-            <Text style={styles.callActionText}>Từ chối</Text>
-          </View>
+        {/* Chỉ hiện 2 nút Chấp nhận/Từ chối khi đang đổ chuông */}
+        {status === "ringing" && (
+          <View style={styles.controlsContainer}>
+            <View style={{ alignItems: "center" }}>
+              <TouchableOpacity style={styles.dangerBtn} onPress={rejectCall}>
+                <PhoneOff size={30} color={COLORS.white} />
+              </TouchableOpacity>
+              <Text style={styles.callActionText}>Từ chối</Text>
+            </View>
 
-          <View style={{ alignItems: "center" }}>
-            <TouchableOpacity style={styles.successBtn} onPress={acceptCall}>
-              <Phone size={30} color={COLORS.white} />
-            </TouchableOpacity>
-            <Text style={styles.callActionText}>Chấp nhận</Text>
+            <View style={{ alignItems: "center" }}>
+              <TouchableOpacity style={styles.successBtn} onPress={acceptCall}>
+                <Phone size={30} color={COLORS.white} />
+              </TouchableOpacity>
+              <Text style={styles.callActionText}>Chấp nhận</Text>
+            </View>
           </View>
-        </View>
+        )}
       </SafeAreaView>
     );
   }
@@ -87,9 +93,9 @@ export const CallScreen = () => {
     if (permission.status !== PermissionStatus.GRANTED) {
       // Quyền bị từ chối
       return (
-        <TouchableOpacity onPress={requestPermission} style={[styles.localVideoPlaceholder, {backgroundColor: COLORS.danger + '40'}]}>
+        <TouchableOpacity onPress={requestPermission} style={[styles.localVideoPlaceholder, { backgroundColor: COLORS.danger + '40' }]}>
           <AlertTriangle size={24} color={COLORS.white} />
-          <Text style={{color: '#fff', fontSize: 10, marginTop: 4}}>Cấp quyền</Text>
+          <Text style={{ color: '#fff', fontSize: 10, marginTop: 4 }}>Cấp quyền</Text>
         </TouchableOpacity>
       );
     }
@@ -97,9 +103,9 @@ export const CallScreen = () => {
     // 6. RENDER CAMERA THẬT (sử dụng CameraView thay vì Camera)
     return (
       <View style={styles.localVideoPlaceholder}>
-        <CameraView 
-          style={StyleSheet.absoluteFill} 
-          facing={isFrontCam ? 'front' : 'back'} 
+        <CameraView
+          style={StyleSheet.absoluteFill}
+          facing={isFrontCam ? 'front' : 'back'}
         />
         {/* Text debug (có thể xóa đi sau khi test xong) */}
         {/* <Text style={[styles.localCamText, {position: 'absolute', bottom: 5}]}>{isFrontCam ? "Cam trước" : "Cam sau"}</Text> */}
@@ -134,20 +140,20 @@ export const CallScreen = () => {
 
       {/* THÊM TÊN/THỜI GIAN NHỎ GÓC TRÊN KHI ĐANG CALL VIDEO (Đã nhấc máy) */}
       {isVideoCall && isAccepted && (
-         <View style={{ position: 'absolute', top: 60, left: 20, zIndex: 10 }}>
-           <Text style={{ color: '#fff', fontSize: 20, fontWeight: 'bold', textShadowColor: 'rgba(0,0,0,0.5)', textShadowRadius: 3 }}>
-             {fullname}
-           </Text>
-           <Text style={{ color: '#fff' }}>{getStatusText()}</Text>
-         </View>
+        <View style={{ position: 'absolute', top: 60, left: 20, zIndex: 10 }}>
+          <Text style={{ color: '#fff', fontSize: 20, fontWeight: 'bold', textShadowColor: 'rgba(0,0,0,0.5)', textShadowRadius: 3 }}>
+            {fullname}
+          </Text>
+          <Text style={{ color: '#fff' }}>{getStatusText()}</Text>
+        </View>
       )}
       {renderLocalCamera()}
 
       {/* CÁC NÚT ĐIỀU KHIỂN */}
       <View style={styles.controlsContainer}>
         {/* Nút Mic */}
-        <TouchableOpacity 
-          style={[styles.controlBtn, !isMicOn && styles.controlBtnActive]} 
+        <TouchableOpacity
+          style={[styles.controlBtn, !isMicOn && styles.controlBtnActive]}
           onPress={toggleMic}
         >
           {isMicOn ? <Mic size={24} color={COLORS.white} /> : <MicOff size={24} color={COLORS.background} />}
@@ -156,8 +162,8 @@ export const CallScreen = () => {
         {/* Nút Video / Xoay Camera (Chỉ hiện khi gọi Video) */}
         {isVideoCall && (
           <>
-            <TouchableOpacity 
-              style={[styles.controlBtn, !isCamOn && styles.controlBtnActive]} 
+            <TouchableOpacity
+              style={[styles.controlBtn, !isCamOn && styles.controlBtnActive]}
               onPress={toggleCam}
             >
               {isCamOn ? <Video size={24} color={COLORS.white} /> : <VideoOff size={24} color={COLORS.background} />}

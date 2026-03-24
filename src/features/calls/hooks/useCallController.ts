@@ -6,8 +6,8 @@ const MOCK_DATA = {
   id: "user_999",
   fullname: "Nguyễn Văn Test",
   avatarUrl: "https://i.pravatar.cc/300?img=11",
-  isVideoCall: true,
-  isIncoming: true,
+  isVideoCall: false,
+  isIncoming: false,
 };
 
 export type CallStatus = "connecting" | "ringing" | "accepted" | "rejected" | "ended";
