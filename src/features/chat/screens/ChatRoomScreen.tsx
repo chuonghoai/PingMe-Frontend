@@ -1,21 +1,24 @@
+import { chatApi } from "@/src/services/chatApi";
+import { mediaApi } from "@/src/services/mediaApi";
+import { useUser } from "@/src/store/UserContext";
+import { socketService } from "@/src/websockets/socketService";
+import { Audio, ResizeMode, Video } from "expo-av";
+import * as ImagePicker from "expo-image-picker";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import {
   ChevronLeft,
   Image as ImageIcon,
+  Mic,
   MoreVertical,
+  Pause,
   Phone,
+  Play,
   Send,
   Smile,
-  Mic,
-  Trash2,
-  Play,
   Square,
-  Pause
+  Trash2
 } from "lucide-react-native";
 import React, { useEffect, useRef, useState } from "react";
-import * as ImagePicker from "expo-image-picker";
-import { Audio, Video, ResizeMode } from "expo-av";
-import { mediaApi } from "@/src/services/mediaApi";
 import {
   ActivityIndicator,
   Alert,
@@ -30,9 +33,6 @@ import {
   View,
 } from "react-native";
 import { useChat } from "../store/ChatContext";
-import { chatApi } from "@/src/services/chatApi";
-import { useUser } from "@/src/store/UserContext";
-import { socketService } from "@/src/websockets/socketService";
 import { COLORS, styles } from "./ChatRoomScreen.styles";
 
 export const ChatRoomScreen = () => {
@@ -80,8 +80,8 @@ export const ChatRoomScreen = () => {
   useEffect(() => {
     return sound
       ? () => {
-          sound.unloadAsync();
-        }
+        sound.unloadAsync();
+      }
       : undefined;
   }, [sound]);
 
@@ -240,7 +240,7 @@ export const ChatRoomScreen = () => {
       for (const asset of result.assets) {
         const tempId = `temp_${Date.now()}_${Math.floor(Math.random() * 100000)}`;
         const type = asset.type === "video" ? "VIDEO" : "IMAGE";
-        
+
         const tempMessage = {
           id: tempId,
           content: "",
@@ -284,11 +284,11 @@ export const ChatRoomScreen = () => {
       if (permission.status === "granted") {
         await Audio.setAudioModeAsync({ allowsRecordingIOS: true, playsInSilentModeIOS: true });
         const { recording: newRecording } = await Audio.Recording.createAsync(Audio.RecordingOptionsPresets.HIGH_QUALITY);
-        
+
         newRecording.setOnRecordingStatusUpdate((status) => {
           setRecordDurationMillis(status.durationMillis);
         });
-        
+
         setRecording(newRecording);
       } else {
         showMessage("Lỗi", "Cần cấp quyền microphone");
@@ -302,32 +302,32 @@ export const ChatRoomScreen = () => {
 
   const stopRecording = async () => {
     if (!recording) {
-       setIsRecording(false);
-       return;
+      setIsRecording(false);
+      return;
     }
     try {
       await recording.stopAndUnloadAsync();
       await Audio.setAudioModeAsync({ allowsRecordingIOS: false });
       const uri = recording.getURI();
       setAudioUri(uri);
-      
+
       const { sound: newSound } = await Audio.Sound.createAsync(
-         { uri: uri! },
-         { shouldPlay: false, progressUpdateIntervalMillis: 100 },
-         (status: any) => { 
-           if (status.isLoaded) {
-             setPlaybackDurationMillis(status.durationMillis || 0);
-             setPlaybackPosMillis(status.positionMillis);
-             setIsPlaying(status.isPlaying);
-           }
-           if (status.didJustFinish) {
-             setIsPlaying(false);
-             setPlaybackPosMillis(0);
-           }
-         }
+        { uri: uri! },
+        { shouldPlay: false, progressUpdateIntervalMillis: 100 },
+        (status: any) => {
+          if (status.isLoaded) {
+            setPlaybackDurationMillis(status.durationMillis || 0);
+            setPlaybackPosMillis(status.positionMillis);
+            setIsPlaying(status.isPlaying);
+          }
+          if (status.didJustFinish) {
+            setIsPlaying(false);
+            setPlaybackPosMillis(0);
+          }
+        }
       );
       setSound(newSound);
-      
+
       setRecording(undefined);
       setIsRecording(false);
     } catch (err) {
@@ -369,41 +369,41 @@ export const ChatRoomScreen = () => {
   };
 
   const sendAudioMessage = async () => {
-     if (!audioUri) return;
-     const tempId = `temp_${Date.now()}_${Math.floor(Math.random() * 100000)}`;
-     const uriToSend = audioUri;
-     cancelAudio(); // Reset UI immediately
-     setIsRecordUIVisible(false); // Close UI
+    if (!audioUri) return;
+    const tempId = `temp_${Date.now()}_${Math.floor(Math.random() * 100000)}`;
+    const uriToSend = audioUri;
+    cancelAudio(); // Reset UI immediately
+    setIsRecordUIVisible(false); // Close UI
 
-     const tempMessage = {
-       id: tempId,
-       content: "",
-       type: "AUDIO",
-       media: { secureUrl: uriToSend, resourceType: "video", is_audio: true },
-       sender: { id: userProfile?.userId },
-       createdAt: new Date().toISOString(),
-       isTemporary: true,
-     };
-     setMessages((prev) => [tempMessage, ...prev]);
+    const tempMessage = {
+      id: tempId,
+      content: "",
+      type: "AUDIO",
+      media: { secureUrl: uriToSend, resourceType: "video", is_audio: true },
+      sender: { id: userProfile?.userId },
+      createdAt: new Date().toISOString(),
+      isTemporary: true,
+    };
+    setMessages((prev) => [tempMessage, ...prev]);
 
-     try {
-       const signature = await mediaApi.getSignature();
-       // Cloudinary processes audio faster when treating it as video upload
-       const cloudinaryRes = await mediaApi.uploadToCloudinary(uriToSend, signature, "video", "audio/m4a");
-       const mediaRecord = await mediaApi.createMediaRecord(cloudinaryRes);
+    try {
+      const signature = await mediaApi.getSignature();
+      // Cloudinary processes audio faster when treating it as video upload
+      const cloudinaryRes = await mediaApi.uploadToCloudinary(uriToSend, signature, "video", "audio/m4a");
+      const mediaRecord = await mediaApi.createMediaRecord(cloudinaryRes);
 
-       socketService.emit("send_message", {
-         conversationId: id,
-         content: "",
-         type: "AUDIO",
-         mediaId: mediaRecord.id,
-         temporaryId: tempId,
-       });
-     } catch (err) {
-       console.error("Audio upload error", err);
-       showMessage("Error", "Gửi tin nhắn thoại thất bại.");
-       setMessages((prev) => prev.filter((msg) => msg.id !== tempId));
-     }
+      socketService.emit("send_message", {
+        conversationId: id,
+        content: "",
+        type: "AUDIO",
+        mediaId: mediaRecord.id,
+        temporaryId: tempId,
+      });
+    } catch (err) {
+      console.error("Audio upload error", err);
+      showMessage("Error", "Gửi tin nhắn thoại thất bại.");
+      setMessages((prev) => prev.filter((msg) => msg.id !== tempId));
+    }
   };
 
   // 4. XỬ LÝ GỬI TIN NHẮN (Optimistic UI)
@@ -447,7 +447,7 @@ export const ChatRoomScreen = () => {
     return `${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}`;
   };
 
-const renderMessage = ({ item }: { item: any }) => {
+  const renderMessage = ({ item }: { item: any }) => {
     const messageSenderId = item.sender?.id || item.senderId || item.sender?.userId;
     const isMe = messageSenderId === userProfile?.userId;
     const displayContent = item.content || item.message?.content || "";
@@ -463,7 +463,7 @@ const renderMessage = ({ item }: { item: any }) => {
           styles.messageBubble,
           isMe ? styles.myMessage : styles.theirMessage,
           // Xóa border màu cam, background và padding nếu chỉ là ảnh/video
-          isMediaOnly && { backgroundColor: 'transparent', borderWidth: 0, padding: 0, elevation: 0 } 
+          isMediaOnly && { backgroundColor: 'transparent', borderWidth: 0, padding: 0, elevation: 0 }
         ]}
       >
         {(type === "TEXT" || displayContent.length > 0) && (
@@ -474,28 +474,28 @@ const renderMessage = ({ item }: { item: any }) => {
 
         {/* --- ẢNH: Scale chuẩn không cắt xén (contain) --- */}
         {type === "IMAGE" && media?.secureUrl && (
-          <Image 
-            source={{ uri: media.secureUrl }} 
-            style={{ 
-              width: 250, 
+          <Image
+            source={{ uri: media.secureUrl }}
+            style={{
+              width: 250,
               height: 250, // Giới hạn kích thước tối đa
-              borderRadius: 8, 
-              marginTop: displayContent ? 8 : 0 
-            }} 
+              borderRadius: 8,
+              marginTop: displayContent ? 8 : 0
+            }}
             resizeMode="contain" // Cốt lõi để không bị cắt xén
           />
         )}
-        
+
         {/* --- VIDEO: Dùng expo-av Video có sẵn Controls --- */}
         {type === "VIDEO" && media?.secureUrl && (
           <Video
             source={{ uri: media.secureUrl }}
-            style={{ 
-              width: 250, 
+            style={{
+              width: 250,
               height: 250, // Khung tối đa cho video
-              borderRadius: 8, 
+              borderRadius: 8,
               marginTop: displayContent ? 8 : 0,
-              backgroundColor: '#000' 
+              backgroundColor: '#000'
             }}
             useNativeControls // Tự động có thumbnail, nút play, thanh tiến trình
             resizeMode={ResizeMode.CONTAIN} // Tránh cắt xén video
@@ -506,7 +506,7 @@ const renderMessage = ({ item }: { item: any }) => {
         {/* --- AUDIO: Sử dụng component AudioPlayer đã tạo --- */}
         {type === "AUDIO" && media?.secureUrl && (
           <View style={{ marginTop: displayContent ? 8 : 0 }}>
-             <AudioPlayer uri={media.secureUrl} isMe={isMe} />
+            <AudioPlayer uri={media.secureUrl} isMe={isMe} />
           </View>
         )}
 
@@ -522,7 +522,7 @@ const renderMessage = ({ item }: { item: any }) => {
             style={[
               styles.timeText,
               isMe ? styles.myTimeText : styles.theirTimeText,
-              isMediaOnly && { color: COLORS.textSub, marginTop: 4 } 
+              isMediaOnly && { color: COLORS.textSub, marginTop: 4 }
             ]}
           >
             {formatTime(item.createdAt)}
@@ -537,10 +537,10 @@ const renderMessage = ({ item }: { item: any }) => {
           )}
 
           {isMe && !item.isTemporary && (
-            <Text style={{ 
-              marginLeft: 6, 
-              color: isMediaOnly ? COLORS.textSub : COLORS.white, 
-              fontSize: 10, alignSelf: 'center', opacity: 0.8 
+            <Text style={{
+              marginLeft: 6,
+              color: isMediaOnly ? COLORS.textSub : COLORS.white,
+              fontSize: 10, alignSelf: 'center', opacity: 0.8
             }}>
               {item.isRead ? "✓✓" : "✓"}
             </Text>
@@ -582,7 +582,14 @@ const renderMessage = ({ item }: { item: any }) => {
         </View>
 
         <View style={styles.headerActions}>
-          <TouchableOpacity style={styles.headerIconButton}>
+          <TouchableOpacity
+            style={styles.headerIconButton}
+            onPress={() => {
+              // Điều hướng sang route call, có thể truyền thêm params nếu cần
+              // Ví dụ: params: { targetUserId: id, isVideoCall: 'false' }
+              router.push("/(main)/call-test");
+            }}
+          >
             <Phone size={22} color={COLORS.amberGold} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.headerIconButton}>
@@ -624,65 +631,65 @@ const renderMessage = ({ item }: { item: any }) => {
       {/* --- THANH NHẬP LIỆU --- */}
       {isRecordUIVisible ? (
         <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.white, paddingVertical: 12, paddingHorizontal: 16, borderTopWidth: 1, borderTopColor: COLORS.borderColor, minHeight: 60, justifyContent: 'space-between' }}>
-           
-           {audioUri ? (
-             // --- TRẠNG THÁI 3: ĐÃ THU ÂM (hiện thanh process) ---
-             <>
-               <TouchableOpacity onPress={() => { cancelAudio(); setIsRecordUIVisible(false); }} style={{ padding: 8 }}>
-                 <Trash2 size={24} color={COLORS.errorRed || '#FF3B30'} />
-               </TouchableOpacity>
 
-               <TouchableOpacity onPress={playOrPauseAudio} style={{ marginHorizontal: 8 }}>
-                 {isPlaying ? <Pause size={28} color={COLORS.amberGold} /> : <Play size={28} color={COLORS.amberGold} />}
-               </TouchableOpacity>
+          {audioUri ? (
+            // --- TRẠNG THÁI 3: ĐÃ THU ÂM (hiện thanh process) ---
+            <>
+              <TouchableOpacity onPress={() => { cancelAudio(); setIsRecordUIVisible(false); }} style={{ padding: 8 }}>
+                <Trash2 size={24} color={COLORS.errorRed || '#FF3B30'} />
+              </TouchableOpacity>
 
-               {/* Process Bar */}
-               <View 
-                  style={{ flex: 1, height: 40, justifyContent: 'center', paddingHorizontal: 10 }}
-                  onLayout={(e) => setProgressBarWidth(e.nativeEvent.layout.width - 20)}
-               >
-                 <View 
-                   style={{ height: 6, backgroundColor: COLORS.borderColor, borderRadius: 3, overflow: 'hidden' }}
-                   onTouchEnd={handleSeek}
-                 >
-                    <View style={{ height: '100%', backgroundColor: COLORS.amberGold, width: playbackDurationMillis > 0 ? `${(playbackPosMillis / playbackDurationMillis) * 100}%` : '0%' }} />
-                 </View>
-                 <Text style={{ fontSize: 10, color: COLORS.textSub, marginTop: 4, alignSelf: 'flex-end' }}>
-                   {Math.floor(playbackPosMillis / 1000)}s / {Math.floor(playbackDurationMillis / 1000)}s
-                 </Text>
-               </View>
+              <TouchableOpacity onPress={playOrPauseAudio} style={{ marginHorizontal: 8 }}>
+                {isPlaying ? <Pause size={28} color={COLORS.amberGold} /> : <Play size={28} color={COLORS.amberGold} />}
+              </TouchableOpacity>
 
-               <TouchableOpacity onPress={sendAudioMessage} style={{ backgroundColor: COLORS.amberGold, padding: 10, borderRadius: 24, marginLeft: 8 }}>
-                 <Send size={20} color={COLORS.white} />
-               </TouchableOpacity>
-             </>
-           ) : (
-             // --- TRẠNG THÁI 2: ĐANG CHỜ / ĐANG THU ---
-             <>
-               <TouchableOpacity onPress={() => { cancelAudio(); setIsRecordUIVisible(false); }} style={{ padding: 8 }}>
-                 <Text style={{ fontSize: 16, color: COLORS.textSub }}>Hủy</Text>
-               </TouchableOpacity>
-               
-               <View style={{ flex: 1, alignItems: 'center' }}>
-                 <Text style={{ color: recording ? (COLORS.errorRed || '#FF3B30') : COLORS.textMain, fontSize: 16 }}>
-                   {recording ? `Đang ghi âm... ${Math.floor(recordDurationMillis / 1000)}s` : "Nhấn giữ để ghi âm"}
-                 </Text>
-               </View>
-
-               <TouchableOpacity 
-                  onPressIn={startRecording} 
-                  onPressOut={stopRecording} 
-                  delayPressIn={0}
-                  style={{ 
-                    backgroundColor: recording ? 'rgba(255, 59, 48, 0.1)' : COLORS.inputBackground, 
-                    padding: 12, 
-                    borderRadius: 30 
-                  }}
+              {/* Process Bar */}
+              <View
+                style={{ flex: 1, height: 40, justifyContent: 'center', paddingHorizontal: 10 }}
+                onLayout={(e) => setProgressBarWidth(e.nativeEvent.layout.width - 20)}
+              >
+                <View
+                  style={{ height: 6, backgroundColor: COLORS.borderColor, borderRadius: 3, overflow: 'hidden' }}
+                  onTouchEnd={handleSeek}
                 >
-                 <Mic size={24} color={recording ? (COLORS.errorRed || '#FF3B30') : COLORS.amberGold} />
-               </TouchableOpacity>
-             </>
-           )}
+                  <View style={{ height: '100%', backgroundColor: COLORS.amberGold, width: playbackDurationMillis > 0 ? `${(playbackPosMillis / playbackDurationMillis) * 100}%` : '0%' }} />
+                </View>
+                <Text style={{ fontSize: 10, color: COLORS.textSub, marginTop: 4, alignSelf: 'flex-end' }}>
+                  {Math.floor(playbackPosMillis / 1000)}s / {Math.floor(playbackDurationMillis / 1000)}s
+                </Text>
+              </View>
+
+              <TouchableOpacity onPress={sendAudioMessage} style={{ backgroundColor: COLORS.amberGold, padding: 10, borderRadius: 24, marginLeft: 8 }}>
+                <Send size={20} color={COLORS.white} />
+              </TouchableOpacity>
+            </>
+          ) : (
+            // --- TRẠNG THÁI 2: ĐANG CHỜ / ĐANG THU ---
+            <>
+              <TouchableOpacity onPress={() => { cancelAudio(); setIsRecordUIVisible(false); }} style={{ padding: 8 }}>
+                <Text style={{ fontSize: 16, color: COLORS.textSub }}>Hủy</Text>
+              </TouchableOpacity>
+
+              <View style={{ flex: 1, alignItems: 'center' }}>
+                <Text style={{ color: recording ? (COLORS.errorRed || '#FF3B30') : COLORS.textMain, fontSize: 16 }}>
+                  {recording ? `Đang ghi âm... ${Math.floor(recordDurationMillis / 1000)}s` : "Nhấn giữ để ghi âm"}
+                </Text>
+              </View>
+
+              <TouchableOpacity
+                onPressIn={startRecording}
+                onPressOut={stopRecording}
+                delayPressIn={0}
+                style={{
+                  backgroundColor: recording ? 'rgba(255, 59, 48, 0.1)' : COLORS.inputBackground,
+                  padding: 12,
+                  borderRadius: 30
+                }}
+              >
+                <Mic size={24} color={recording ? (COLORS.errorRed || '#FF3B30') : COLORS.amberGold} />
+              </TouchableOpacity>
+            </>
+          )}
         </View>
       ) : (
         <View style={styles.inputContainer}>
@@ -732,7 +739,7 @@ const AudioPlayer = ({ uri, isMe }: { uri: string; isMe: boolean }) => {
   const [duration, setDuration] = useState(0);
   const [position, setPosition] = useState(0);
   const [barWidth, setBarWidth] = useState(0);
-  
+
   // Use a ref to access the latest sound object inside the callback
   const soundRef = useRef<Audio.Sound | null>(null);
 
@@ -805,9 +812,9 @@ const AudioPlayer = ({ uri, isMe }: { uri: string; isMe: boolean }) => {
       <TouchableOpacity onPress={handlePlayPause}>
         {isPlaying ? <Square size={20} color={isMe ? COLORS.white : COLORS.amberGold} /> : <Play size={20} color={isMe ? COLORS.white : COLORS.amberGold} />}
       </TouchableOpacity>
-      
+
       {/* Thanh tiến trình */}
-      <View 
+      <View
         style={{ flex: 1, marginHorizontal: 8, height: 20, justifyContent: 'center' }}
         onLayout={(e) => setBarWidth(e.nativeEvent.layout.width)}
         onTouchEnd={handleSeek}
@@ -816,7 +823,7 @@ const AudioPlayer = ({ uri, isMe }: { uri: string; isMe: boolean }) => {
           <View style={{ width: `${progress}%`, height: '100%', backgroundColor: isMe ? COLORS.white : COLORS.amberGold, borderRadius: 2 }} />
         </View>
       </View>
-      
+
       {/* Thời gian */}
       <Text style={{ fontSize: 11, color: isMe ? COLORS.white : COLORS.textMain }}>
         {formatTime(position)} / {formatTime(duration)}
