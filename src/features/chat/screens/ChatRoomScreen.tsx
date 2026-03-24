@@ -14,7 +14,7 @@ import {
 } from "lucide-react-native";
 import React, { useEffect, useRef, useState } from "react";
 import * as ImagePicker from "expo-image-picker";
-import { Audio } from "expo-av";
+import { Audio, Video, ResizeMode } from "expo-av";
 import { mediaApi } from "@/src/services/mediaApi";
 import {
   ActivityIndicator,
@@ -447,18 +447,23 @@ export const ChatRoomScreen = () => {
     return `${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}`;
   };
 
-  const renderMessage = ({ item }: { item: any }) => {
+const renderMessage = ({ item }: { item: any }) => {
     const messageSenderId = item.sender?.id || item.senderId || item.sender?.userId;
     const isMe = messageSenderId === userProfile?.userId;
     const displayContent = item.content || item.message?.content || "";
     const type = item.type || "TEXT";
     const media = item.media;
 
+    // KIỂM TRA: Nếu chỉ có ảnh/video mà không có chữ
+    const isMediaOnly = (!displayContent || displayContent.length === 0) && (type === "IMAGE" || type === "VIDEO");
+
     return (
       <View
         style={[
           styles.messageBubble,
           isMe ? styles.myMessage : styles.theirMessage,
+          // Xóa border màu cam, background và padding nếu chỉ là ảnh/video
+          isMediaOnly && { backgroundColor: 'transparent', borderWidth: 0, padding: 0, elevation: 0 } 
         ]}
       >
         {(type === "TEXT" || displayContent.length > 0) && (
@@ -467,20 +472,41 @@ export const ChatRoomScreen = () => {
           </Text>
         )}
 
+        {/* --- ẢNH: Scale chuẩn không cắt xén (contain) --- */}
         {type === "IMAGE" && media?.secureUrl && (
-          <Image source={{ uri: media.secureUrl }} style={{ width: 220, height: 220, borderRadius: 8, marginTop: displayContent ? 8 : 0 }} resizeMode="cover" />
+          <Image 
+            source={{ uri: media.secureUrl }} 
+            style={{ 
+              width: 250, 
+              height: 250, // Giới hạn kích thước tối đa
+              borderRadius: 8, 
+              marginTop: displayContent ? 8 : 0 
+            }} 
+            resizeMode="contain" // Cốt lõi để không bị cắt xén
+          />
         )}
         
+        {/* --- VIDEO: Dùng expo-av Video có sẵn Controls --- */}
         {type === "VIDEO" && media?.secureUrl && (
-          <View style={{ width: 220, height: 160, backgroundColor: '#000', borderRadius: 8, marginTop: displayContent ? 8 : 0, justifyContent: 'center', alignItems: 'center' }}>
-            <Play size={40} color="rgba(255,255,255,0.7)" />
-          </View>
+          <Video
+            source={{ uri: media.secureUrl }}
+            style={{ 
+              width: 250, 
+              height: 250, // Khung tối đa cho video
+              borderRadius: 8, 
+              marginTop: displayContent ? 8 : 0,
+              backgroundColor: '#000' 
+            }}
+            useNativeControls // Tự động có thumbnail, nút play, thanh tiến trình
+            resizeMode={ResizeMode.CONTAIN} // Tránh cắt xén video
+            isLooping={false}
+          />
         )}
 
+        {/* --- AUDIO: Sử dụng component AudioPlayer đã tạo --- */}
         {type === "AUDIO" && media?.secureUrl && (
-          <View style={{ flexDirection: 'row', alignItems: 'center', padding: 8, backgroundColor: isMe ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.05)', borderRadius: 16, marginTop: displayContent ? 8 : 0 }}>
-             <Play size={20} color={isMe ? COLORS.white : COLORS.amberGold} />
-             <Text style={{ marginLeft: 8, color: isMe ? COLORS.white : COLORS.textMain, fontSize: 13 }}>Tin nhắn thoại đính kèm</Text>
+          <View style={{ marginTop: displayContent ? 8 : 0 }}>
+             <AudioPlayer uri={media.secureUrl} isMe={isMe} />
           </View>
         )}
 
@@ -496,22 +522,26 @@ export const ChatRoomScreen = () => {
             style={[
               styles.timeText,
               isMe ? styles.myTimeText : styles.theirTimeText,
+              isMediaOnly && { color: COLORS.textSub, marginTop: 4 } 
             ]}
           >
             {formatTime(item.createdAt)}
           </Text>
 
-          {/* HIỆN SPINNER XOAY TRÒN NẾU ĐANG LÀ TIN NHẮN TẠM (Chờ server phản hồi) */}
           {item.isTemporary && (
             <ActivityIndicator
               size="small"
-              color={COLORS.white}
+              color={isMediaOnly ? COLORS.amberGold : COLORS.white}
               style={{ marginLeft: 6 }}
             />
           )}
 
           {isMe && !item.isTemporary && (
-            <Text style={{ marginLeft: 6, color: COLORS.white, fontSize: 10, alignSelf: 'center', opacity: 0.8 }}>
+            <Text style={{ 
+              marginLeft: 6, 
+              color: isMediaOnly ? COLORS.textSub : COLORS.white, 
+              fontSize: 10, alignSelf: 'center', opacity: 0.8 
+            }}>
               {item.isRead ? "✓✓" : "✓"}
             </Text>
           )}
@@ -692,5 +722,77 @@ export const ChatRoomScreen = () => {
         </View>
       )}
     </KeyboardAvoidingView>
+  );
+};
+
+// Audio message component
+const AudioPlayer = ({ uri, isMe }: { uri: string; isMe: boolean }) => {
+  const [sound, setSound] = useState<Audio.Sound | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [duration, setDuration] = useState(0);
+  const [position, setPosition] = useState(0);
+
+  useEffect(() => {
+    return () => {
+      if (sound) sound.unloadAsync();
+    };
+  }, [sound]);
+
+  const onPlaybackStatusUpdate = (status: any) => {
+    if (status.isLoaded) {
+      setPosition(status.positionMillis);
+      setDuration(status.durationMillis || 0);
+      setIsPlaying(status.isPlaying);
+      if (status.didJustFinish) {
+        setIsPlaying(false);
+        setPosition(0);
+        sound?.setPositionAsync(0);
+      }
+    }
+  };
+
+  const handlePlayPause = async () => {
+    if (!sound) {
+      const { sound: newSound } = await Audio.Sound.createAsync(
+        { uri },
+        { shouldPlay: true },
+        onPlaybackStatusUpdate
+      );
+      setSound(newSound);
+      setIsPlaying(true);
+    } else {
+      if (isPlaying) {
+        await sound.pauseAsync();
+      } else {
+        await sound.playAsync();
+      }
+    }
+  };
+
+  const formatTime = (millis: number) => {
+    const totalSeconds = Math.floor(millis / 1000);
+    const mins = Math.floor(totalSeconds / 60);
+    const secs = totalSeconds % 60;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  const progress = duration > 0 ? (position / duration) * 100 : 0;
+
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', width: 220, padding: 8, backgroundColor: isMe ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.05)', borderRadius: 16 }}>
+      <TouchableOpacity onPress={handlePlayPause}>
+        {isPlaying ? <Square size={20} color={isMe ? COLORS.white : COLORS.amberGold} /> : <Play size={20} color={isMe ? COLORS.white : COLORS.amberGold} />}
+      </TouchableOpacity>
+      
+      {/* Thanh tiến trình */}
+      <View style={{ flex: 1, marginHorizontal: 8, height: 4, backgroundColor: 'rgba(150,150,150,0.5)', borderRadius: 2 }}>
+        <View style={{ width: `${progress}%`, height: '100%', backgroundColor: isMe ? COLORS.white : COLORS.amberGold, borderRadius: 2 }} />
+      </View>
+      
+      {/* Thời gian */}
+      <Text style={{ fontSize: 11, color: isMe ? COLORS.white : COLORS.textMain }}>
+        {formatTime(position)} / {formatTime(duration)}
+      </Text>
+    </View>
   );
 };
