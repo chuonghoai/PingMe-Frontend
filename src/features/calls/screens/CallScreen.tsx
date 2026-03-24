@@ -1,10 +1,10 @@
-import { CameraView, PermissionStatus, useCameraPermissions } from 'expo-camera';
-import { AlertTriangle, Mic, MicOff, Phone, PhoneOff, SwitchCamera, Video, VideoOff, Volume2, VolumeX } from "lucide-react-native";
+import { useCameraPermissions } from 'expo-camera';
+import { Mic, MicOff, Phone, PhoneOff, SwitchCamera, Video, VideoOff, Volume2, VolumeX } from "lucide-react-native";
 import React, { useEffect } from "react";
-import { ActivityIndicator, Image, SafeAreaView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Image, SafeAreaView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { RTCView } from "react-native-webrtc";
 import { useCallController } from "../hooks/useCallController";
 import { COLORS, styles } from "./CallScreen.styles";
-import { RTCView } from "react-native-webrtc";
 
 export const CallScreen = () => {
   const {
@@ -92,6 +92,7 @@ export const CallScreen = () => {
           objectFit="cover"
           style={StyleSheet.absoluteFill}
           mirror={isFrontCam}
+          zOrder={1}
         />
       </View>
     );
@@ -109,9 +110,11 @@ export const CallScreen = () => {
         <View style={styles.remoteVideoPlaceholder}>
           {remoteStream ? (
             <RTCView
+              key={remoteStream.toURL()}
               streamURL={remoteStream.toURL()}
               objectFit="cover"
               style={StyleSheet.absoluteFill}
+              zOrder={0}
             />
           ) : (
             <Text style={{ color: '#fff' }}>Đang kết nối video...</Text>
@@ -120,7 +123,6 @@ export const CallScreen = () => {
       )}
 
       {/* THÔNG TIN NGƯỜI GỌI (Avatar, Tên) */}
-      {/* Ẩn Avatar to đi nếu là Video Call và đã nhấc máy (nhường chỗ cho màn hình cam) */}
       {(!isVideoCall || !isAccepted) && (
         <View style={styles.infoContainer}>
           <Image source={{ uri: avatarUrl }} style={styles.avatarBig} />

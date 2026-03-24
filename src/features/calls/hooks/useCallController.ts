@@ -38,7 +38,7 @@ export const useCallController = () => {
   const [isMicOn, setIsMicOn] = useState(true);
   const [isCamOn, setIsCamOn] = useState(true);
   const [isFrontCam, setIsFrontCam] = useState(true);
-  const [isSpeakerOn, setIsSpeakerOn] = useState(true);
+  const [isSpeakerOn, setIsSpeakerOn] = useState(isVideoCall);
 
   const pc = useRef<RTCPeerConnection | null>(null);
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
@@ -68,14 +68,17 @@ export const useCallController = () => {
   useEffect(() => {
     let isMounted = true;
 
-    // Bật VoIP audio mode + speaker ngay khi vào màn hình gọi
-    InCallManager.start({ media: isVideoCall ? 'video' : 'audio' });
-    InCallManager.setForceSpeakerphoneOn(true);
-
     const setupWebrtc = async () => {
       try {
         const stream = await mediaDevices.getUserMedia({
-          audio: true,
+          audio: {
+            mandatory: {
+              echoCancellation: true, // Khử tiếng vang
+              googNoiseSuppression: true, // Khử tiếng ồn (Google)
+              googAutoGainControl: true, // Tự động khuếch đại âm thanh cho to lên (Google)
+            }
+          } as any,
+          // audio: true,
           video: isVideoCall ? { facingMode: isFrontCam ? "user" : "environment" } : false,
         });
         if (isMounted) setLocalStream(stream);
@@ -103,6 +106,9 @@ export const useCallController = () => {
 
         pc.current = peerConnection;
 
+        InCallManager.start({ media: isVideoCall ? 'video' : 'audio' });
+        InCallManager.setForceSpeakerphoneOn(isVideoCall);
+
         // BẢO VỆ CHẶT: Chỉ phát sự kiện gọi 1 lần duy nhất
         if (!isIncoming && status === "connecting" && !hasEmittedCall.current) {
           hasEmittedCall.current = true;
@@ -123,18 +129,18 @@ export const useCallController = () => {
       if (pc.current) pc.current.close();
       InCallManager.stop();
     };
-  }, []); // <--- Giữ nguyên array rỗng
+  }, []);
 
   // 2. XỬ LÝ CÁC SỰ KIỆN SIGNALING TỪ SOCKET
   useEffect(() => {
-    // ❌ ĐÃ XÓA DÒNG `if (!pc.current) return;` GÂY LỖI Ở ĐÂY ❌
-
     const handleCallResponse = async (data: { responderId: string; accepted: boolean }) => {
-      
+
       if (data.accepted) {
         setStatus("accepted");
         try {
-          if (pc.current) { // Check bên trong hàm thay vì check bên ngoài
+          if (pc.current) {
+            if (pc.current.signalingState !== "stable") return;
+
             const offer = await pc.current.createOffer();
             await pc.current.setLocalDescription(offer);
             socketService.emit("webrtc_offer", { targetUserId, sdp: offer });
@@ -151,12 +157,13 @@ export const useCallController = () => {
       if (data.senderId !== targetUserId) return;
       try {
         if (pc.current) {
+          if (pc.current.signalingState !== "stable") return;
+
           await pc.current.setRemoteDescription(new RTCSessionDescription(data.sdp));
           const answer = await pc.current.createAnswer();
           await pc.current.setLocalDescription(answer);
           socketService.emit("webrtc_answer", { targetUserId, sdp: answer });
 
-          // Xử lý hàng đợi candidate xếp hàng trước khi có remoteDescription
           for (const c of pendingCandidates.current) {
             await pc.current.addIceCandidate(new RTCIceCandidate(c));
           }
@@ -171,9 +178,13 @@ export const useCallController = () => {
       if (data.senderId !== targetUserId) return;
       try {
         if (pc.current) {
+          if (pc.current.signalingState !== "have-local-offer") {
+            console.log("Đã kết nối thành công, bỏ qua gói tin Answer lặp lại.");
+            return;
+          }
+
           await pc.current.setRemoteDescription(new RTCSessionDescription(data.sdp));
-          
-          // Xử lý hàng đợi candidate
+
           for (const c of pendingCandidates.current) {
             await pc.current.addIceCandidate(new RTCIceCandidate(c));
           }
