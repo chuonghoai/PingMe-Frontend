@@ -20,7 +20,13 @@ export default function MainLayout() {
         name="chat/[id]"
         options={{
           headerShown: false,
-          // Màn hình chat room thì cứ để full màn hình bình thường
+        }}
+      />
+
+      <Stack.Screen
+        name="call-test"
+        options={{
+          headerShown: false,
         }}
       />
     </Stack>

@@ -2,16 +2,20 @@ import { chatApi } from "@/src/services/chatApi";
 import { useUser } from "@/src/store/UserContext";
 import { socketService } from "@/src/websockets/socketService";
 import React, { createContext, useContext, useEffect, useState } from "react";
+import { useRouter } from "expo-router";
 
 export const ChatContext = createContext<any>(null);
 
 export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
+  const router = useRouter();
+
   const [conversations, setConversations] = useState<any[]>([]);
   const [isLoadingConversations, setIsLoadingConversations] = useState(true);
   const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
+
   const { userProfile } = useUser();
 
-  // Lấy danh sách conversations từ API
+  // Call api get conversation list
   const loadConversations = async () => {
     try {
       setIsLoadingConversations(true);
@@ -27,8 +31,16 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  // Clear unread count
+  const clearUnreadCount = (conversationId: string) => {
+    setConversations((prev) =>
+      prev.map((conv) =>
+        conv.id === conversationId ? { ...conv, unreadCount: 0 } : conv
+      )
+    );
+  };
+
   useEffect(() => {
-    // Nếu chưa đăng nhập -> Xóa sạch data
     if (!userProfile?.userId) {
       setConversations([]);
       setOnlineUsers([]);
@@ -39,7 +51,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     // Tải danh sách chat
     loadConversations();
 
-    // Lắng nghe sự kiện
+    // Sự kiện ai đó online
     const handleUserOnline = (data: { userId: string }) => {
       console.log("🔥 Ai đó vừa online:", data.userId);
       setOnlineUsers((prev) => {
@@ -48,6 +60,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
       });
     };
 
+    // Sự kiện ai đó offline
     const handleUserOffline = (data: { userId: string; lastActiveAt: any }) => {
       console.log("💤 Ai đó vừa offline:", data.userId);
       setOnlineUsers((prev) => prev.filter((id) => id !== data.userId));
@@ -58,15 +71,82 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
       setOnlineUsers(users);
     };
 
+    const handleSyncChatList = () => {
+      loadConversations();
+    };
+
+    const handleNewMessage = (data: any) => {
+      if (data && data.conversation) {
+        setConversations((prev) => {
+          const currentList = [...prev];
+          const rawConv = data.conversation;
+          const index = currentList.findIndex(c => c.id === rawConv.id);
+          if (index > -1) {
+            currentList.splice(index, 1);
+          }
+
+          // Format raw entity to match UI requirements (hoist unreadCount & hasMuted)
+          const myParticipant = rawConv.participants?.find((p: any) => p.userId === userProfile?.userId) || {};
+          
+          const formattedConv = {
+            id: rawConv.id,
+            type: rawConv.type,
+            name: rawConv.name,
+            avatarUrl: rawConv.avatarUrl,
+            lastMessageSnippet: rawConv.lastMessageSnippet,
+            lastMessageAt: rawConv.lastMessageAt,
+            unreadCount: myParticipant.unreadCount || 0,
+            hasMuted: myParticipant.hasMuted || false,
+            participants: rawConv.participants?.map((op: any) => ({
+              userId: op.user?.id || op.userId,
+              fullname: op.user?.fullname,
+              avatarUrl: op.user?.avatarUrl,
+              isOnline: op.user?.isOnline || false,
+            })) || []
+          };
+
+          currentList.unshift(formattedConv);
+          return currentList;
+        });
+      } else {
+        loadConversations();
+      }
+    };
+
+    // Incoming call
+    const handleIncomingCall = (data: any) => {
+      console.log("📞 Có cuộc gọi đến:", data);
+      
+      router.push({
+        pathname: "/(main)/call-test",
+        params: {
+          targetUserId: data.callerId,
+          fullname: data.fullname,
+          avatarUrl: data.avatarUrl,
+          isVideoCall: String(data.isVideoCall),
+          isIncoming: "true",
+        },
+      });
+    };
+
+    socketService.on("is_typing", (data: any) => {
+      console.log("🔥 Ai đó vừa typing:", data.userId);
+    })
     socketService.on("user_online", handleUserOnline);
     socketService.on("user_offline", handleUserOffline);
     socketService.on("online_users_list", handleOnlineUsersList);
+    socketService.on("new_message", handleNewMessage);
+    socketService.on("message_sent_success", handleSyncChatList);
+    socketService.on("incoming_call", handleIncomingCall);
 
     // Dọn dẹp listener khi đăng xuất
     return () => {
       socketService.off("user_online", handleUserOnline);
       socketService.off("user_offline", handleUserOffline);
       socketService.off("online_users_list", handleOnlineUsersList);
+      socketService.off("new_message", handleNewMessage);
+      socketService.off("message_sent_success", handleSyncChatList);
+      socketService.on("incoming_call", handleIncomingCall);
     };
   }, [userProfile?.userId]);
 
@@ -77,6 +157,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
         isLoadingConversations,
         loadConversations,
         onlineUsers,
+        clearUnreadCount,
       }}
     >
       {children}

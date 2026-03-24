@@ -1,10 +1,8 @@
-import * as SecureStore from "expo-secure-store";
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { Platform } from "react-native";
 import { apiClient } from "../services/apiClient";
+import { getAccessToken } from "../utils/tokenStorage";
 import { socketService } from "../websockets/socketService";
 
-// Cập nhật cấu trúc khớp với ProfileResponse từ Backend
 export interface UserProfile {
   userId: string;
   firstName: string;
@@ -16,11 +14,11 @@ export interface UserProfile {
 
 const DEFAULT_PROFILE: UserProfile = {
   userId: "",
-  firstName: "Người dùng",
-  lastName: "Mới",
+  firstName: "Nguoi dung",
+  lastName: "Moi",
   email: "chua_cap_nhat@email.com",
   avatarUrl: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png",
-  bio: "Chưa có tiểu sử",
+  bio: "Chua co tieu su",
 };
 
 const UserContext = createContext<any>(null);
@@ -31,19 +29,13 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const restoreSession = async () => {
       try {
-        let token = null;
-        if (Platform.OS === "web") {
-          token = localStorage.getItem("accessToken");
-        } else {
-          token = await SecureStore.getItemAsync("accessToken");
-        }
+        const token = await getAccessToken();
 
-        // Nếu có token lưu trong máy, gọi API lấy thông tin Profile
         if (token) {
           const response: any = await apiClient.get("/users/me");
           if (response.success) {
             setUserProfile({
-              userId: response.data.id, // TypeORM lưu là id
+              userId: response.data.id,
               email: response.data.email,
               firstName: response.data.fullname,
               lastName: "",
@@ -53,7 +45,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
           }
         }
       } catch (error) {
-        console.log("Phiên đăng nhập hết hạn hoặc lỗi", error);
+        console.log("Phien dang nhap het han hoac loi", error);
       }
     };
 

@@ -1,20 +1,22 @@
- 
 import axios from "axios";
 import { router } from "expo-router";
-import * as SecureStore from "expo-secure-store";
 import { Platform } from "react-native";
+import { clearTokens, getAccessToken } from "../utils/tokenStorage";
 
 const getBaseUrl = () => {
-  // if (process.env.EXPO_PUBLIC_API_URL) return process.env.EXPO_PUBLIC_API_URL;
-  if (Platform.OS === "android") {
-    return process.env.EXPO_PUBLIC_API_URL;
+  if (Platform.OS === "web") {
+    return process.env.EXPO_PUBLIC_API_URL_WEB;
   }
-  return "http://localhost:3000";
+
+  if (Platform.OS === "android") {
+    return process.env.EXPO_PUBLIC_API_URL_ANDROID;
+  }
+
+  return process.env.EXPO_PUBLIC_API_URL_ANDROID;
 };
 
 export const BASE_URL = getBaseUrl();
 
-// Khởi tạo một instance của Axios
 export const apiClient = axios.create({
   baseURL: BASE_URL,
   timeout: 10000,
@@ -23,25 +25,14 @@ export const apiClient = axios.create({
   },
 });
 
-// --- HÀM HỖ TRỢ LẤY/XÓA TOKEN ĐA NỀN TẢNG ---
 const getToken = async () => {
-  if (Platform.OS === "web") {
-    return localStorage.getItem("accessToken");
-  }
-  return await SecureStore.getItemAsync("accessToken");
+  return getAccessToken();
 };
 
 const removeToken = async () => {
-  if (Platform.OS === "web") {
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
-  } else {
-    await SecureStore.deleteItemAsync("accessToken");
-    await SecureStore.deleteItemAsync("refreshToken");
-  }
+  await clearTokens();
 };
 
-// --- INTERCEPTOR: REQUEST ---
 apiClient.interceptors.request.use(
   async (config) => {
     try {
@@ -50,7 +41,7 @@ apiClient.interceptors.request.use(
         config.headers.Authorization = `Bearer ${token}`;
       }
     } catch (error) {
-      console.log("Lỗi khi lấy token", error);
+      console.log("Loi khi lay token", error);
     }
     return config;
   },
@@ -59,7 +50,6 @@ apiClient.interceptors.request.use(
   },
 );
 
-// --- INTERCEPTOR: RESPONSE ---
 apiClient.interceptors.response.use(
   (response) => {
     return response.data;
@@ -74,15 +64,16 @@ apiClient.interceptors.response.use(
       !originalRequest.url?.includes("/auth/login")
     ) {
       originalRequest._retry = true;
-      console.log("Token hết hạn hoặc không hợp lệ. Thực hiện xóa token...");
+      console.log("Token het han hoac khong hop le. Thuc hien xoa token...");
 
       await removeToken();
       router.replace("/(auth)/login");
     }
+
     const errMessage =
       error.response?.data?.error?.message ||
       error.response?.data?.message ||
-      "Có lỗi xảy ra, vui lòng thử lại";
+      "Co loi xay ra, vui long thu lai";
 
     return Promise.reject(errMessage);
   },
