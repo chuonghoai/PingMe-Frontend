@@ -731,12 +731,16 @@ const AudioPlayer = ({ uri, isMe }: { uri: string; isMe: boolean }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [duration, setDuration] = useState(0);
   const [position, setPosition] = useState(0);
+  const [barWidth, setBarWidth] = useState(0);
+  
+  // Use a ref to access the latest sound object inside the callback
+  const soundRef = useRef<Audio.Sound | null>(null);
 
   useEffect(() => {
     return () => {
-      if (sound) sound.unloadAsync();
+      if (soundRef.current) soundRef.current.unloadAsync();
     };
-  }, [sound]);
+  }, []);
 
   const onPlaybackStatusUpdate = (status: any) => {
     if (status.isLoaded) {
@@ -746,7 +750,10 @@ const AudioPlayer = ({ uri, isMe }: { uri: string; isMe: boolean }) => {
       if (status.didJustFinish) {
         setIsPlaying(false);
         setPosition(0);
-        sound?.setPositionAsync(0);
+        // Use ref to safely reset position to start
+        if (soundRef.current) {
+          soundRef.current.setPositionAsync(0);
+        }
       }
     }
   };
@@ -755,18 +762,33 @@ const AudioPlayer = ({ uri, isMe }: { uri: string; isMe: boolean }) => {
     if (!sound) {
       const { sound: newSound } = await Audio.Sound.createAsync(
         { uri },
-        { shouldPlay: true },
+        { shouldPlay: true, progressUpdateIntervalMillis: 50 },
         onPlaybackStatusUpdate
       );
       setSound(newSound);
+      soundRef.current = newSound;
       setIsPlaying(true);
     } else {
       if (isPlaying) {
         await sound.pauseAsync();
       } else {
-        await sound.playAsync();
+        // If it was at the end or reset to 0, start from beginning
+        if (position >= duration && duration > 0) {
+          await sound.replayAsync();
+        } else {
+          await sound.playAsync();
+        }
       }
     }
+  };
+
+  const handleSeek = async (e: any) => {
+    if (!sound || barWidth === 0 || duration === 0) return;
+    const { locationX } = e.nativeEvent;
+    const ratio = Math.max(0, Math.min(1, locationX / barWidth));
+    const seekPos = ratio * duration;
+    await sound.setPositionAsync(seekPos);
+    setPosition(seekPos);
   };
 
   const formatTime = (millis: number) => {
@@ -785,8 +807,14 @@ const AudioPlayer = ({ uri, isMe }: { uri: string; isMe: boolean }) => {
       </TouchableOpacity>
       
       {/* Thanh tiến trình */}
-      <View style={{ flex: 1, marginHorizontal: 8, height: 4, backgroundColor: 'rgba(150,150,150,0.5)', borderRadius: 2 }}>
-        <View style={{ width: `${progress}%`, height: '100%', backgroundColor: isMe ? COLORS.white : COLORS.amberGold, borderRadius: 2 }} />
+      <View 
+        style={{ flex: 1, marginHorizontal: 8, height: 20, justifyContent: 'center' }}
+        onLayout={(e) => setBarWidth(e.nativeEvent.layout.width)}
+        onTouchEnd={handleSeek}
+      >
+        <View style={{ width: '100%', height: 4, backgroundColor: 'rgba(150,150,150,0.5)', borderRadius: 2 }}>
+          <View style={{ width: `${progress}%`, height: '100%', backgroundColor: isMe ? COLORS.white : COLORS.amberGold, borderRadius: 2 }} />
+        </View>
       </View>
       
       {/* Thời gian */}
