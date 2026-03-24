@@ -2,13 +2,17 @@ import { chatApi } from "@/src/services/chatApi";
 import { useUser } from "@/src/store/UserContext";
 import { socketService } from "@/src/websockets/socketService";
 import React, { createContext, useContext, useEffect, useState } from "react";
+import { useRouter } from "expo-router";
 
 export const ChatContext = createContext<any>(null);
 
 export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
+  const router = useRouter();
+
   const [conversations, setConversations] = useState<any[]>([]);
   const [isLoadingConversations, setIsLoadingConversations] = useState(true);
   const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
+
   const { userProfile } = useUser();
 
   // Call api get conversation list
@@ -109,6 +113,22 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
       }
     };
 
+    // Incoming call
+    const handleIncomingCall = (data: any) => {
+      console.log("📞 Có cuộc gọi đến:", data);
+      
+      router.push({
+        pathname: "/(main)/call-test",
+        params: {
+          targetUserId: data.callerId,
+          fullname: data.fullname,
+          avatarUrl: data.avatarUrl,
+          isVideoCall: String(data.isVideoCall),
+          isIncoming: "true",
+        },
+      });
+    };
+
     socketService.on("is_typing", (data: any) => {
       console.log("🔥 Ai đó vừa typing:", data.userId);
     })
@@ -117,6 +137,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     socketService.on("online_users_list", handleOnlineUsersList);
     socketService.on("new_message", handleNewMessage);
     socketService.on("message_sent_success", handleSyncChatList);
+    socketService.on("incoming_call", handleIncomingCall);
 
     // Dọn dẹp listener khi đăng xuất
     return () => {
@@ -125,6 +146,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
       socketService.off("online_users_list", handleOnlineUsersList);
       socketService.off("new_message", handleNewMessage);
       socketService.off("message_sent_success", handleSyncChatList);
+      socketService.on("incoming_call", handleIncomingCall);
     };
   }, [userProfile?.userId]);
 

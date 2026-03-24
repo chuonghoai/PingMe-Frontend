@@ -1,9 +1,10 @@
 import { CameraView, PermissionStatus, useCameraPermissions } from 'expo-camera';
-import { AlertTriangle, Mic, MicOff, Phone, PhoneOff, SwitchCamera, Video, VideoOff } from "lucide-react-native";
+import { AlertTriangle, Mic, MicOff, Phone, PhoneOff, SwitchCamera, Video, VideoOff, Volume2, VolumeX } from "lucide-react-native";
 import React, { useEffect } from "react";
 import { ActivityIndicator, Image, SafeAreaView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useCallController } from "../hooks/useCallController";
 import { COLORS, styles } from "./CallScreen.styles";
+import { RTCView } from "react-native-webrtc";
 
 export const CallScreen = () => {
   const {
@@ -12,9 +13,14 @@ export const CallScreen = () => {
     isMicOn,
     isCamOn,
     isFrontCam,
+    formattedDuration,
+    isSpeakerOn,
+    localStream,
+    remoteStream,
     toggleMic,
     toggleCam,
     switchCamera,
+    toggleSpeaker,
     acceptCall,
     rejectCall,
     endCall,
@@ -34,7 +40,7 @@ export const CallScreen = () => {
     if (status === "ringing") return "Đang đổ chuông...";
     if (status === "rejected") return "Đã từ chối cuộc gọi";
     if (status === "ended") return "Cuộc gọi đã kết thúc";
-    return "00:00"; // Đồng hồ đếm giờ khi đã accepted
+    return formattedDuration;
   };
 
   // 1. GIAO DIỆN NGƯỜI NHẬN - LÚC ĐANG ĐỔ CHUÔNG
@@ -77,38 +83,16 @@ export const CallScreen = () => {
   }
 
   const renderLocalCamera = () => {
-    // 4. KIỂM TRA ĐIỀU KIỆN ĐỂ BẬT CAM: VideoCall VÀ isCamOn phải TRUE
-    if (!isVideoCall || !isCamOn) return null;
+    if (!isVideoCall || !isCamOn || !localStream) return null;
 
-    // 5. XỬ LÝ CÁC TRẠNG THÁI QUYỀN (PERMISSION)
-    if (!permission) {
-      // Đang loading quyền
-      return (
-        <View style={styles.localVideoPlaceholder}>
-          <ActivityIndicator size="small" color={COLORS.white} />
-        </View>
-      );
-    }
-
-    if (permission.status !== PermissionStatus.GRANTED) {
-      // Quyền bị từ chối
-      return (
-        <TouchableOpacity onPress={requestPermission} style={[styles.localVideoPlaceholder, { backgroundColor: COLORS.danger + '40' }]}>
-          <AlertTriangle size={24} color={COLORS.white} />
-          <Text style={{ color: '#fff', fontSize: 10, marginTop: 4 }}>Cấp quyền</Text>
-        </TouchableOpacity>
-      );
-    }
-
-    // 6. RENDER CAMERA THẬT (sử dụng CameraView thay vì Camera)
     return (
       <View style={styles.localVideoPlaceholder}>
-        <CameraView
+        <RTCView
+          streamURL={localStream.toURL()}
+          objectFit="cover"
           style={StyleSheet.absoluteFill}
-          facing={isFrontCam ? 'front' : 'back'}
+          mirror={isFrontCam}
         />
-        {/* Text debug (có thể xóa đi sau khi test xong) */}
-        {/* <Text style={[styles.localCamText, {position: 'absolute', bottom: 5}]}>{isFrontCam ? "Cam trước" : "Cam sau"}</Text> */}
       </View>
     );
   };
@@ -123,8 +107,15 @@ export const CallScreen = () => {
       {/* BACKGROUND VIDEO (Đối phương) - Chỉ hiện khi Video Call VÀ đã Accept */}
       {isVideoCall && isAccepted && (
         <View style={styles.remoteVideoPlaceholder}>
-          {/* Tương lai sẽ thay bằng <RTCView streamURL={remoteStream.toURL()} objectFit="cover" style={styles.absoluteFill} /> */}
-          <Text style={{ color: '#fff' }}>[Camera của đối phương]</Text>
+          {remoteStream ? (
+            <RTCView
+              streamURL={remoteStream.toURL()}
+              objectFit="cover"
+              style={StyleSheet.absoluteFill}
+            />
+          ) : (
+            <Text style={{ color: '#fff' }}>Đang kết nối video...</Text>
+          )}
         </View>
       )}
 
@@ -157,6 +148,14 @@ export const CallScreen = () => {
           onPress={toggleMic}
         >
           {isMicOn ? <Mic size={24} color={COLORS.white} /> : <MicOff size={24} color={COLORS.background} />}
+        </TouchableOpacity>
+
+        {/* Nút Speaker */}
+        <TouchableOpacity
+          style={[styles.controlBtn, !isSpeakerOn && styles.controlBtnActive]}
+          onPress={toggleSpeaker}
+        >
+          {isSpeakerOn ? <Volume2 size={24} color={COLORS.white} /> : <VolumeX size={24} color={COLORS.background} />}
         </TouchableOpacity>
 
         {/* Nút Video / Xoay Camera (Chỉ hiện khi gọi Video) */}

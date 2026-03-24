@@ -16,7 +16,8 @@ import {
   Send,
   Smile,
   Square,
-  Trash2
+  Trash2,
+  Video as VideoIcon
 } from "lucide-react-native";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -30,21 +31,38 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import { useChat } from "../store/ChatContext";
 import { COLORS, styles } from "./ChatRoomScreen.styles";
 
 export const ChatRoomScreen = () => {
   const router = useRouter();
-  const { id, name } = useLocalSearchParams();
+  const { id, name, targetUserId: paramTargetUserId, avatarUrl: paramAvatarUrl } = useLocalSearchParams();
+  const roomAvatarUrl = paramAvatarUrl 
+    ? decodeURIComponent(paramAvatarUrl as string) 
+    : "https://ui-avatars.com/api/?name=" + encodeURIComponent((name as string) || "User");
+
   const { userProfile } = useUser();
-  const { clearUnreadCount } = useChat();
+  const { conversations, clearUnreadCount } = useChat();
+
+  const currentConversation = conversations?.find((c: any) => c.id === id);
+  const otherParticipant = currentConversation?.participants?.find((p: any) => p.userId !== userProfile?.userId) || currentConversation?.participants?.[0];
+  const actualTargetUserId = otherParticipant?.userId || otherParticipant?.user?.id || otherParticipant?.id;
 
   const [inputText, setInputText] = useState("");
   const [messages, setMessages] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isOtherTyping, setIsOtherTyping] = useState(false);
+
+  const getTargetUserId = () => {
+    if (paramTargetUserId) return paramTargetUserId;
+    const otherMsg = messages.find(m => {
+      const sId = m.sender?.id || m.senderId || m.sender?.userId;
+      return sId && sId !== userProfile?.userId;
+    });
+    return otherMsg ? (otherMsg.sender?.id || otherMsg.senderId || otherMsg.sender?.userId) : null;
+  };
 
   const showMessage = (title: string, message: string) => {
     if (Platform.OS === "web") {
@@ -567,7 +585,7 @@ export const ChatRoomScreen = () => {
         </TouchableOpacity>
 
         <Image
-          source={{ uri: "https://i.pravatar.cc/150?img=11" }}
+          source={{ uri: roomAvatarUrl }}
           style={styles.headerAvatar}
         />
 
@@ -582,16 +600,50 @@ export const ChatRoomScreen = () => {
         </View>
 
         <View style={styles.headerActions}>
+          {/* NÚT GỌI THOẠI (AUDIO CALL) */}
           <TouchableOpacity
             style={styles.headerIconButton}
             onPress={() => {
-              // Điều hướng sang route call, có thể truyền thêm params nếu cần
-              // Ví dụ: params: { targetUserId: id, isVideoCall: 'false' }
-              router.push("/(main)/call-test");
+              const finalTargetId = getTargetUserId();
+              if (!finalTargetId) return alert("Đang tải thông tin, vui lòng chờ!");
+
+              router.push({
+                pathname: "/(main)/call-test",
+                params: {
+                  targetUserId: finalTargetId,
+                  isVideoCall: 'false',
+                  isIncoming: 'false',
+                  fullname: name,
+                  avatarUrl: paramAvatarUrl
+                }
+              });
             }}
           >
             <Phone size={22} color={COLORS.amberGold} />
           </TouchableOpacity>
+
+          {/* NÚT GỌI VIDEO (VIDEO CALL) */}
+          <TouchableOpacity
+            style={styles.headerIconButton}
+            onPress={() => {
+              const finalTargetId = getTargetUserId();
+              if (!finalTargetId) return alert("Đang tải thông tin, vui lòng chờ!");
+
+              router.push({
+                pathname: "/(main)/call-test",
+                params: {
+                  targetUserId: finalTargetId,
+                  isVideoCall: 'true',
+                  isIncoming: 'false',
+                  fullname: name,
+                  avatarUrl: paramAvatarUrl
+                }
+              });
+            }}
+          >
+            <VideoIcon size={22} color={COLORS.amberGold} />
+          </TouchableOpacity>
+
           <TouchableOpacity style={styles.headerIconButton}>
             <MoreVertical size={22} color={COLORS.iconGray} />
           </TouchableOpacity>

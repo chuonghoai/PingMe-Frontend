@@ -60,14 +60,14 @@ export const ChatListScreen = () => {
     const displayName = isGroup
       ? item.name
       : otherParticipant?.user?.fullname ||
-        otherParticipant?.fullname ||
-        "Người dùng ẩn danh";
+      otherParticipant?.fullname ||
+      "Người dùng ẩn danh";
 
     const displayAvatar = isGroup
       ? "https://ui-avatars.com/api/?name=Group&background=random"
       : otherParticipant?.user?.avatarUrl ||
-        otherParticipant?.avatarUrl ||
-        "https://ui-avatars.com/api/?name=User";
+      otherParticipant?.avatarUrl ||
+      "https://ui-avatars.com/api/?name=User";
 
     const snippet = item.lastMessageSnippet || "Chưa có tin nhắn nào";
     const hasUnread = item.unreadCount > 0;
@@ -81,7 +81,12 @@ export const ChatListScreen = () => {
         onPress={() =>
           router.push({
             pathname: "/(main)/chat/[id]",
-            params: { id: item.id, name: displayName },
+            params: {
+              id: item.id,
+              name: displayName,
+              targetUserId: otherParticipant?.userId,
+              avatarUrl: encodeURIComponent(otherParticipant?.user?.avatarUrl || otherParticipant?.avatarUrl || "https://ui-avatars.com/api/?name=User")
+            },
           })
         }
       >
