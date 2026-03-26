@@ -39,8 +39,8 @@ import { COLORS, styles } from "./ChatRoomScreen.styles";
 export const ChatRoomScreen = () => {
   const router = useRouter();
   const { id, name, targetUserId: paramTargetUserId, avatarUrl: paramAvatarUrl } = useLocalSearchParams();
-  const roomAvatarUrl = paramAvatarUrl 
-    ? decodeURIComponent(paramAvatarUrl as string) 
+  const roomAvatarUrl = paramAvatarUrl
+    ? decodeURIComponent(paramAvatarUrl as string)
     : "https://ui-avatars.com/api/?name=" + encodeURIComponent((name as string) || "User");
 
   const { userProfile } = useUser();
@@ -644,7 +644,23 @@ export const ChatRoomScreen = () => {
             <VideoIcon size={22} color={COLORS.amberGold} />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.headerIconButton}>
+          {/* NÚT THÔNG TIN CUỘC TRÒ CHUYỆN */}
+          <TouchableOpacity
+            style={styles.headerIconButton}
+            onPress={() => {
+              const finalTargetId = getTargetUserId();
+              router.push({
+                pathname: "/(main)/chat-profile",
+                params: {
+                  conversationId: id,
+                  targetUserId: finalTargetId,
+                  name: name,
+                  avatarUrl: paramAvatarUrl,
+                  isVideoCall: 'false'
+                }
+              });
+            }}
+          >
             <MoreVertical size={22} color={COLORS.iconGray} />
           </TouchableOpacity>
         </View>
