@@ -15,17 +15,20 @@ import {
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Image,
   ScrollView,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import { useChat } from "../store/ChatContext";
 import { COLORS, styles } from "./ChatProfileScreen.styles";
 
 export const ChatProfileScreen = () => {
   const router = useRouter();
   const { conversationId, targetUserId, name, avatarUrl } = useLocalSearchParams();
+  const { loadConversations } = useChat();
 
   const [recentMedia, setRecentMedia] = useState<any[]>([]);
   const [isLoadingMedia, setIsLoadingMedia] = useState(true);
@@ -69,6 +72,34 @@ export const ChatProfileScreen = () => {
         avatarUrl,
       },
     });
+  };
+
+  const handleBlockUser = async () => {
+    Alert.alert("Xác nhận", `Bạn có chắc chắn muốn chặn ${displayName}?`, [
+      { text: "Hủy", style: "cancel" },
+      { text: "Chặn", style: "destructive", onPress: async () => {
+          try {
+            await chatApi.blockUser(conversationId as string);
+            await loadConversations();
+            alert("Đã chặn người dùng");
+            router.back(); // Trở về chat room
+          } catch (e) { alert("Lỗi khi chặn"); }
+      }}
+    ]);
+  };
+
+  const handleClearHistory = async () => {
+    Alert.alert("Xác nhận", "Xóa toàn bộ lịch sử trò chuyện phía bạn?", [
+      { text: "Hủy", style: "cancel" },
+      { text: "Xóa", style: "destructive", onPress: async () => {
+          try {
+            await chatApi.clearHistory(conversationId as string);
+            await loadConversations();
+            alert("Đã xóa lịch sử trò chuyện");
+            router.back();
+          } catch (e) { alert("Lỗi khi xóa"); }
+      }}
+    ]);
   };
 
   return (
@@ -159,12 +190,12 @@ export const ChatProfileScreen = () => {
             <ChevronRight size={20} color={COLORS.textSub} />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.optionItem}>
+          <TouchableOpacity style={styles.optionItem} onPress={handleBlockUser}>
             <Ban size={22} color={COLORS.errorRed} />
             <Text style={[styles.optionText, styles.dangerText]}>Chặn người dùng</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.optionItem}>
+          <TouchableOpacity style={styles.optionItem} onPress={handleClearHistory}>
             <Trash2 size={22} color={COLORS.errorRed} />
             <Text style={[styles.optionText, styles.dangerText]}>Xóa lịch sử trò chuyện</Text>
           </TouchableOpacity>

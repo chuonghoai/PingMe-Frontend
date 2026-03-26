@@ -36,4 +36,14 @@ export const chatApi = {
       `/messages/${conversationId}/media?page=${page}&limit=${limit}`,
     );
   },
+
+  blockUser: async (conversationId: string) => {
+    return apiClient.post(`/conversations/${conversationId}/block`);
+  },
+  unblockUser: async (conversationId: string) => {
+    return apiClient.post(`/conversations/${conversationId}/unblock`);
+  },
+  clearHistory: async (conversationId: string) => {
+    return apiClient.post(`/conversations/${conversationId}/clear-history`);
+  },
 };

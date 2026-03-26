@@ -44,7 +44,7 @@ export const ChatRoomScreen = () => {
     : "https://ui-avatars.com/api/?name=" + encodeURIComponent((name as string) || "User");
 
   const { userProfile } = useUser();
-  const { conversations, clearUnreadCount } = useChat();
+  const { conversations, clearUnreadCount, loadConversations } = useChat();
 
   const currentConversation = conversations?.find((c: any) => c.id === id);
   const otherParticipant = currentConversation?.participants?.find((p: any) => p.userId !== userProfile?.userId) || currentConversation?.participants?.[0];
@@ -126,7 +126,7 @@ export const ChatRoomScreen = () => {
     }
   };
 
-  // 2. LẮNG NGHE PHẢN HỒI GỬI TIN NHẮN TỪ SOCKET
+  // Listen event websocket
   useEffect(() => {
     const handleMessageSuccess = (data: any) => {
       const realMessage = data.message || data;
@@ -140,8 +140,7 @@ export const ChatRoomScreen = () => {
     };
 
     const handleMessageError = (data: any) => {
-      showMessage("Loi", "Loi mang, vui long kiem tra lai.");
-      // Xóa tin nhắn tạm khỏi danh sách vì gửi thất bại
+      showMessage("Lỗi", data.message || "Lỗi mạng, vui lòng kiểm tra lại.");
       setMessages((prev) => prev.filter((msg) => msg.id !== data.temporaryId));
     };
 
@@ -697,10 +696,49 @@ export const ChatRoomScreen = () => {
       )}
 
       {/* --- THANH NHẬP LIỆU --- */}
-      {isRecordUIVisible ? (
-        <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.white, paddingVertical: 12, paddingHorizontal: 16, borderTopWidth: 1, borderTopColor: COLORS.borderColor, minHeight: 60, justifyContent: 'space-between' }}>
+      {(() => {
+        const isBlockedByMe = currentConversation?.blockedById === userProfile?.userId;
+        const isBlockedByThem = currentConversation?.blockedById && currentConversation?.blockedById !== userProfile?.userId;
 
-          {audioUri ? (
+        // Nếu mình chặn người ta
+        if (isBlockedByMe) {
+          return (
+            <View style={{ padding: 16, alignItems: 'center', backgroundColor: COLORS.white, borderTopWidth: 1, borderColor: COLORS.borderColor, paddingBottom: Platform.OS === "ios" ? 30 : 16 }}>
+              <Text style={{ marginBottom: 12, color: COLORS.textSub }}>Bạn đã chặn người này.</Text>
+              <TouchableOpacity 
+                style={{ backgroundColor: COLORS.amberGold, paddingVertical: 10, paddingHorizontal: 24, borderRadius: 20 }}
+                onPress={async () => {
+                  try {
+                    await chatApi.unblockUser(id as string);
+                    await loadConversations();
+                    // Emit hoặc Load lại ChatList để cập nhật currentConversation
+                    socketService.emit("mark_read", { conversationId: id }); // Mẹo trigger nhẹ để làm mới UI nếu cần
+                    Alert.alert("Thành công", "Đã bỏ chặn thành công.");
+                  } catch (e) {
+                    Alert.alert("Lỗi", "Không thể bỏ chặn vào lúc này.");
+                  }
+                }}
+              >
+                <Text style={{ color: COLORS.white, fontWeight: "bold" }}>Bỏ chặn</Text>
+              </TouchableOpacity>
+            </View>
+          );
+        }
+
+        // Nếu người ta chặn mình
+        if (isBlockedByThem) {
+          return (
+            <View style={{ padding: 16, alignItems: 'center', backgroundColor: COLORS.white, borderTopWidth: 1, borderColor: COLORS.borderColor, paddingBottom: Platform.OS === "ios" ? 30 : 16 }}>
+              <Text style={{ color: COLORS.errorRed, fontWeight: '500' }}>Bạn đã bị chặn bởi {name}</Text>
+            </View>
+          );
+        }
+
+        // --- THANH NHẬP LIỆU BÌNH THƯỜNG ---
+        return isRecordUIVisible ? (
+          <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.white, paddingVertical: 12, paddingHorizontal: 16, borderTopWidth: 1, borderTopColor: COLORS.borderColor, minHeight: 60, justifyContent: 'space-between' }}>
+
+            {audioUri ? (
             // --- TRẠNG THÁI 3: ĐÃ THU ÂM (hiện thanh process) ---
             <>
               <TouchableOpacity onPress={() => { cancelAudio(); setIsRecordUIVisible(false); }} style={{ padding: 8 }}>
@@ -795,7 +833,8 @@ export const ChatRoomScreen = () => {
             </TouchableOpacity>
           )}
         </View>
-      )}
+      );
+      })()}
     </KeyboardAvoidingView>
   );
 };
