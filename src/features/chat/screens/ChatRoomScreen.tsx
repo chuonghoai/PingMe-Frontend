@@ -489,35 +489,59 @@ export const ChatRoomScreen = () => {
           </Text>
         )}
 
-        {/* --- ẢNH: Scale chuẩn không cắt xén (contain) --- */}
+        {/* ẢNH */}
         {type === "IMAGE" && media?.secureUrl && (
-          <Image
-            source={{ uri: media.secureUrl }}
-            style={{
-              width: 250,
-              height: 250, // Giới hạn kích thước tối đa
-              borderRadius: 8,
-              marginTop: displayContent ? 8 : 0
-            }}
-            resizeMode="contain" // Cốt lõi để không bị cắt xén
-          />
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => router.push({
+              pathname: "/(main)/media-viewer",
+              params: { url: item.media.secureUrl, type: "IMAGE" }
+            })}
+          >
+            <Image
+              source={{ uri: media.secureUrl }}
+              style={{
+                width: 250,
+                height: 250,
+                borderRadius: 8,
+                marginTop: displayContent ? 8 : 0
+              }}
+              resizeMode="contain"
+            />
+          </TouchableOpacity>
         )}
 
-        {/* --- VIDEO: Dùng expo-av Video có sẵn Controls --- */}
+        {/* VIDEO */}
         {type === "VIDEO" && media?.secureUrl && (
-          <Video
-            source={{ uri: media.secureUrl }}
-            style={{
-              width: 250,
-              height: 250, // Khung tối đa cho video
-              borderRadius: 8,
-              marginTop: displayContent ? 8 : 0,
-              backgroundColor: '#000'
-            }}
-            useNativeControls // Tự động có thumbnail, nút play, thanh tiến trình
-            resizeMode={ResizeMode.CONTAIN} // Tránh cắt xén video
-            isLooping={false}
-          />
+          
+
+          <TouchableOpacity 
+               activeOpacity={0.8}
+               onPress={() => router.push({
+                 pathname: "/(main)/media-viewer",
+                 params: { url: item.media.secureUrl, type: "VIDEO" }
+               })}
+            >
+               {/* Tạm thời ở ngoài chat room, bạn có thể để video resizeMode="cover" 
+                 và tắt tiếng/shouldPlay={false} để nó giống như thumbnail. 
+               */}
+              <Video
+                source={{ uri: media.secureUrl }}
+                style={{
+                  width: 250,
+                  height: 250,
+                  borderRadius: 8,
+                  marginTop: displayContent ? 8 : 0,
+                  backgroundColor: '#000'
+                }}
+                useNativeControls
+                resizeMode={ResizeMode.CONTAIN}
+                isLooping={false}
+              />
+              <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center' }}>
+                 <Play size={40} color="rgba(255,255,255,0.8)" />
+              </View>
+            </TouchableOpacity>
         )}
 
         {/* --- AUDIO: Sử dụng component AudioPlayer đã tạo --- */}
@@ -705,7 +729,7 @@ export const ChatRoomScreen = () => {
           return (
             <View style={{ padding: 16, alignItems: 'center', backgroundColor: COLORS.white, borderTopWidth: 1, borderColor: COLORS.borderColor, paddingBottom: Platform.OS === "ios" ? 30 : 16 }}>
               <Text style={{ marginBottom: 12, color: COLORS.textSub }}>Bạn đã chặn người này.</Text>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={{ backgroundColor: COLORS.amberGold, paddingVertical: 10, paddingHorizontal: 24, borderRadius: 20 }}
                 onPress={async () => {
                   try {
@@ -739,101 +763,101 @@ export const ChatRoomScreen = () => {
           <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.white, paddingVertical: 12, paddingHorizontal: 16, borderTopWidth: 1, borderTopColor: COLORS.borderColor, minHeight: 60, justifyContent: 'space-between' }}>
 
             {audioUri ? (
-            // --- TRẠNG THÁI 3: ĐÃ THU ÂM (hiện thanh process) ---
-            <>
-              <TouchableOpacity onPress={() => { cancelAudio(); setIsRecordUIVisible(false); }} style={{ padding: 8 }}>
-                <Trash2 size={24} color={COLORS.errorRed || '#FF3B30'} />
-              </TouchableOpacity>
+              // --- TRẠNG THÁI 3: ĐÃ THU ÂM (hiện thanh process) ---
+              <>
+                <TouchableOpacity onPress={() => { cancelAudio(); setIsRecordUIVisible(false); }} style={{ padding: 8 }}>
+                  <Trash2 size={24} color={COLORS.errorRed || '#FF3B30'} />
+                </TouchableOpacity>
 
-              <TouchableOpacity onPress={playOrPauseAudio} style={{ marginHorizontal: 8 }}>
-                {isPlaying ? <Pause size={28} color={COLORS.amberGold} /> : <Play size={28} color={COLORS.amberGold} />}
-              </TouchableOpacity>
+                <TouchableOpacity onPress={playOrPauseAudio} style={{ marginHorizontal: 8 }}>
+                  {isPlaying ? <Pause size={28} color={COLORS.amberGold} /> : <Play size={28} color={COLORS.amberGold} />}
+                </TouchableOpacity>
 
-              {/* Process Bar */}
-              <View
-                style={{ flex: 1, height: 40, justifyContent: 'center', paddingHorizontal: 10 }}
-                onLayout={(e) => setProgressBarWidth(e.nativeEvent.layout.width - 20)}
-              >
+                {/* Process Bar */}
                 <View
-                  style={{ height: 6, backgroundColor: COLORS.borderColor, borderRadius: 3, overflow: 'hidden' }}
-                  onTouchEnd={handleSeek}
+                  style={{ flex: 1, height: 40, justifyContent: 'center', paddingHorizontal: 10 }}
+                  onLayout={(e) => setProgressBarWidth(e.nativeEvent.layout.width - 20)}
                 >
-                  <View style={{ height: '100%', backgroundColor: COLORS.amberGold, width: playbackDurationMillis > 0 ? `${(playbackPosMillis / playbackDurationMillis) * 100}%` : '0%' }} />
+                  <View
+                    style={{ height: 6, backgroundColor: COLORS.borderColor, borderRadius: 3, overflow: 'hidden' }}
+                    onTouchEnd={handleSeek}
+                  >
+                    <View style={{ height: '100%', backgroundColor: COLORS.amberGold, width: playbackDurationMillis > 0 ? `${(playbackPosMillis / playbackDurationMillis) * 100}%` : '0%' }} />
+                  </View>
+                  <Text style={{ fontSize: 10, color: COLORS.textSub, marginTop: 4, alignSelf: 'flex-end' }}>
+                    {Math.floor(playbackPosMillis / 1000)}s / {Math.floor(playbackDurationMillis / 1000)}s
+                  </Text>
                 </View>
-                <Text style={{ fontSize: 10, color: COLORS.textSub, marginTop: 4, alignSelf: 'flex-end' }}>
-                  {Math.floor(playbackPosMillis / 1000)}s / {Math.floor(playbackDurationMillis / 1000)}s
-                </Text>
-              </View>
 
-              <TouchableOpacity onPress={sendAudioMessage} style={{ backgroundColor: COLORS.amberGold, padding: 10, borderRadius: 24, marginLeft: 8 }}>
-                <Send size={20} color={COLORS.white} />
-              </TouchableOpacity>
-            </>
-          ) : (
-            // --- TRẠNG THÁI 2: ĐANG CHỜ / ĐANG THU ---
-            <>
-              <TouchableOpacity onPress={() => { cancelAudio(); setIsRecordUIVisible(false); }} style={{ padding: 8 }}>
-                <Text style={{ fontSize: 16, color: COLORS.textSub }}>Hủy</Text>
-              </TouchableOpacity>
+                <TouchableOpacity onPress={sendAudioMessage} style={{ backgroundColor: COLORS.amberGold, padding: 10, borderRadius: 24, marginLeft: 8 }}>
+                  <Send size={20} color={COLORS.white} />
+                </TouchableOpacity>
+              </>
+            ) : (
+              // --- TRẠNG THÁI 2: ĐANG CHỜ / ĐANG THU ---
+              <>
+                <TouchableOpacity onPress={() => { cancelAudio(); setIsRecordUIVisible(false); }} style={{ padding: 8 }}>
+                  <Text style={{ fontSize: 16, color: COLORS.textSub }}>Hủy</Text>
+                </TouchableOpacity>
 
-              <View style={{ flex: 1, alignItems: 'center' }}>
-                <Text style={{ color: recording ? (COLORS.errorRed || '#FF3B30') : COLORS.textMain, fontSize: 16 }}>
-                  {recording ? `Đang ghi âm... ${Math.floor(recordDurationMillis / 1000)}s` : "Nhấn giữ để ghi âm"}
-                </Text>
-              </View>
+                <View style={{ flex: 1, alignItems: 'center' }}>
+                  <Text style={{ color: recording ? (COLORS.errorRed || '#FF3B30') : COLORS.textMain, fontSize: 16 }}>
+                    {recording ? `Đang ghi âm... ${Math.floor(recordDurationMillis / 1000)}s` : "Nhấn giữ để ghi âm"}
+                  </Text>
+                </View>
 
-              <TouchableOpacity
-                onPressIn={startRecording}
-                onPressOut={stopRecording}
-                delayPressIn={0}
-                style={{
-                  backgroundColor: recording ? 'rgba(255, 59, 48, 0.1)' : COLORS.inputBackground,
-                  padding: 12,
-                  borderRadius: 30
-                }}
-              >
-                <Mic size={24} color={recording ? (COLORS.errorRed || '#FF3B30') : COLORS.amberGold} />
-              </TouchableOpacity>
-            </>
-          )}
-        </View>
-      ) : (
-        <View style={styles.inputContainer}>
-          <Animated.View
-            style={[
-              styles.mediaButtonsContainer,
-              { width: mediaWidthAnim, opacity: mediaOpacityAnim },
-            ]}
-          >
-            <TouchableOpacity style={styles.mediaButton} onPress={handlePickMedia}>
-              <ImageIcon size={24} color={COLORS.iconGray} />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.mediaButton} onPress={() => setIsRecordUIVisible(true)}>
-              <Mic size={24} color={COLORS.iconGray} />
-            </TouchableOpacity>
-          </Animated.View>
-
-          <View style={styles.inputWrapper}>
-            <TextInput
-              style={styles.textInput}
-              placeholder="Nhập tin nhắn..."
-              value={inputText}
-              onChangeText={handleTextChange}
-              placeholderTextColor={COLORS.textSub}
-              multiline
-            />
-            <TouchableOpacity style={styles.stickerButton}>
-              <Smile size={24} color={COLORS.iconGray} />
-            </TouchableOpacity>
+                <TouchableOpacity
+                  onPressIn={startRecording}
+                  onPressOut={stopRecording}
+                  delayPressIn={0}
+                  style={{
+                    backgroundColor: recording ? 'rgba(255, 59, 48, 0.1)' : COLORS.inputBackground,
+                    padding: 12,
+                    borderRadius: 30
+                  }}
+                >
+                  <Mic size={24} color={recording ? (COLORS.errorRed || '#FF3B30') : COLORS.amberGold} />
+                </TouchableOpacity>
+              </>
+            )}
           </View>
+        ) : (
+          <View style={styles.inputContainer}>
+            <Animated.View
+              style={[
+                styles.mediaButtonsContainer,
+                { width: mediaWidthAnim, opacity: mediaOpacityAnim },
+              ]}
+            >
+              <TouchableOpacity style={styles.mediaButton} onPress={handlePickMedia}>
+                <ImageIcon size={24} color={COLORS.iconGray} />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.mediaButton} onPress={() => setIsRecordUIVisible(true)}>
+                <Mic size={24} color={COLORS.iconGray} />
+              </TouchableOpacity>
+            </Animated.View>
 
-          {inputText.trim().length > 0 && (
-            <TouchableOpacity style={styles.sendBtn} onPress={handleSend}>
-              <Send size={24} color={COLORS.amberGold} />
-            </TouchableOpacity>
-          )}
-        </View>
-      );
+            <View style={styles.inputWrapper}>
+              <TextInput
+                style={styles.textInput}
+                placeholder="Nhập tin nhắn..."
+                value={inputText}
+                onChangeText={handleTextChange}
+                placeholderTextColor={COLORS.textSub}
+                multiline
+              />
+              <TouchableOpacity style={styles.stickerButton}>
+                <Smile size={24} color={COLORS.iconGray} />
+              </TouchableOpacity>
+            </View>
+
+            {inputText.trim().length > 0 && (
+              <TouchableOpacity style={styles.sendBtn} onPress={handleSend}>
+                <Send size={24} color={COLORS.amberGold} />
+              </TouchableOpacity>
+            )}
+          </View>
+        );
       })()}
     </KeyboardAvoidingView>
   );
