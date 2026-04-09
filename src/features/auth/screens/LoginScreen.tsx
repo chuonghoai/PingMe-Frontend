@@ -1,6 +1,8 @@
-import { authApi } from "@/src/services/authApi";
+/* eslint-disable import/no-unresolved */
+import { authApi } from "@/services/authApi";
+import { useUser } from "@/store/UserContext";
+import { getAccessToken, setTokens } from "@/utils/tokenStorage";
 import { useRouter } from "expo-router";
-import * as SecureStore from "expo-secure-store";
 import React, { useState } from "react";
 import {
   Alert,
@@ -10,10 +12,8 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { Button } from "../../../components/Button/Button";
-import { Input } from "../../../components/Input/Input";
+import { Input } from "@/components/Input/Input";
 import { COLORS, styles } from "./LoginScreen.styles";
-import { useUser } from "@/src/store/UserContext";
 
 export const LoginScreen = () => {
   const router = useRouter();
@@ -23,69 +23,64 @@ export const LoginScreen = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  const showMessage = (title: string, message: string) => {
+    if (Platform.OS === "web") {
+      window.alert(`${title}: ${message}`);
+      return;
+    }
+    Alert.alert(title, message);
+  };
+
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert("Lỗi", "Vui lòng nhập email và mật khẩu");
+      showMessage("Lỗi", "Vui lòng nhập email và mật khẩu");
       return;
     }
 
     if (!isValidEmail(email)) {
-      Alert.alert("Lỗi", "Email không hợp lệ");
-      console.log("Email không hợp lệ");
+      showMessage("Lỗi", "Email không hợp lệ");
       return;
     }
 
     try {
       setIsLoading(true);
-      const response: any = await authApi.login({ email, password });
-      console.log(response);
+      const response: any = await authApi.login({ email, password, rememberMe });
 
       if (response.success) {
-        if (Platform.OS === "web") {
-          localStorage.setItem("accessToken", response.data.accessToken);
-          localStorage.setItem("refreshToken", response.data.refreshToken);
-        } else {
-          await SecureStore.setItemAsync(
-            "accessToken",
-            response.data.accessToken,
-          );
-          await SecureStore.setItemAsync(
-            "refreshToken",
-            response.data.refreshToken,
-          );
-        }
-        
+        await setTokens(response.data.accessToken, response.data.refreshToken);
+
         updateUserProfile({
           userId: response.data.user.userId,
           email: response.data.user.email,
         });
 
-        Alert.alert("Thành công", "Đăng nhập thành công!");
+        showMessage("Thành công", "Đăng nhập thành công!");
         router.replace("/(main)/home");
       }
     } catch (error: any) {
-      Alert.alert("Đăng nhập thất bại", error.toString());
+      showMessage("Đăng nhập thất bại", error.toString());
     } finally {
       setIsLoading(false);
     }
   };
 
-  // validate email
-  const isValidEmail = (email: string) => {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const isValidEmail = (value: string) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
   };
 
   return (
     <View style={styles.container}>
-      {/* Khối Logo GoGo ở trên cùng */}
       <View style={styles.logoContainer}>
         <View style={styles.logoRow}>
-          <Text style={styles.logoTextMain}>Go</Text>
-          <Text style={styles.logoTextSecondary}>Go</Text>
+          <Text style={styles.logoTextMain}>Ping</Text>
+          <Text style={styles.logoTextSecondary}>Me</Text>
         </View>
       </View>
 
-      <Text style={styles.title}>Đăng nhập</Text>
+      <View style={styles.titleWrapper}>
+        <Text style={styles.title}>Đăng nhập</Text>
+        <Text style={styles.subtitle}>Chào mừng trở lại! Hãy kết nối nào.</Text>
+      </View>
 
       <Input
         label="Email"
@@ -95,12 +90,13 @@ export const LoginScreen = () => {
         keyboardType="email-address"
         autoCapitalize="none"
       />
+      
       <Input
         label="Mật khẩu"
         placeholder="Nhập mật khẩu"
         value={password}
         onChangeText={setPassword}
-        secureTextEntry
+        isPassword={true}
       />
 
       <View style={styles.row}>
@@ -108,29 +104,33 @@ export const LoginScreen = () => {
           <Switch
             value={rememberMe}
             onValueChange={setRememberMe}
-            trackColor={{ false: "#767577", true: COLORS.amberGold }}
-            thumbColor={Platform.OS === "android" ? "#f4f3f4" : undefined}
+            trackColor={{ false: "#CBD5E1", true: COLORS.primary }}
+            thumbColor={Platform.OS === "android" ? "#F8FAFC" : undefined}
           />
           <Text style={styles.rememberText}>Nhớ mật khẩu</Text>
         </View>
-        <TouchableOpacity
-          onPress={() => router.push("/(auth)/forgot-password")}
-        >
+        <TouchableOpacity onPress={() => router.push("/(auth)/forgot-password")}>
           <Text style={styles.forgotText}>Quên mật khẩu?</Text>
         </TouchableOpacity>
       </View>
 
-      <Button
-        title="Đăng nhập"
-        onPress={handleLogin}
-        style={{ backgroundColor: COLORS.amberGold }}
-      />
-      <Button
-        title="Chưa có tài khoản? Đăng ký ngay"
-        variant="outline"
-        onPress={() => router.push("/(auth)/register")}
-        style={{ borderColor: COLORS.amberGold }}
-      />
+      <TouchableOpacity 
+        style={styles.loginBtn} 
+        onPress={handleLogin} 
+        activeOpacity={0.8}
+        disabled={isLoading}
+      >
+        <View style={{ alignItems: 'center' }}>
+          <Text style={styles.loginBtnText}>{isLoading ? "ĐANG ĐĂNG NHẬP..." : "ĐĂNG NHẬP"}</Text>
+        </View>
+      </TouchableOpacity>
+
+      <View style={styles.registerBtnWrapper}>
+        <Text style={styles.registerTextPrefix}>Chưa có tài khoản? </Text>
+        <TouchableOpacity onPress={() => router.push("/(auth)/register")}>
+          <Text style={styles.registerTextAction}>Đăng ký ngay</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };

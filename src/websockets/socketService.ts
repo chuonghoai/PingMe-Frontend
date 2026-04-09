@@ -1,41 +1,31 @@
-import * as SecureStore from "expo-secure-store";
-import { Platform } from "react-native";
 import { io, Socket } from "socket.io-client";
-import { BASE_URL } from "../services/apiClient";
+import { BASE_URL } from "@/services/apiClient";
+import { getAccessToken } from "@/utils/tokenStorage";
 
 class SocketService {
   public socket: Socket;
 
   constructor() {
-    // 1. Khởi tạo socket ngay từ đầu để UI có thể gắn listener (.on)
-    // nhưng đặt autoConnect: false để nó không tự tiện kết nối khi chưa có Token
     this.socket = io(BASE_URL, {
       autoConnect: false,
       transports: ["websocket"],
     });
 
     this.socket.on("connect", () => {
-      console.log("🟢 [Socket] Đã kết nối thành công, ID:", this.socket.id);
+      console.log("[Socket] Da ket noi thanh cong, ID:", this.socket.id);
     });
 
     this.socket.on("disconnect", (reason) => {
-      console.log("🔴 [Socket] Đã ngắt kết nối. Lý do:", reason);
+      console.log("[Socket] Da ngat ket noi. Ly do:", reason);
     });
   }
 
   public async connect() {
     if (this.socket.connected) return;
 
-    let token = null;
-    if (Platform.OS === "web") {
-      token = localStorage.getItem("accessToken");
-    } else {
-      token = await SecureStore.getItemAsync("accessToken");
-    }
-
+    const token = await getAccessToken();
     if (!token) return;
 
-    // 2. Gắn token vào và chủ động mở kết nối
     this.socket.auth = { token };
     this.socket.connect();
   }

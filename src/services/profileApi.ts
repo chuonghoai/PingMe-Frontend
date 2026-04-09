@@ -27,6 +27,13 @@ export interface UpdateAvatarRequest {
 }
 
 // --- 4. CÁC HÀM GỌI API ---
+export const getNearbyUsers = async (lat: number, lng: number, radius: number = 2000) => {
+  return await apiClient.get(`/users/nearby?lat=${lat}&lng=${lng}&radius=${radius}`);
+};
+
+export const searchUsersGlobally = async (query: string) => {
+  return await apiClient.get(`/users/search?q=${encodeURIComponent(query)}`);
+};
 export const profileApi = {
   getProfile: async (): Promise<ProfileResponse> => {
     // Tự động nhận header Authorization Bearer từ apiClient

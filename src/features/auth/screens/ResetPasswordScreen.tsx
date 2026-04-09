@@ -1,30 +1,36 @@
-// src/features/auth/screens/ResetPasswordScreen.tsx
-import { authApi } from "@/src/services/authApi";
+import { authApi } from "@/services/authApi";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from "react";
-import { Alert, Text, View } from "react-native";
-import { Button } from "../../../components/Button/Button";
-import { Input } from "../../../components/Input/Input";
+import { Alert, Platform, Text, View } from "react-native";
+import { Button } from "@/components/Button/Button";
+import { Input } from "@/components/Input/Input";
 import { COLORS, styles } from "./ForgotPasswordScreen.styles";
 
 export const ResetPasswordScreen = () => {
   const router = useRouter();
-
   const { email, otp } = useLocalSearchParams<{ email: string; otp: string }>();
 
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  const showMessage = (title: string, message: string) => {
+    if (Platform.OS === "web") {
+      window.alert(`${title}: ${message}`);
+      return;
+    }
+
+    Alert.alert(title, message);
+  };
+
   const handleResetPassword = async () => {
     if (!newPassword || newPassword.length < 6) {
-      Alert.alert("Lỗi", "Mật khẩu phải có ít nhất 6 ký tự");
+      showMessage("Loi", "Mat khau phai co it nhat 6 ky tu");
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      Alert.alert("Lỗi", "Mật khẩu nhập lại không khớp");
-      window.alert("Mật khẩu nhập lại không khớp");
+      showMessage("Loi", "Mat khau nhap lai khong khop");
       return;
     }
 
@@ -35,23 +41,19 @@ export const ResetPasswordScreen = () => {
         otp,
         newPassword,
       });
-      console.log("backend đã cập nhật dữ liệu mới");
 
       if (response.success) {
-        console.log("Đặt lại mật khẩu thành công");
-        window.alert("Đặt lại mật khẩu thành công, vui lòng đăng nhập lại");
-        Alert.alert(
-          "Thành công",
-          "Đặt lại mật khẩu thành công, vui lòng đăng nhập lại",
+        showMessage(
+          "Thanh cong",
+          "Dat lai mat khau thanh cong, vui long dang nhap lai",
         );
         router.replace("/(auth)/login");
       }
     } catch (error: any) {
-      Alert.alert("Lỗi", error.toString());
-      window.alert(error.toString());
+      showMessage("Loi", error.toString());
       router.replace({
         pathname: "/(auth)/verify-email",
-        params: { email: email, action: "reset" },
+        params: { email, action: "reset" },
       });
     } finally {
       setIsLoading(false);
@@ -60,30 +62,30 @@ export const ResetPasswordScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Tạo mật khẩu mới</Text>
+      <Text style={styles.title}>Tao mat khau moi</Text>
       <Text style={styles.subtitle}>
-        Vui lòng nhập mật khẩu mới cho tài khoản{" "}
+        Vui long nhap mat khau moi cho tai khoan{" "}
         <Text style={{ fontWeight: "bold" }}>{email}</Text>
       </Text>
 
       <Input
-        label="Mật khẩu mới"
-        placeholder="Nhập mật khẩu mới"
+        label="Mat khau moi"
+        placeholder="Nhap mat khau moi"
         value={newPassword}
         onChangeText={setNewPassword}
         secureTextEntry
       />
 
       <Input
-        label="Xác nhận mật khẩu"
-        placeholder="Nhập lại mật khẩu mới"
+        label="Xac nhan mat khau"
+        placeholder="Nhap lai mat khau moi"
         value={confirmPassword}
         onChangeText={setConfirmPassword}
         secureTextEntry
       />
 
       <Button
-        title={isLoading ? "Đang xử lý..." : "Lưu mật khẩu mới"}
+        title={isLoading ? "Dang xu ly..." : "Luu mat khau moi"}
         onPress={handleResetPassword}
         disabled={isLoading}
         style={{ marginTop: 20, backgroundColor: COLORS.amberGold }}

@@ -1,22 +1,29 @@
- 
 import axios from "axios";
 import { router } from "expo-router";
-import * as SecureStore from "expo-secure-store";
+import Constants from "expo-constants";
 import { Platform } from "react-native";
+import { clearTokens, getAccessToken } from "@/utils/tokenStorage";
 
 const getBaseUrl = () => {
-  if (process.env.EXPO_PUBLIC_API_URL) {
-    return process.env.EXPO_PUBLIC_API_URL;
+  if (Platform.OS === "web") {
+    return process.env.EXPO_PUBLIC_API_URL_WEB ?? "http://localhost:3000";
   }
-  if (Platform.OS === "android") {
-    return "http://10.0.2.2:3000";
+
+  // isDevice = true khi chạy trên thiết bị thật (iPhone, Android thật)
+  // isDevice = false khi chạy trên Emulator/Simulator
+  const isRealDevice = Constants.isDevice;
+
+  if (Platform.OS === "android" && !isRealDevice) {
+    // Android Emulator: 10.0.2.2 là địa chỉ đặc biệt trỏ tới localhost của máy host
+    return process.env.EXPO_PUBLIC_API_URL_ANDROID ?? "http://10.0.2.2:3000";
   }
-  return "http://localhost:3000";
+
+  // iPhone thật hoặc Android thật: cần dùng IP LAN của máy tính
+  return process.env.EXPO_PUBLIC_API_URL_DEVICE ?? "http://192.168.88.127:3000";
 };
 
 export const BASE_URL = getBaseUrl();
 
-// Khởi tạo một instance của Axios
 export const apiClient = axios.create({
   baseURL: BASE_URL,
   timeout: 10000,
@@ -25,25 +32,14 @@ export const apiClient = axios.create({
   },
 });
 
-// --- HÀM HỖ TRỢ LẤY/XÓA TOKEN ĐA NỀN TẢNG ---
 const getToken = async () => {
-  if (Platform.OS === "web") {
-    return localStorage.getItem("accessToken");
-  }
-  return await SecureStore.getItemAsync("accessToken");
+  return getAccessToken();
 };
 
 const removeToken = async () => {
-  if (Platform.OS === "web") {
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
-  } else {
-    await SecureStore.deleteItemAsync("accessToken");
-    await SecureStore.deleteItemAsync("refreshToken");
-  }
+  await clearTokens();
 };
 
-// --- INTERCEPTOR: REQUEST ---
 apiClient.interceptors.request.use(
   async (config) => {
     try {
@@ -52,7 +48,7 @@ apiClient.interceptors.request.use(
         config.headers.Authorization = `Bearer ${token}`;
       }
     } catch (error) {
-      console.log("Lỗi khi lấy token", error);
+      console.log("Loi khi lay token", error);
     }
     return config;
   },
@@ -61,7 +57,6 @@ apiClient.interceptors.request.use(
   },
 );
 
-// --- INTERCEPTOR: RESPONSE ---
 apiClient.interceptors.response.use(
   (response) => {
     return response.data;
@@ -83,10 +78,11 @@ apiClient.interceptors.response.use(
       await removeToken();
       router.replace("/(auth)/login");
     }
+
     const errMessage =
       error.response?.data?.error?.message ||
       error.response?.data?.message ||
-      "Có lỗi xảy ra, vui lòng thử lại";
+      "Co loi xay ra, vui long thu lai";
 
     return Promise.reject(errMessage);
   },

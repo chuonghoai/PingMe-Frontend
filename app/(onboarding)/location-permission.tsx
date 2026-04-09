@@ -1,4 +1,4 @@
-import { LocationPermissionScreen } from "../../src/features/onboarding/screens/LocationPermissionScreen";
+import { LocationPermissionScreen } from "@/features/onboarding/screens/LocationPermissionScreen";
 export default function LocationPermission() {
   return <LocationPermissionScreen />;
 }

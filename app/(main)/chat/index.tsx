@@ -1,5 +1,5 @@
 import { Stack } from "expo-router";
-import { ChatListScreen } from "../../../src/features/chat/screens/ChatListScreen";
+import { ChatListScreen } from "@/features/chat/screens/ChatListScreen";
 
 export default function ChatList() {
   return (

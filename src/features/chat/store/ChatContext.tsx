@@ -1,7 +1,7 @@
-import { chatApi } from "@/src/services/chatApi";
-import { useUser } from "@/src/store/UserContext";
-import { socketService } from "@/src/websockets/socketService";
-import React, { createContext, useContext, useEffect, useState } from "react";
+import { chatApi } from "@/services/chatApi";
+import { useUser } from "@/store/UserContext";
+import { socketService } from "@/websockets/socketService";
+import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 
 export const ChatContext = createContext<any>(null);
 
@@ -39,7 +39,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     // Tải danh sách chat
     loadConversations();
 
-    // Lắng nghe sự kiện
+    // Sự kiện ai đó online
     const handleUserOnline = (data: { userId: string }) => {
       console.log("🔥 Ai đó vừa online:", data.userId);
       setOnlineUsers((prev) => {
@@ -48,6 +48,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
       });
     };
 
+    // Sự kiện ai đó offline
     const handleUserOffline = (data: { userId: string; lastActiveAt: any }) => {
       console.log("💤 Ai đó vừa offline:", data.userId);
       setOnlineUsers((prev) => prev.filter((id) => id !== data.userId));
@@ -58,17 +59,31 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
       setOnlineUsers(users);
     };
 
+    const handleSyncChatList = () => {
+      loadConversations();
+    };
+
     socketService.on("user_online", handleUserOnline);
     socketService.on("user_offline", handleUserOffline);
     socketService.on("online_users_list", handleOnlineUsersList);
+    socketService.on("new_message", handleSyncChatList);
+    socketService.on("message_sent_success", handleSyncChatList);
 
     // Dọn dẹp listener khi đăng xuất
     return () => {
       socketService.off("user_online", handleUserOnline);
       socketService.off("user_offline", handleUserOffline);
       socketService.off("online_users_list", handleOnlineUsersList);
+      socketService.off("new_message", handleSyncChatList);
+      socketService.off("message_sent_success", handleSyncChatList);
     };
   }, [userProfile?.userId]);
+
+  // Tính tổng tin nhắn chưa đọc
+  const totalUnreadCount = useMemo(() => {
+    if (!conversations || conversations.length === 0) return 0;
+    return conversations.reduce((sum: number, conv: any) => sum + (conv.unreadCount || 0), 0);
+  }, [conversations]);
 
   return (
     <ChatContext.Provider
@@ -77,6 +92,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
         isLoadingConversations,
         loadConversations,
         onlineUsers,
+        totalUnreadCount,
       }}
     >
       {children}
