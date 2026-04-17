@@ -1,6 +1,5 @@
 import { apiClient } from "./apiClient";
 
-// --- 1. ĐỊNH NGHĨA KIỂU DỮ LIỆU ---
 export interface ChatListItem {
   id: string;
   name: string;
@@ -13,13 +12,11 @@ export interface ChatListItem {
 export interface ChatMessage {
   id: string;
   text: string;
-  sender: "me" | "them"; // Để UI biết bóng chat nằm bên trái hay phải
+  sender: "me" | "them";
   time: string;
 }
 
-// --- 2. GOM NHÓM CÁC HÀM GỌI API ---
 export const chatApi = {
-  // Lấy danh sách các cuộc trò chuyện hiển thị ở ChatListScreen
   getConversations: async () => {
     return apiClient.get("/conversations");
   },
@@ -32,5 +29,21 @@ export const chatApi = {
 
   getMessageContext: async (conversationId: string, messageId: string) => {
     return apiClient.get(`/messages/${conversationId}/context/${messageId}`);
-  }
+  },
+
+  getConversationMedia: async (conversationId: string, page = 1, limit = 10) => {
+    return apiClient.get(
+      `/messages/${conversationId}/media?page=${page}&limit=${limit}`,
+    );
+  },
+
+  blockUser: async (conversationId: string) => {
+    return apiClient.post(`/conversations/${conversationId}/block`);
+  },
+  unblockUser: async (conversationId: string) => {
+    return apiClient.post(`/conversations/${conversationId}/unblock`);
+  },
+  clearHistory: async (conversationId: string) => {
+    return apiClient.post(`/conversations/${conversationId}/clear-history`);
+  },
 };

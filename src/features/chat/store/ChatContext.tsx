@@ -95,6 +95,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
             avatarUrl: rawConv.avatarUrl,
             lastMessageSnippet: rawConv.lastMessageSnippet,
             lastMessageAt: rawConv.lastMessageAt,
+            blockedById: rawConv.blockedById || null,
             unreadCount: myParticipant.unreadCount || 0,
             hasMuted: myParticipant.hasMuted || false,
             participants: rawConv.participants?.map((op: any) => ({

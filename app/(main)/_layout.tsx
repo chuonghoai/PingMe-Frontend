@@ -29,6 +29,29 @@ export default function MainLayout() {
           headerShown: false,
         }}
       />
+
+      <Stack.Screen
+        name="chat-profile"
+        options={{
+          headerShown: false,
+        }}
+      />
+
+      <Stack.Screen
+        name="chat-media"
+        options={{
+          headerShown: false,
+        }}
+      />
+
+      <Stack.Screen
+        name="media-viewer"
+        options={{
+          headerShown: false,
+          presentation: "transparentModal",
+          animation: "fade",
+        }}
+      />
     </Stack>
   );
 }

@@ -1,5 +1,7 @@
+import { Audio } from "expo-av";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
+import { Vibration } from "react-native";
 import InCallManager from "react-native-incall-manager";
 import {
   mediaDevices,
@@ -12,7 +14,6 @@ import { socketService } from "../../../websockets/socketService";
 
 export type CallStatus = "connecting" | "ringing" | "accepted" | "rejected" | "ended";
 
-// Cấu hình máy chủ STUN miễn phí của Google để tìm đường kết nối mạng
 const peerConstraints = {
   iceServers: [
     { urls: "stun:stun.l.google.com:19302" },
@@ -46,6 +47,11 @@ export const useCallController = () => {
 
   const hasEmittedCall = useRef(false);
   const pendingCandidates = useRef<any[]>([]);
+  const soundRef = useRef<Audio.Sound | null>(null);
+
+  const formattedDuration = `${String(Math.floor(callDuration / 60)).padStart(2, "0")}:${String(
+    callDuration % 60
+  ).padStart(2, "0")}`;
 
   // Calculate call duration
   useEffect(() => {
@@ -60,10 +66,6 @@ export const useCallController = () => {
     };
   }, [status]);
 
-  const formattedDuration = `${String(Math.floor(callDuration / 60)).padStart(2, "0")}:${String(
-    callDuration % 60
-  ).padStart(2, "0")}`;
-
   // Create camera/mic and webRTC when enter call screen
   useEffect(() => {
     let isMounted = true;
@@ -73,12 +75,11 @@ export const useCallController = () => {
         const stream = await mediaDevices.getUserMedia({
           audio: {
             mandatory: {
-              echoCancellation: true, // Khử tiếng vang
-              googNoiseSuppression: true, // Khử tiếng ồn (Google)
-              googAutoGainControl: true, // Tự động khuếch đại âm thanh cho to lên (Google)
+              echoCancellation: true,
+              googNoiseSuppression: true,
+              googAutoGainControl: true,
             }
           } as any,
-          // audio: true,
           video: isVideoCall ? { facingMode: isFrontCam ? "user" : "environment" } : false,
         });
         if (isMounted) setLocalStream(stream);
@@ -106,10 +107,12 @@ export const useCallController = () => {
 
         pc.current = peerConnection;
 
-        InCallManager.start({ media: isVideoCall ? 'video' : 'audio' });
-        InCallManager.setForceSpeakerphoneOn(isVideoCall);
+        if (isIncoming && status === "ringing") {
+          InCallManager.setForceSpeakerphoneOn(true);
+        } else {
+          InCallManager.setForceSpeakerphoneOn(isVideoCall);
+        }
 
-        // BẢO VỆ CHẶT: Chỉ phát sự kiện gọi 1 lần duy nhất
         if (!isIncoming && status === "connecting" && !hasEmittedCall.current) {
           hasEmittedCall.current = true;
           console.log(`[Caller] Đã gửi tín hiệu gọi đến ${targetUserId}`);
@@ -131,7 +134,7 @@ export const useCallController = () => {
     };
   }, []);
 
-  // 2. XỬ LÝ CÁC SỰ KIỆN SIGNALING TỪ SOCKET
+  // Listen signal from socket
   useEffect(() => {
     const handleCallResponse = async (data: { responderId: string; accepted: boolean }) => {
 
@@ -238,7 +241,7 @@ export const useCallController = () => {
     };
   }, [targetUserId]);
 
-  // 3. LOGIC TỰ ĐỘNG THOÁT
+  // Out feature call if reject or ended
   useEffect(() => {
     if (status === "rejected" || status === "ended") {
       const timer = setTimeout(() => {
@@ -248,7 +251,70 @@ export const useCallController = () => {
     }
   }, [status, router]);
 
-  // --- CÁC HÀM TƯƠNG TÁC GIAO DIỆN CHUẨN WEBRTC ---
+  // Play sound and vibrate phone when have incoming call
+  useEffect(() => {
+    let isMounted = true;
+
+    const handleRingtoneAndVibration = async () => {
+      // Ringing
+      if (isIncoming && status === "ringing") {
+        Vibration.vibrate([0, 1000, 1000], true);
+
+        try {
+          InCallManager.stop();
+          await Audio.setAudioModeAsync({
+            allowsRecordingIOS: true,
+            playsInSilentModeIOS: true,
+            staysActiveInBackground: true,
+            shouldDuckAndroid: false,
+            playThroughEarpieceAndroid: false,
+          });
+
+          InCallManager.setForceSpeakerphoneOn(true);
+
+          const { sound } = await Audio.Sound.createAsync(
+            require("../../../../assets/audio/calls.mp3"),
+            { shouldPlay: true, isLooping: true }
+          );
+
+          if (isMounted) {
+            soundRef.current = sound;
+          } else {
+            sound.unloadAsync();
+          }
+        } catch (error) {
+          console.error("Lỗi phát nhạc chuông:", error);
+        }
+      }
+      // Response incoming call
+      else {
+        Vibration.cancel();
+
+        if (soundRef.current) {
+          soundRef.current.stopAsync();
+          soundRef.current.unloadAsync();
+          soundRef.current = null;
+        }
+
+        if (status === "accepted") {
+          InCallManager.setForceSpeakerphoneOn(isVideoCall);
+          setIsSpeakerOn(isVideoCall);
+        }
+      }
+    };
+
+    handleRingtoneAndVibration();
+
+    return () => {
+      isMounted = false;
+      Vibration.cancel();
+      if (soundRef.current) {
+        soundRef.current.stopAsync();
+        soundRef.current.unloadAsync();
+        soundRef.current = null;
+      }
+    };
+  }, [isIncoming, status, isVideoCall]);
 
   const toggleMic = () => {
     if (localStream) {
@@ -286,6 +352,8 @@ export const useCallController = () => {
 
   const acceptCall = () => {
     setStatus("accepted");
+    InCallManager.start({ media: isVideoCall ? 'video' : 'audio' });
+    InCallManager.setForceSpeakerphoneOn(isVideoCall);
     socketService.emit("call_response", { targetUserId, accepted: true });
   };
 
@@ -296,6 +364,7 @@ export const useCallController = () => {
 
   const endCall = () => {
     setStatus("ended");
+    InCallManager.stop();
     socketService.emit("end_call", { targetUserId });
   };
 
