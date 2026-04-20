@@ -1,7 +1,7 @@
-import { chatApi } from "@/src/services/chatApi";
-import { mediaApi } from "@/src/services/mediaApi";
-import { useUser } from "@/src/store/UserContext";
-import { socketService } from "@/src/websockets/socketService";
+import { chatApi } from "@/services/chatApi";
+import { mediaApi } from "@/services/mediaApi";
+import { useUser } from "@/store/UserContext";
+import { socketService } from "@/websockets/socketService";
 import { Audio, ResizeMode, Video } from "expo-av";
 import * as ImagePicker from "expo-image-picker";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
