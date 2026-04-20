@@ -1,60 +1,50 @@
 import { StyleSheet } from "react-native";
+import { PINGME_COLORS } from "@/constants/theme";
 
 export const COLORS = {
-  white: "#FFFFFF",
-  amberGold: "#F5A623",
-  darkAmber: "#D48806",
-  lightYellow: "#FFFDF9",
-  lightGray: "#F2F3F5",
-  borderColor: "#EAEAEA",
-  textMain: "#1C1C1E",
-  textSub: "#8E8E93",
-  onlineGreen: "#34C759",
-  offlineGray: "#A0A0A0",
+  ...PINGME_COLORS,
+  textSub: PINGME_COLORS.textSecondary,
 };
 
 export const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.4)",
+    backgroundColor: "rgba(15, 23, 42, 0.4)", // Darker, cooler scrim
     justifyContent: "flex-end",
   },
   bottomSheet: {
     height: "75%",
-    backgroundColor: COLORS.white,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    backgroundColor: COLORS.bgWhite,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.15,
-    shadowRadius: 10,
-    elevation: 20,
+    shadowRadius: 16,
+    elevation: 24,
     overflow: "hidden",
-    display: "flex",
     flexDirection: "column",
   },
 
-  // Thanh nắm kéo (Khu vực cảm biến vuốt)
   dragHandleContainer: {
-    height: 40, // Đủ rộng để ngón tay dễ chạm vào
+    height: 40,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: COLORS.white,
+    backgroundColor: COLORS.bgWhite,
   },
   dragHandle: {
     width: 44,
     height: 5,
-    backgroundColor: "#DDDDDD",
+    backgroundColor: COLORS.border,
     borderRadius: 3,
   },
-  // Đã xóa hoàn toàn class closeBtn
 
   headerContainer: {
     paddingHorizontal: 16,
-    paddingBottom: 16,
-    backgroundColor: COLORS.white,
+    paddingBottom: 14,
+    backgroundColor: COLORS.bgWhite,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.borderColor,
+    borderBottomColor: COLORS.border,
   },
   searchRow: {
     flexDirection: "row",
@@ -64,32 +54,34 @@ export const styles = StyleSheet.create({
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: COLORS.lightGray,
+    backgroundColor: COLORS.bgMid,
     borderRadius: 20,
     paddingHorizontal: 14,
     marginRight: 12,
     height: 44,
+    borderWidth: 1.5,
+    borderColor: COLORS.border,
   },
   searchIcon: {
     marginRight: 8,
   },
   searchInput: {
     flex: 1,
-    fontSize: 16,
-    color: COLORS.textMain,
+    fontSize: 15,
+    color: COLORS.textPrimary,
     paddingVertical: 10,
   },
   addFriendBtn: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: COLORS.amberGold,
+    backgroundColor: COLORS.primary,
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: COLORS.darkAmber,
+    shadowColor: COLORS.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
-    shadowRadius: 5,
+    shadowRadius: 8,
     elevation: 6,
   },
 
@@ -101,13 +93,13 @@ export const styles = StyleSheet.create({
   },
   avatarContainer: {
     position: "relative",
-    marginRight: 16,
+    marginRight: 14,
   },
   avatar: {
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: COLORS.lightGray,
+    backgroundColor: COLORS.bgMid,
   },
   onlineBadge: {
     position: "absolute",
@@ -116,36 +108,37 @@ export const styles = StyleSheet.create({
     width: 14,
     height: 14,
     borderRadius: 7,
-    backgroundColor: COLORS.onlineGreen,
+    backgroundColor: COLORS.online,
     borderWidth: 2,
-    borderColor: COLORS.white,
+    borderColor: COLORS.bgWhite,
   },
   offlineBadge: {
-    backgroundColor: COLORS.offlineGray, // Ghi đè màu nền thành xám
+    backgroundColor: COLORS.offline,
   },
   chatInfo: {
     flex: 1,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.borderColor,
-    paddingBottom: 16,
-    paddingTop: 4,
+    borderBottomColor: COLORS.border,
+    paddingBottom: 14,
+    paddingTop: 2,
   },
   chatHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 6,
+    marginBottom: 5,
     alignItems: "center",
   },
   chatName: {
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: "700",
-    color: COLORS.textMain,
+    color: COLORS.textPrimary,
     flex: 1,
     marginRight: 8,
   },
   chatTime: {
     fontSize: 12,
-    color: COLORS.textSub,
+    color: COLORS.textSecondary,
+    fontWeight: "500",
   },
   chatFooter: {
     flexDirection: "row",
@@ -153,17 +146,17 @@ export const styles = StyleSheet.create({
     alignItems: "center",
   },
   lastMessage: {
-    fontSize: 15,
-    color: COLORS.textSub,
+    fontSize: 14,
+    color: COLORS.textSecondary,
     flex: 1,
     marginRight: 16,
   },
   unreadMessage: {
-    color: COLORS.textMain,
+    color: COLORS.textPrimary,
     fontWeight: "700",
   },
   unreadBadge: {
-    backgroundColor: "#FF3B30",
+    backgroundColor: COLORS.primary,
     paddingHorizontal: 7,
     paddingVertical: 3,
     borderRadius: 12,
@@ -177,14 +170,16 @@ export const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   emptyContainer: {
-    padding: 40,
+    padding: 48,
     alignItems: "center",
     justifyContent: "center",
     marginTop: 40,
   },
   emptyText: {
-    color: COLORS.textSub,
+    color: COLORS.textSecondary,
     fontSize: 16,
-    marginTop: 12,
+    fontWeight: "600",
+    textAlign: "center",
+    lineHeight: 24,
   },
 });

@@ -1,14 +1,16 @@
+import { PINGME_COLORS } from "@/constants/theme";
 import { Platform, StyleSheet } from "react-native";
 
 export const COLORS = {
+  ...PINGME_COLORS,
   white: "#FFFFFF",
   amberGold: "#F5A623",
   darkAmber: "#D48806",
-  lightYellow: "#FFFDF9", // Đổi màu nền sáng hơn một chút cho sang trọng
+  lightYellow: "#FFFDF9",
   borderColor: "#EAEAEA",
   inputBackground: "#F2F3F5",
   iconGray: "#8E8E93",
-  iconActive: "#F5A623", // Vàng hổ phách cho icon đang hoạt động
+  iconActive: "#F5A623",
   textMain: "#1C1C1E",
   textSub: "#8E8E93",
   bgDarker: "#F5F6F8",
@@ -18,35 +20,36 @@ export const COLORS = {
 };
 
 export const styles = StyleSheet.create({
-  // --- TỔNG THỂ ---
   container: {
     flex: 1,
-    backgroundColor: COLORS.lightYellow,
+    backgroundColor: COLORS.bgWhite,
   },
 
-  // --- HEADER CHUYÊN NGHIỆP ---
+  // ── HEADER ──
   headerContainer: {
     flexDirection: "row",
     alignItems: "center",
-    paddingTop: Platform.OS === "ios" ? 50 : 20, // Xử lý SafeArea
+    paddingTop: Platform.OS === "ios" ? 50 : 20,
     paddingBottom: 12,
     paddingHorizontal: 16,
-    backgroundColor: COLORS.white,
+    backgroundColor: COLORS.bgWhite,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.borderColor,
+    borderBottomColor: COLORS.border,
     zIndex: 10,
   },
   backButton: {
     padding: 8,
     marginRight: 8,
-    marginLeft: -8, // Kéo nhẹ sang trái cho cân
+    marginLeft: -8,
   },
   headerAvatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: COLORS.inputBackground,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: COLORS.bgMid,
     marginRight: 12,
+    borderWidth: 2,
+    borderColor: COLORS.border,
   },
   headerTitleContainer: {
     flex: 1,
@@ -54,8 +57,8 @@ export const styles = StyleSheet.create({
   },
   headerName: {
     fontSize: 17,
-    fontWeight: "700",
-    color: COLORS.textMain,
+    fontWeight: "800",
+    color: COLORS.textPrimary,
   },
   headerStatusContainer: {
     flexDirection: "row",
@@ -66,53 +69,55 @@ export const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: "#34C759", // Màu xanh lá online
+    backgroundColor: COLORS.online,
     marginRight: 6,
   },
   headerStatus: {
     fontSize: 12,
-    color: COLORS.textSub,
+    color: COLORS.textSecondary,
+    fontWeight: "600",
   },
   headerActions: {
     flexDirection: "row",
   },
   headerIconButton: {
     padding: 8,
-    marginLeft: 8,
+    marginLeft: 4,
   },
 
-  // --- DANH SÁCH TIN NHẮN ---
+  // ── MESSAGE LIST ──
   chatListContent: {
     paddingHorizontal: 16,
     paddingVertical: 20,
   },
   messageBubble: {
-    maxWidth: "75%",
+    maxWidth: "78%",
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderRadius: 20,
-    marginBottom: 10,
+    marginBottom: 8,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
+    shadowRadius: 3,
+    elevation: 2,
   },
   myMessage: {
-    backgroundColor: COLORS.amberGold,
+    // Vibrant Cyan gradient feel
+    backgroundColor: COLORS.primary,
     alignSelf: "flex-end",
     borderBottomRightRadius: 4,
   },
   theirMessage: {
-    backgroundColor: COLORS.white,
+    backgroundColor: COLORS.bgSurface,
     alignSelf: "flex-start",
     borderBottomLeftRadius: 4,
     borderWidth: 1,
-    borderColor: COLORS.borderColor,
+    borderColor: COLORS.border,
   },
   messageText: {
     fontSize: 16,
-    color: COLORS.textMain,
+    color: COLORS.textPrimary,
     lineHeight: 22,
   },
   myMessageText: {
@@ -122,29 +127,30 @@ export const styles = StyleSheet.create({
     fontSize: 11,
     alignSelf: "flex-end",
     marginTop: 4,
+    fontWeight: "500",
   },
   theirTimeText: {
-    color: COLORS.textSub,
+    color: COLORS.textSecondary,
   },
   myTimeText: {
-    color: "rgba(255,255,255,0.7)",
+    color: "rgba(255,255,255,0.75)",
   },
 
-  // --- THANH NHẬP LIỆU ---
+  // ── INPUT BAR ──
   inputContainer: {
     flexDirection: "row",
     alignItems: "flex-end",
     paddingHorizontal: 12,
     paddingVertical: 10,
-    paddingBottom: Platform.OS === "ios" ? 30 : 10, // Kéo lên trên iOS
-    backgroundColor: COLORS.white,
+    paddingBottom: Platform.OS === "ios" ? 30 : 10,
+    backgroundColor: COLORS.bgWhite,
     borderTopWidth: 1,
-    borderColor: COLORS.borderColor,
+    borderColor: COLORS.border,
   },
   mediaButtonsContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 8, // Căn giữa với ô input dòng đầu
+    marginBottom: 8,
   },
   mediaButton: {
     padding: 8,
@@ -154,16 +160,18 @@ export const styles = StyleSheet.create({
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: COLORS.inputBackground,
+    backgroundColor: COLORS.bgMid,
     borderRadius: 24,
     paddingHorizontal: 12,
     minHeight: 40,
-    maxHeight: 120, // Không cho phình to quá mức
+    maxHeight: 120,
+    borderWidth: 1.5,
+    borderColor: COLORS.border,
   },
   textInput: {
     flex: 1,
     fontSize: 16,
-    color: COLORS.textMain,
+    color: COLORS.textPrimary,
     paddingVertical: 10,
     paddingRight: 8,
     ...(Platform.OS === "android" ? { padding: 0 } : {}),
@@ -174,7 +182,18 @@ export const styles = StyleSheet.create({
   },
   sendBtn: {
     marginBottom: 8,
-    padding: 8,
-    marginLeft: 4,
+    padding: 10,
+    marginLeft: 6,
+    backgroundColor: COLORS.primary,
+    borderRadius: 22,
+    width: 44,
+    height: 44,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
   },
 });

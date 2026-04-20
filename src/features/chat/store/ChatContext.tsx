@@ -1,8 +1,8 @@
-import { chatApi } from "@/src/services/chatApi";
-import { useUser } from "@/src/store/UserContext";
-import { socketService } from "@/src/websockets/socketService";
-import React, { createContext, useContext, useEffect, useState } from "react";
+import { chatApi } from "@/services/chatApi";
+import { useUser } from "@/store/UserContext";
+import { socketService } from "@/websockets/socketService";
 import { useRouter } from "expo-router";
+import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 
 export const ChatContext = createContext<any>(null);
 
@@ -87,7 +87,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 
           // Format raw entity to match UI requirements (hoist unreadCount & hasMuted)
           const myParticipant = rawConv.participants?.find((p: any) => p.userId === userProfile?.userId) || {};
-          
+
           const formattedConv = {
             id: rawConv.id,
             type: rawConv.type,
@@ -117,7 +117,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     // Incoming call
     const handleIncomingCall = (data: any) => {
       console.log("📞 Có cuộc gọi đến:", data);
-      
+
       router.push({
         pathname: "/(main)/call-test",
         params: {
@@ -151,6 +151,12 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     };
   }, [userProfile?.userId]);
 
+  // Tính tổng tin nhắn chưa đọc
+  const totalUnreadCount = useMemo(() => {
+    if (!conversations || conversations.length === 0) return 0;
+    return conversations.reduce((sum: number, conv: any) => sum + (conv.unreadCount || 0), 0);
+  }, [conversations]);
+
   return (
     <ChatContext.Provider
       value={{
@@ -159,6 +165,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
         loadConversations,
         onlineUsers,
         clearUnreadCount,
+        totalUnreadCount,
       }}
     >
       {children}

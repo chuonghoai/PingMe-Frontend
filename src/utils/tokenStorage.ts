@@ -12,12 +12,15 @@ export const getRefreshToken = async () => {
 };
 
 export const setTokens = async (accessToken: string, refreshToken: string) => {
-  await AsyncStorage.multiSet([
-    [ACCESS_TOKEN_KEY, accessToken],
-    [REFRESH_TOKEN_KEY, refreshToken],
+  await Promise.all([
+    AsyncStorage.setItem(ACCESS_TOKEN_KEY, accessToken),
+    AsyncStorage.setItem(REFRESH_TOKEN_KEY, refreshToken),
   ]);
 };
 
 export const clearTokens = async () => {
-  await AsyncStorage.multiRemove([ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY]);
+  await Promise.all([
+    AsyncStorage.removeItem(ACCESS_TOKEN_KEY),
+    AsyncStorage.removeItem(REFRESH_TOKEN_KEY),
+  ]);
 };

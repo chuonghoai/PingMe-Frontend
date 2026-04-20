@@ -1,4 +1,4 @@
-import { authApi } from "@/src/services/authApi";
+import { authApi } from "@/services/authApi";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -7,6 +7,7 @@ import {
   Platform,
   ScrollView,
   Text,
+  TouchableOpacity,
   View,
 } from "react-native";
 import { Button } from "../../../components/Button/Button";
@@ -25,24 +26,26 @@ export const RegisterScreen = () => {
       window.alert(`${title}: ${message}`);
       return;
     }
-
     Alert.alert(title, message);
+  };
+
+  const isValidEmail = (value: string) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
   };
 
   const handleRegister = async () => {
     if (!email.trim() || !password.trim() || !confirmPassword.trim()) {
-      showMessage("Loi", "Vui long nhap day du thong tin!");
+      showMessage("Lỗi", "Vui lòng nhập đầy đủ thông tin!");
       return;
     }
 
     if (password !== confirmPassword) {
-      showMessage("Loi", "Mat khau xac nhan khong khop. Vui long kiem tra lai!");
+      showMessage("Lỗi", "Mật khẩu xác nhận không khớp. Vui lòng kiểm tra lại!");
       return;
     }
 
     if (!isValidEmail(email)) {
-      showMessage("Loi", "Email khong hop le");
-      console.log("Email khong hop le");
+      showMessage("Lỗi", "Email không hợp lệ");
       return;
     }
 
@@ -51,7 +54,7 @@ export const RegisterScreen = () => {
       const response: any = await authApi.sendOtp(email);
 
       if (response.success) {
-        showMessage("Thanh cong", "Ma OTP da duoc gui den email cua ban");
+        showMessage("Thành công", "Mã OTP đã được gửi đến email của bạn");
 
         router.push({
           pathname: "/(auth)/verify-email",
@@ -62,30 +65,29 @@ export const RegisterScreen = () => {
         });
       }
     } catch (error: any) {
-      showMessage("Loi", error.toString());
+      showMessage("Lỗi", error.toString());
     } finally {
       setIsLoading(false);
     }
   };
 
-  const isValidEmail = (value: string) => {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-  };
-
   return (
     <KeyboardAvoidingView
-      style={{ flex: 1, backgroundColor: COLORS.white }}
+      style={{ flex: 1, backgroundColor: COLORS.bgWhite }}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.logoContainer}>
           <View style={styles.logoRow}>
-            <Text style={styles.logoTextMain}>Go</Text>
-            <Text style={styles.logoTextSecondary}>Go</Text>
+            <Text style={styles.logoTextMain}>Ping</Text>
+            <Text style={styles.logoTextSecondary}>Me</Text>
           </View>
         </View>
 
-        <Text style={styles.title}>Dang ky tai khoan</Text>
+        <View style={styles.titleWrapper}>
+          <Text style={styles.title}>Đăng ký tài khoản</Text>
+          <Text style={styles.subtitle}>Bắt đầu hành trình kết nối của bạn</Text>
+        </View>
 
         <Input
           label="Email"
@@ -101,7 +103,7 @@ export const RegisterScreen = () => {
           placeholder="Tao mat khau"
           value={password}
           onChangeText={setPassword}
-          secureTextEntry
+          isPassword={true}
         />
 
         <Input
@@ -109,20 +111,26 @@ export const RegisterScreen = () => {
           placeholder="Nhap lai mat khau"
           value={confirmPassword}
           onChangeText={setConfirmPassword}
-          secureTextEntry
+          isPassword={true}
         />
 
-        <Button
-          title={isLoading ? "Dang gui..." : "Tiep tuc"}
-          onPress={handleRegister}
-          style={{ marginTop: 20, backgroundColor: COLORS.amberGold }}
-        />
-        <Button
-          title="Da co tai khoan? Dang nhap"
-          variant="outline"
-          onPress={() => router.back()}
-          style={{ borderColor: COLORS.amberGold }}
-        />
+        <TouchableOpacity 
+          style={styles.registerBtn} 
+          onPress={handleRegister} 
+          activeOpacity={0.8}
+          disabled={isLoading}
+        >
+          <View style={{ alignItems: 'center' }}>
+            <Text style={styles.registerBtnText}>{isLoading ? "ĐANG GỬI OTP..." : "TIẾP TỤC"}</Text>
+          </View>
+        </TouchableOpacity>
+
+        <View style={styles.loginLinkWrapper}>
+          <Text style={styles.loginTextPrefix}>Đã có tài khoản? </Text>
+          <TouchableOpacity onPress={() => router.back()}>
+            <Text style={styles.loginTextAction}>Đăng nhập</Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );

@@ -1,7 +1,8 @@
 /* eslint-disable import/no-unresolved */
-import { authApi } from "@/src/services/authApi";
-import { useUser } from "@/src/store/UserContext";
-import { getAccessToken, setTokens } from "@/src/utils/tokenStorage";
+import { Input } from "@/components/Input/Input";
+import { authApi } from "@/services/authApi";
+import { useUser } from "@/store/UserContext";
+import { setTokens } from "@/utils/tokenStorage";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -12,8 +13,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { Button } from "../../../components/Button/Button";
-import { Input } from "../../../components/Input/Input";
 import { COLORS, styles } from "./LoginScreen.styles";
 
 export const LoginScreen = () => {
@@ -29,13 +28,12 @@ export const LoginScreen = () => {
       window.alert(`${title}: ${message}`);
       return;
     }
-
     Alert.alert(title, message);
   };
 
   const handleLogin = async () => {
     if (!email || !password) {
-      showMessage("Loi", "Vui long nhap email va mat khau");
+      showMessage("Lỗi", "Vui lòng nhập email và mật khẩu");
       return;
     }
 
@@ -48,7 +46,6 @@ export const LoginScreen = () => {
     try {
       setIsLoading(true);
       const response: any = await authApi.login({ email, password, rememberMe });
-      console.log(response);
 
       if (response.success) {
         await setTokens(response.data.accessToken, response.data.refreshToken);
@@ -58,13 +55,11 @@ export const LoginScreen = () => {
           email: response.data.user.email,
         });
 
-        showMessage("Thanh cong", "Dang nhap thanh cong!");
-        const accessToken = await getAccessToken();
-        console.log(accessToken);
+        showMessage("Thành công", "Đăng nhập thành công!");
         router.replace("/(main)/home");
       }
     } catch (error: any) {
-      showMessage("Dang nhap that bai", error.toString());
+      showMessage("Đăng nhập thất bại", error.toString());
     } finally {
       setIsLoading(false);
     }
@@ -78,12 +73,15 @@ export const LoginScreen = () => {
     <View style={styles.container}>
       <View style={styles.logoContainer}>
         <View style={styles.logoRow}>
-          <Text style={styles.logoTextMain}>Go</Text>
-          <Text style={styles.logoTextSecondary}>Go</Text>
+          <Text style={styles.logoTextMain}>Ping</Text>
+          <Text style={styles.logoTextSecondary}>Me</Text>
         </View>
       </View>
 
-      <Text style={styles.title}>Dang nhap</Text>
+      <View style={styles.titleWrapper}>
+        <Text style={styles.title}>Đăng nhập</Text>
+        <Text style={styles.subtitle}>Chào mừng trở lại! Hãy kết nối nào.</Text>
+      </View>
 
       <Input
         label="Email"
@@ -93,12 +91,13 @@ export const LoginScreen = () => {
         keyboardType="email-address"
         autoCapitalize="none"
       />
+
       <Input
         label="Mat khau"
         placeholder="Nhap mat khau"
         value={password}
         onChangeText={setPassword}
-        secureTextEntry
+        isPassword={true}
       />
 
       <View style={styles.row}>
@@ -106,29 +105,33 @@ export const LoginScreen = () => {
           <Switch
             value={rememberMe}
             onValueChange={setRememberMe}
-            trackColor={{ false: "#767577", true: COLORS.amberGold }}
-            thumbColor={Platform.OS === "android" ? "#f4f3f4" : undefined}
+            trackColor={{ false: "#CBD5E1", true: COLORS.primary }}
+            thumbColor={Platform.OS === "android" ? "#F8FAFC" : undefined}
           />
           <Text style={styles.rememberText}>Nho mat khau</Text>
         </View>
-        <TouchableOpacity
-          onPress={() => router.push("/(auth)/forgot-password")}
-        >
-          <Text style={styles.forgotText}>Quen mat khau?</Text>
+        <TouchableOpacity onPress={() => router.push("/(auth)/forgot-password")}>
+          <Text style={styles.forgotText}>Quên mật khẩu?</Text>
         </TouchableOpacity>
       </View>
 
-      <Button
-        title={isLoading ? "Dang nhap..." : "Dang nhap"}
+      <TouchableOpacity
+        style={styles.loginBtn}
         onPress={handleLogin}
-        style={{ backgroundColor: COLORS.amberGold }}
-      />
-      <Button
-        title="Chua co tai khoan? Dang ky ngay"
-        variant="outline"
-        onPress={() => router.push("/(auth)/register")}
-        style={{ borderColor: COLORS.amberGold }}
-      />
+        activeOpacity={0.8}
+        disabled={isLoading}
+      >
+        <View style={{ alignItems: 'center' }}>
+          <Text style={styles.loginBtnText}>{isLoading ? "ĐANG ĐĂNG NHẬP..." : "ĐĂNG NHẬP"}</Text>
+        </View>
+      </TouchableOpacity>
+
+      <View style={styles.registerBtnWrapper}>
+        <Text style={styles.registerTextPrefix}>Chưa có tài khoản? </Text>
+        <TouchableOpacity onPress={() => router.push("/(auth)/register")}>
+          <Text style={styles.registerTextAction}>Đăng ký ngay</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };

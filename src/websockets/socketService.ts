@@ -1,6 +1,6 @@
+import { BASE_URL } from "@/services/apiClient";
+import { getAccessToken } from "@/utils/tokenStorage";
 import { io, Socket } from "socket.io-client";
-import { BASE_URL } from "../services/apiClient";
-import { getAccessToken } from "../utils/tokenStorage";
 
 class SocketService {
   public socket: Socket;

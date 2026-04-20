@@ -1,6 +1,6 @@
-import { authApi } from "@/src/services/authApi";
+import { authApi } from "@/services/authApi";
 import { useRouter } from "expo-router";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import {
   Activity,
@@ -10,13 +10,29 @@ import {
   MapPin,
   User,
 } from "lucide-react-native";
-import { useUser } from "../../../store/UserContext";
-import { clearTokens, getRefreshToken } from "../../../utils/tokenStorage";
+import { useUser } from "@/store/UserContext";
+import { clearTokens, getRefreshToken } from "@/utils/tokenStorage";
 import { COLORS, styles } from "./ProfileScreen.styles";
+import { getFriendList } from "@/services/friendsApi";
 
 export const ProfileScreen = () => {
   const router = useRouter();
   const { userProfile, logout } = useUser();
+  const [friendCount, setFriendCount] = useState(0);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const res: any = await getFriendList();
+        if (res.success && res.data) {
+          setFriendCount(res.data.length);
+        }
+      } catch (error) {
+        console.log("Lỗi load bạn bè:", error);
+      }
+    };
+    loadData();
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -59,24 +75,24 @@ export const ProfileScreen = () => {
           {userProfile.firstName} {userProfile.lastName}
         </Text>
         <Text style={styles.bioValue}>
-          {userProfile.bio || "Chua co tieu su. Hay them mot vai dieu thu vi ve ban nhe!"}
+          {userProfile.bio || "Chưa có tiểu sử. Hãy thêm một vài điều thú vị về bạn nhé!"}
         </Text>
       </View>
 
       <View style={styles.statsContainer}>
         <View style={styles.statItem}>
-          <Text style={styles.statNumber}>142</Text>
-          <Text style={styles.statLabel}>Ban be</Text>
+          <Text style={styles.statNumber}>{friendCount}</Text>
+          <Text style={styles.statLabel}>Bạn bè</Text>
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
-          <Text style={styles.statNumber}>28</Text>
-          <Text style={styles.statLabel}>Dia diem</Text>
+          <Text style={styles.statNumber}>{userProfile.currentExp}</Text>
+          <Text style={styles.statLabel}>Kinh nghiệm</Text>
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
-          <Text style={styles.statNumber}>5</Text>
-          <Text style={styles.statLabel}>Chuoi ngay</Text>
+          <Text style={styles.statNumber}>{userProfile.level}</Text>
+          <Text style={styles.statLabel}>Cấp độ</Text>
         </View>
       </View>
 
@@ -85,10 +101,10 @@ export const ProfileScreen = () => {
 
         <View style={styles.infoRow}>
           <View style={styles.iconBox}>
-            <User size={20} color={COLORS.darkAmber} />
+            <User size={20} color={COLORS.primary} />
           </View>
           <View style={styles.infoTextContainer}>
-            <Text style={styles.infoLabel}>Ho va ten</Text>
+            <Text style={styles.infoLabel}>Họ và tên</Text>
             <Text style={styles.infoValue}>
               {userProfile.firstName} {userProfile.lastName}
             </Text>
@@ -97,7 +113,7 @@ export const ProfileScreen = () => {
 
         <View style={styles.infoRow}>
           <View style={styles.iconBox}>
-            <Mail size={20} color={COLORS.darkAmber} />
+            <Mail size={20} color={COLORS.primary} />
           </View>
           <View style={styles.infoTextContainer}>
             <Text style={styles.infoLabel}>Email lien he</Text>
@@ -107,11 +123,11 @@ export const ProfileScreen = () => {
 
         <View style={styles.infoRow}>
           <View style={styles.iconBox}>
-            <MapPin size={20} color={COLORS.darkAmber} />
+            <MapPin size={20} color={COLORS.accent} />
           </View>
           <View style={styles.infoTextContainer}>
-            <Text style={styles.infoLabel}>Khu vuc</Text>
-            <Text style={styles.infoValue}>Ho Chi Minh, Viet Nam</Text>
+            <Text style={styles.infoLabel}>Khu vực</Text>
+            <Text style={styles.infoValue}>{userProfile.address || "Trái Đất"}</Text>
           </View>
         </View>
       </View>
@@ -119,7 +135,7 @@ export const ProfileScreen = () => {
       <TouchableOpacity
         style={styles.actionBtn}
         activeOpacity={0.8}
-        onPress={() => alert("Chuyen sang man hinh Statistics")}
+        onPress={() => alert("Chuyển sang màn hình Thống kê")}
       >
         <Activity size={20} color={COLORS.white} />
         <Text style={styles.actionBtnText}>Xem Thong Ke Hoat Dong</Text>
@@ -129,8 +145,8 @@ export const ProfileScreen = () => {
         style={[
           styles.actionBtn,
           {
-            backgroundColor: COLORS.white,
-            borderColor: COLORS.amberGold,
+            backgroundColor: COLORS.bgWhite,
+            borderColor: COLORS.secondary,
             borderWidth: 2,
             elevation: 0,
             shadowOpacity: 0,
@@ -139,9 +155,9 @@ export const ProfileScreen = () => {
         activeOpacity={0.8}
         onPress={() => alert("Mo form sua firstName, lastName, bio")}
       >
-        <Edit3 size={20} color={COLORS.amberGold} />
-        <Text style={[styles.actionBtnText, { color: COLORS.amberGold }]}>
-          Chinh sua ho so
+        <Edit3 size={20} color={COLORS.secondary} />
+        <Text style={[styles.actionBtnText, { color: COLORS.secondary }]}>
+          Chỉnh sửa hồ sơ
         </Text>
       </TouchableOpacity>
 

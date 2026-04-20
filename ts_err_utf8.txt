@@ -1,0 +1,19 @@
+﻿app/(auth)/reset-password.tsx(1,37): error TS2307: Cannot find module '@/src/features/auth/screens/ResetPasswordScreen' or its corresponding type declarations.
+app/_layout.tsx(1,30): error TS2307: Cannot find module '@/src/features/chat/store/ChatContext' or its corresponding type declarations.
+src/features/auth/screens/ForgotPasswordScreen.tsx(1,25): error TS2307: Cannot find module '@/src/services/authApi' or its corresponding type declarations.
+src/features/auth/screens/LoginScreen.tsx(2,25): error TS2307: Cannot find module '@/src/services/authApi' or its corresponding type declarations.
+src/features/auth/screens/LoginScreen.tsx(3,25): error TS2307: Cannot find module '@/src/store/UserContext' or its corresponding type declarations.
+src/features/auth/screens/LoginScreen.tsx(4,43): error TS2307: Cannot find module '@/src/utils/tokenStorage' or its corresponding type declarations.
+src/features/auth/screens/RegisterScreen.tsx(1,25): error TS2307: Cannot find module '@/src/services/authApi' or its corresponding type declarations.
+src/features/auth/screens/ResetPasswordScreen.tsx(1,25): error TS2307: Cannot find module '@/src/services/authApi' or its corresponding type declarations.
+src/features/auth/screens/VerifyEmailScreen.tsx(1,25): error TS2307: Cannot find module '@/src/services/authApi' or its corresponding type declarations.
+src/features/chat/screens/ChatListScreen.tsx(1,25): error TS2307: Cannot find module '@/src/store/UserContext' or its corresponding type declarations.
+src/features/chat/screens/ChatRoomScreen.tsx(26,25): error TS2307: Cannot find module '@/src/services/chatApi' or its corresponding type declarations.
+src/features/chat/screens/ChatRoomScreen.tsx(27,25): error TS2307: Cannot find module '@/src/store/UserContext' or its corresponding type declarations.
+src/features/chat/screens/ChatRoomScreen.tsx(28,31): error TS2307: Cannot find module '@/src/websockets/socketService' or its corresponding type declarations.
+src/features/chat/store/ChatContext.tsx(1,25): error TS2307: Cannot find module '@/src/services/chatApi' or its corresponding type declarations.
+src/features/chat/store/ChatContext.tsx(2,25): error TS2307: Cannot find module '@/src/store/UserContext' or its corresponding type declarations.
+src/features/chat/store/ChatContext.tsx(3,31): error TS2307: Cannot find module '@/src/websockets/socketService' or its corresponding type declarations.
+src/features/onboarding/screens/ProfileSetupScreen.tsx(1,25): error TS2307: Cannot find module '@/src/services/authApi' or its corresponding type declarations.
+src/features/profile/screens/ProfileScreen.tsx(1,25): error TS2307: Cannot find module '@/src/services/authApi' or its corresponding type declarations.
+src/features/profile/screens/ProfileScreen.tsx(26,45): error TS7006: Parameter 'err' implicitly has an 'any' type.

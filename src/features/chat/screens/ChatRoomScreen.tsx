@@ -604,7 +604,7 @@ export const ChatRoomScreen = () => {
           onPress={() => router.back()}
           style={styles.backButton}
         >
-          <ChevronLeft size={28} color={COLORS.amberGold} />
+          <ChevronLeft size={28} color={COLORS.primary} />
         </TouchableOpacity>
 
         <Image
