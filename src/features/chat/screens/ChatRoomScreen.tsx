@@ -6,22 +6,21 @@ import { Audio, ResizeMode, Video } from "expo-av";
 import * as ImagePicker from "expo-image-picker";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import {
-  Camera,
   ChevronLeft,
   Image as ImageIcon,
   Mic,
   MoreVertical,
   Pause,
   Phone,
-  PhoneMissed,
   PhoneCall,
-  VideoOff,
+  PhoneMissed,
   Play,
   Send,
   Smile,
   Square,
   Trash2,
-  Video as VideoIcon
+  Video as VideoIcon,
+  VideoOff
 } from "lucide-react-native";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -39,7 +38,6 @@ import {
 } from "react-native";
 import { useChat } from "../store/ChatContext";
 import { COLORS, styles } from "./ChatRoomScreen.styles";
-import { StickerPicker } from "../components/StickerPicker";
 
 export const ChatRoomScreen = () => {
   const router = useRouter();
@@ -357,7 +355,6 @@ export const ChatRoomScreen = () => {
       isTemporary: true,
     };
     setMessages((prev) => [tempMessage, ...prev]);
-    setIsStickerPickerVisible(false);
 
     socketService.emit("send_message", {
       conversationId: id,
@@ -578,8 +575,8 @@ export const ChatRoomScreen = () => {
     // === CALL LOG MESSAGE ===
     if (type === "CALL") {
       let callData: any = {};
-      try { callData = JSON.parse(displayContent); } catch(e){}
-      
+      try { callData = JSON.parse(displayContent); } catch (e) { }
+
       const isMissed = callData.status === "MISSED";
       const isVideo = callData.callType === "VIDEO";
       const durationStr = callData.duration ? `${String(Math.floor(callData.duration / 60)).padStart(2, '0')}:${String(callData.duration % 60).padStart(2, '0')}` : "00:00";
@@ -598,11 +595,11 @@ export const ChatRoomScreen = () => {
           ]}>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
               <View style={{
-                width: 36, height: 36, borderRadius: 18, 
+                width: 36, height: 36, borderRadius: 18,
                 backgroundColor: isMe ? 'rgba(255,255,255,0.2)' : (isMissed ? 'rgba(255, 59, 48, 0.15)' : 'rgba(52, 199, 89, 0.15)'),
                 justifyContent: 'center', alignItems: 'center', marginRight: 12
               }}>
-                {isMissed ? 
+                {isMissed ?
                   (isVideo ? <VideoOff size={18} color={isMe ? "#FFF" : "#FF3B30"} /> : <PhoneMissed size={18} color={isMe ? "#FFF" : "#FF3B30"} />) :
                   (isVideo ? <VideoIcon size={18} color={isMe ? "#FFF" : "#34C759"} /> : <PhoneCall size={18} color={isMe ? "#FFF" : "#34C759"} />)
                 }
@@ -625,29 +622,29 @@ export const ChatRoomScreen = () => {
                   </Text>
                 )}
                 {isMissed && (
-                   <TouchableOpacity onPress={() => {
-                      const finalTargetId = getTargetUserId();
-                      if (!finalTargetId) return alert("Đang tải thông tin, vui lòng chờ!");
-                      router.push({
-                        pathname: "/(main)/call",
-                        params: {
-                          targetUserId: finalTargetId,
-                          isVideoCall: isVideo ? 'true' : 'false',
-                          isIncoming: 'false',
-                          fullname: name,
-                          avatarUrl: paramAvatarUrl,
-                          conversationId: currentConversation?.id || id
-                        }
-                      });
-                   }}>
-                     <Text style={{ 
-                        fontSize: 14, 
-                        fontWeight: '600', 
-                        color: isMe ? COLORS.white : COLORS.primary, 
-                        marginTop: 4,
-                        textDecorationLine: 'underline'
-                     }}>Call back</Text>
-                   </TouchableOpacity>
+                  <TouchableOpacity onPress={() => {
+                    const finalTargetId = getTargetUserId();
+                    if (!finalTargetId) return alert("Đang tải thông tin, vui lòng chờ!");
+                    router.push({
+                      pathname: "/(main)/call",
+                      params: {
+                        targetUserId: finalTargetId,
+                        isVideoCall: isVideo ? 'true' : 'false',
+                        isIncoming: 'false',
+                        fullname: name,
+                        avatarUrl: paramAvatarUrl,
+                        conversationId: currentConversation?.id || id
+                      }
+                    });
+                  }}>
+                    <Text style={{
+                      fontSize: 14,
+                      fontWeight: '600',
+                      color: isMe ? COLORS.white : COLORS.primary,
+                      marginTop: 4,
+                      textDecorationLine: 'underline'
+                    }}>Call back</Text>
+                  </TouchableOpacity>
                 )}
               </View>
             </View>
@@ -729,35 +726,35 @@ export const ChatRoomScreen = () => {
 
         {/* VIDEO */}
         {type === "VIDEO" && media?.secureUrl && (
-          
 
-          <TouchableOpacity 
-               activeOpacity={0.8}
-               onPress={() => router.push({
-                 pathname: "/(main)/media-viewer",
-                 params: { url: item.media.secureUrl, type: "VIDEO" }
-               })}
-            >
-               {/* Tạm thời ở ngoài chat room, bạn có thể để video resizeMode="cover" 
+
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => router.push({
+              pathname: "/(main)/media-viewer",
+              params: { url: item.media.secureUrl, type: "VIDEO" }
+            })}
+          >
+            {/* Tạm thời ở ngoài chat room, bạn có thể để video resizeMode="cover" 
                  và tắt tiếng/shouldPlay={false} để nó giống như thumbnail. 
                */}
-              <Video
-                source={{ uri: media.secureUrl }}
-                style={{
-                  width: 250,
-                  height: 250,
-                  borderRadius: 8,
-                  marginTop: displayContent ? 8 : 0,
-                  backgroundColor: '#000'
-                }}
-                useNativeControls
-                resizeMode={ResizeMode.CONTAIN}
-                isLooping={false}
-              />
-              <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center' }}>
-                 <Play size={40} color="rgba(255,255,255,0.8)" />
-              </View>
-            </TouchableOpacity>
+            <Video
+              source={{ uri: media.secureUrl }}
+              style={{
+                width: 250,
+                height: 250,
+                borderRadius: 8,
+                marginTop: displayContent ? 8 : 0,
+                backgroundColor: '#000'
+              }}
+              useNativeControls
+              resizeMode={ResizeMode.CONTAIN}
+              isLooping={false}
+            />
+            <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center' }}>
+              <Play size={40} color="rgba(255,255,255,0.8)" />
+            </View>
+          </TouchableOpacity>
         )}
 
         {/* --- AUDIO: Sử dụng component AudioPlayer đã tạo --- */}
