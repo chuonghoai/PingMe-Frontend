@@ -12,7 +12,7 @@ import {
 } from "react-native-webrtc";
 import { socketService } from "../../../websockets/socketService";
 
-export type CallStatus = "connecting" | "ringing" | "accepted" | "rejected" | "ended";
+export type CallStatus = "connecting" | "ringing" | "accepted" | "rejected" | "ended" | "busy";
 
 const peerConstraints = {
   iceServers: [
@@ -376,6 +376,7 @@ export const useCallController = () => {
     isFrontCam,
     isSpeakerOn,
     formattedDuration,
+    callDuration,
     localStream,
     remoteStream,
     toggleMic,

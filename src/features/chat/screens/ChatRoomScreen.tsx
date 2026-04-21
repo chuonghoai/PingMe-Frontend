@@ -6,12 +6,16 @@ import { Audio, ResizeMode, Video } from "expo-av";
 import * as ImagePicker from "expo-image-picker";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import {
+  Camera,
   ChevronLeft,
   Image as ImageIcon,
   Mic,
   MoreVertical,
   Pause,
   Phone,
+  PhoneMissed,
+  PhoneCall,
+  VideoOff,
   Play,
   Send,
   Smile,
@@ -35,6 +39,7 @@ import {
 } from "react-native";
 import { useChat } from "../store/ChatContext";
 import { COLORS, styles } from "./ChatRoomScreen.styles";
+import { StickerPicker } from "../components/StickerPicker";
 
 export const ChatRoomScreen = () => {
   const router = useRouter();
@@ -290,6 +295,78 @@ export const ChatRoomScreen = () => {
     }
   };
 
+  // === CAMERA CAPTURE (Chụp ảnh / Quay video trực tiếp) ===
+  const handleCaptureMedia = async () => {
+    const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+    if (permissionResult.granted === false) {
+      showMessage("Lỗi", "Cần cấp quyền truy cập máy ảnh");
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ['images', 'videos'],
+      quality: 0.8,
+      videoMaxDuration: 60,
+    });
+
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      const asset = result.assets[0];
+      const tempId = `temp_${Date.now()}_${Math.floor(Math.random() * 100000)}`;
+      const type = asset.type === "video" ? "VIDEO" : "IMAGE";
+
+      const tempMessage = {
+        id: tempId,
+        content: "",
+        type: type,
+        media: { secureUrl: asset.uri, resourceType: asset.type },
+        sender: { id: userProfile?.userId },
+        createdAt: new Date().toISOString(),
+        isTemporary: true,
+      };
+      setMessages((prev) => [tempMessage, ...prev]);
+
+      try {
+        const signature = await mediaApi.getSignature();
+        const cloudinaryRes = await mediaApi.uploadToCloudinary(asset.uri, signature, asset.type as any, asset.mimeType);
+        const mediaRecord = await mediaApi.createMediaRecord(cloudinaryRes);
+
+        socketService.emit("send_message", {
+          conversationId: id,
+          content: "",
+          type: type,
+          mediaId: mediaRecord.id,
+          temporaryId: tempId,
+        });
+      } catch (err) {
+        console.error(err);
+        showMessage("Error", "Lỗi khi tải lên tệp tin đính kèm.");
+        setMessages((prev) => prev.filter((msg) => msg.id !== tempId));
+      }
+    }
+  };
+
+  // === STICKER HANDLER ===
+  const handleSendSticker = (stickerUrl: string) => {
+    const tempId = `temp_${Date.now()}_${Math.floor(Math.random() * 100000)}`;
+    const tempMessage = {
+      id: tempId,
+      content: stickerUrl,
+      type: "STICKER",
+      sender: { id: userProfile?.userId },
+      createdAt: new Date().toISOString(),
+      isTemporary: true,
+    };
+    setMessages((prev) => [tempMessage, ...prev]);
+    setIsStickerPickerVisible(false);
+
+    socketService.emit("send_message", {
+      conversationId: id,
+      content: stickerUrl,
+      type: "STICKER",
+      temporaryId: tempId,
+    });
+  };
+
   const startRecording = async () => {
     if (isRecording) return;
     try {
@@ -452,8 +529,6 @@ export const ChatRoomScreen = () => {
         content: textToSend,
         type: "TEXT",
         temporaryId: tempId,
-        // mediaId: ...,
-        // replyToId: ...
       });
     }
   };
@@ -470,6 +545,147 @@ export const ChatRoomScreen = () => {
     const displayContent = item.content || item.message?.content || "";
     const type = item.type || "TEXT";
     const media = item.media;
+
+    // === SYSTEM MESSAGE: Centered notification bubble ===
+    if (type === "SYSTEM") {
+      return (
+        <View style={{
+          alignItems: 'center',
+          marginVertical: 12,
+          paddingHorizontal: 32,
+        }}>
+          <View style={{
+            backgroundColor: 'rgba(108, 92, 231, 0.08)',
+            paddingHorizontal: 16,
+            paddingVertical: 10,
+            borderRadius: 16,
+            maxWidth: '85%',
+          }}>
+            <Text style={{
+              fontSize: 13,
+              color: '#6C5CE7',
+              fontStyle: 'italic',
+              textAlign: 'center',
+              lineHeight: 18,
+            }}>
+              {displayContent}
+            </Text>
+          </View>
+        </View>
+      );
+    }
+
+    // === CALL LOG MESSAGE ===
+    if (type === "CALL") {
+      let callData: any = {};
+      try { callData = JSON.parse(displayContent); } catch(e){}
+      
+      const isMissed = callData.status === "MISSED";
+      const isVideo = callData.callType === "VIDEO";
+      const durationStr = callData.duration ? `${String(Math.floor(callData.duration / 60)).padStart(2, '0')}:${String(callData.duration % 60).padStart(2, '0')}` : "00:00";
+
+      return (
+        <View style={{
+          alignSelf: isMe ? 'flex-end' : 'flex-start',
+          marginVertical: 4,
+          marginHorizontal: 12,
+          maxWidth: '75%',
+        }}>
+          <View style={[
+            styles.messageBubble,
+            isMe ? styles.myMessage : styles.theirMessage,
+            { paddingVertical: 12, paddingHorizontal: 16 }
+          ]}>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <View style={{
+                width: 36, height: 36, borderRadius: 18, 
+                backgroundColor: isMe ? 'rgba(255,255,255,0.2)' : (isMissed ? 'rgba(255, 59, 48, 0.15)' : 'rgba(52, 199, 89, 0.15)'),
+                justifyContent: 'center', alignItems: 'center', marginRight: 12
+              }}>
+                {isMissed ? 
+                  (isVideo ? <VideoOff size={18} color={isMe ? "#FFF" : "#FF3B30"} /> : <PhoneMissed size={18} color={isMe ? "#FFF" : "#FF3B30"} />) :
+                  (isVideo ? <VideoIcon size={18} color={isMe ? "#FFF" : "#34C759"} /> : <PhoneCall size={18} color={isMe ? "#FFF" : "#34C759"} />)
+                }
+              </View>
+              <View>
+                <Text style={{
+                  fontSize: 15,
+                  fontWeight: '600',
+                  color: isMe ? COLORS.white : (isMissed ? '#FF3B30' : COLORS.textMain),
+                  marginBottom: 2
+                }}>
+                  {isMissed ? (isVideo ? 'Missed video call' : 'Missed audio call') : (isVideo ? 'Video call' : 'Audio call')}
+                </Text>
+                {!isMissed && (
+                  <Text style={{
+                    fontSize: 13,
+                    color: isMe ? 'rgba(255,255,255,0.8)' : COLORS.textSub
+                  }}>
+                    {durationStr}
+                  </Text>
+                )}
+                {isMissed && (
+                   <TouchableOpacity onPress={() => {
+                      const finalTargetId = getTargetUserId();
+                      if (!finalTargetId) return alert("Đang tải thông tin, vui lòng chờ!");
+                      router.push({
+                        pathname: "/(main)/call",
+                        params: {
+                          targetUserId: finalTargetId,
+                          isVideoCall: isVideo ? 'true' : 'false',
+                          isIncoming: 'false',
+                          fullname: name,
+                          avatarUrl: paramAvatarUrl,
+                          conversationId: currentConversation?.id || id
+                        }
+                      });
+                   }}>
+                     <Text style={{ 
+                        fontSize: 14, 
+                        fontWeight: '600', 
+                        color: isMe ? COLORS.white : COLORS.primary, 
+                        marginTop: 4,
+                        textDecorationLine: 'underline'
+                     }}>Call back</Text>
+                   </TouchableOpacity>
+                )}
+              </View>
+            </View>
+          </View>
+          <Text style={[
+            styles.timeText,
+            isMe ? styles.myTimeText : styles.theirTimeText,
+            { color: COLORS.textSub, marginTop: 4, textAlign: isMe ? 'right' : 'left' }
+          ]}>
+            {formatTime(item.createdAt)}
+          </Text>
+        </View>
+      );
+    }
+
+    // === STICKER MESSAGE ===
+    if (type === "STICKER") {
+      return (
+        <View style={{
+          alignSelf: isMe ? 'flex-end' : 'flex-start',
+          marginVertical: 4,
+          marginHorizontal: 12,
+        }}>
+          <Image
+            source={{ uri: displayContent }}
+            style={{ width: 120, height: 120 }}
+            resizeMode="contain"
+          />
+          <Text style={[
+            styles.timeText,
+            isMe ? styles.myTimeText : styles.theirTimeText,
+            { color: COLORS.textSub, marginTop: 4, textAlign: isMe ? 'right' : 'left' }
+          ]}>
+            {formatTime(item.createdAt)}
+          </Text>
+        </View>
+      );
+    }
 
     // KIỂM TRA: Nếu chỉ có ảnh/video mà không có chữ
     const isMediaOnly = (!displayContent || displayContent.length === 0) && (type === "IMAGE" || type === "VIDEO");
@@ -631,13 +847,14 @@ export const ChatRoomScreen = () => {
               if (!finalTargetId) return alert("Đang tải thông tin, vui lòng chờ!");
 
               router.push({
-                pathname: "/(main)/call-test",
+                pathname: "/(main)/call",
                 params: {
                   targetUserId: finalTargetId,
                   isVideoCall: 'false',
                   isIncoming: 'false',
                   fullname: name,
-                  avatarUrl: paramAvatarUrl
+                  avatarUrl: paramAvatarUrl,
+                  conversationId: currentConversation?.id || id
                 }
               });
             }}
@@ -653,13 +870,14 @@ export const ChatRoomScreen = () => {
               if (!finalTargetId) return alert("Đang tải thông tin, vui lòng chờ!");
 
               router.push({
-                pathname: "/(main)/call-test",
+                pathname: "/(main)/call",
                 params: {
                   targetUserId: finalTargetId,
                   isVideoCall: 'true',
                   isIncoming: 'false',
                   fullname: name,
-                  avatarUrl: paramAvatarUrl
+                  avatarUrl: paramAvatarUrl,
+                  conversationId: currentConversation?.id || id
                 }
               });
             }}

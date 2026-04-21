@@ -50,7 +50,14 @@ export const AddFriendModal: React.FC<Props> = ({ visible, onClose }) => {
     try {
       setIsLoadingRequests(true);
       const res: any = await getFriendRequests();
-      if (res.success) {
+      // apiClient interceptor unwraps response.data, so res could be:
+      // 1. { success: true, data: [...] } from backend
+      // 2. Direct array if backend returns plain array
+      if (Array.isArray(res)) {
+        setPendingRequests(res);
+      } else if (res?.success && Array.isArray(res.data)) {
+        setPendingRequests(res.data);
+      } else if (Array.isArray(res?.data)) {
         setPendingRequests(res.data);
       }
     } catch (e) {
@@ -188,18 +195,26 @@ export const AddFriendModal: React.FC<Props> = ({ visible, onClose }) => {
                     />
                     <View style={styles.userInfo}>
                       <Text style={styles.userName}>{item.fullName}</Text>
-                    </View>
-                    <TouchableOpacity 
-                      style={[styles.actionBtn, sentRequests.has(item.userId) && styles.actionBtnDisabled]}
-                      onPress={() => handleSendRequest(item.userId, item.fullName)}
-                      disabled={sentRequests.has(item.userId)}
-                    >
-                      {sentRequests.has(item.userId) ? (
-                        <Check size={18} color={COLORS.textMuted} />
-                      ) : (
-                        <UserPlus size={18} color={COLORS.primary} />
+                      {item.isFriend && (
+                        <Text style={{ fontSize: 12, color: COLORS.textMuted }}>Bạn bè</Text>
                       )}
-                    </TouchableOpacity>
+                      {!item.isFriend && item.friendshipStatus === 'PENDING' && (
+                        <Text style={{ fontSize: 12, color: COLORS.textMuted }}>Đã gửi lời mời</Text>
+                      )}
+                    </View>
+                    {!item.isFriend && (
+                      <TouchableOpacity 
+                        style={[styles.actionBtn, (sentRequests.has(item.userId) || item.friendshipStatus === 'PENDING') && styles.actionBtnDisabled]}
+                        onPress={() => handleSendRequest(item.userId, item.fullName)}
+                        disabled={sentRequests.has(item.userId) || item.friendshipStatus === 'PENDING'}
+                      >
+                        {sentRequests.has(item.userId) || item.friendshipStatus === 'PENDING' ? (
+                          <Check size={18} color={COLORS.textMuted} />
+                        ) : (
+                          <UserPlus size={18} color={COLORS.primary} />
+                        )}
+                      </TouchableOpacity>
+                    )}
                   </View>
                 )}
               />

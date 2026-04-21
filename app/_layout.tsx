@@ -1,11 +1,13 @@
 import { ChatProvider } from "@/features/chat/store/ChatContext";
+import { BackgroundNotificationHandler } from "@/features/main/services/BackgroundNotificationHandler";
+import { UserProvider } from "@/store/UserContext";
 import { Stack } from "expo-router";
-import { UserProvider } from "../src/store/UserContext";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 
 export default function RootLayout() {
   return (
     <SafeAreaProvider>
+      <BackgroundNotificationHandler />
       <SafeAreaView style={{ flex: 1, backgroundColor: '#0A0A0A' }}>
         <UserProvider>
           <ChatProvider>

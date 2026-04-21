@@ -1,7 +1,12 @@
-import { StyleSheet } from "react-native";
+import { StyleSheet, Dimensions } from "react-native";
 import { PINGME_COLORS } from "@/constants/theme";
 
-export const COLORS = PINGME_COLORS;
+export const COLORS = {
+  ...PINGME_COLORS,
+  textMuted: "#9CA3AF",
+};
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export const styles = StyleSheet.create({
   container: {
@@ -21,7 +26,6 @@ export const styles = StyleSheet.create({
     borderBottomLeftRadius: 60,
     borderBottomRightRadius: 60,
     zIndex: 0,
-    // Cheap gradient illusion with opacity layer
     opacity: 0.9,
   },
 
@@ -53,8 +57,14 @@ export const styles = StyleSheet.create({
     fontSize: 26,
     fontWeight: "900",
     color: COLORS.textPrimary,
-    marginBottom: 4,
+    marginBottom: 2,
     letterSpacing: 0.3,
+  },
+  username: {
+    fontSize: 15,
+    color: COLORS.textSecondary,
+    fontWeight: "600",
+    marginBottom: 8,
   },
   bioValue: {
     fontSize: 15,
@@ -62,7 +72,19 @@ export const styles = StyleSheet.create({
     fontStyle: "italic",
     paddingHorizontal: 30,
     textAlign: "center",
+    marginBottom: 8,
+    lineHeight: 22,
+  },
+  joinDateRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
     marginBottom: 24,
+  },
+  joinDateText: {
+    fontSize: 13,
+    color: COLORS.textMuted,
+    fontWeight: "500",
   },
 
   // ── STATS CARD ──
@@ -70,7 +92,7 @@ export const styles = StyleSheet.create({
     flexDirection: "row",
     backgroundColor: COLORS.bgWhite,
     borderRadius: 20,
-    paddingVertical: 16,
+    paddingVertical: 20,
     paddingHorizontal: 20,
     marginHorizontal: 20,
     marginBottom: 20,
@@ -85,9 +107,10 @@ export const styles = StyleSheet.create({
   },
   statItem: {
     alignItems: "center",
+    flex: 1,
   },
   statNumber: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: "900",
     color: COLORS.primary,
     marginBottom: 4,
@@ -106,7 +129,7 @@ export const styles = StyleSheet.create({
     alignSelf: "center",
   },
 
-  // ── INFO CARD ──
+  // ── SETTINGS CARD ──
   cardContainer: {
     backgroundColor: COLORS.bgWhite,
     borderRadius: 24,
@@ -129,61 +152,26 @@ export const styles = StyleSheet.create({
     letterSpacing: 1.5,
     marginBottom: 16,
   },
-  infoRow: {
+  settingRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 14,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
   },
   iconBox: {
     width: 40,
     height: 40,
     borderRadius: 12,
-    backgroundColor: '#EFF6FF', // Soft cyan tint
     justifyContent: "center",
     alignItems: "center",
     marginRight: 14,
-    borderWidth: 1,
-    borderColor: '#DBEAFE',
   },
-  infoTextContainer: {
+  settingText: {
     flex: 1,
-  },
-  infoLabel: {
-    fontSize: 12,
-    color: COLORS.textSecondary,
-    marginBottom: 2,
-    fontWeight: "600",
-    textTransform: "uppercase",
-    letterSpacing: 0.3,
-  },
-  infoValue: {
     fontSize: 15,
-    fontWeight: "700",
+    fontWeight: "600",
     color: COLORS.textPrimary,
-  },
-
-  // ── ACTION BUTTONS ──
-  actionBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: COLORS.primary,
-    marginHorizontal: 20,
-    height: 54,
-    borderRadius: 16,
-    marginBottom: 12,
-    shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-    elevation: 6,
-  },
-  actionBtnText: {
-    fontSize: 16,
-    fontWeight: "800",
-    color: COLORS.white,
-    marginLeft: 8,
-    letterSpacing: 0.3,
   },
 
   // ── LOGOUT BUTTON ──
@@ -203,5 +191,116 @@ export const styles = StyleSheet.create({
     fontWeight: "700",
     color: COLORS.danger,
     marginLeft: 8,
+  },
+
+  // ── MODAL ──
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "flex-end",
+  },
+  modalContainer: {
+    backgroundColor: COLORS.bgWhite,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    maxHeight: "80%",
+    minHeight: 300,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "800",
+    color: COLORS.textPrimary,
+  },
+  modalCloseBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: COLORS.bgMid,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  // ── FRIEND LIST ITEM ──
+  friendItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+  },
+  friendAvatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    borderWidth: 2,
+    borderColor: COLORS.primary,
+  },
+  friendName: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: COLORS.textPrimary,
+  },
+  friendStatus: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    marginTop: 2,
+  },
+  unfriendBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(255, 56, 96, 0.1)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  // ── EDIT PROFILE MODAL ──
+  editLabel: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: COLORS.textSecondary,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    marginBottom: 8,
+  },
+  editInput: {
+    backgroundColor: COLORS.bgMid,
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontSize: 15,
+    color: COLORS.textPrimary,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  saveBtn: {
+    backgroundColor: COLORS.primary,
+    height: 54,
+    borderRadius: 16,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 24,
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 6,
+  },
+  saveBtnText: {
+    fontSize: 16,
+    fontWeight: "800",
+    color: "#fff",
+    letterSpacing: 0.3,
   },
 });

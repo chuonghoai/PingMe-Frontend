@@ -12,6 +12,7 @@ export const styles = StyleSheet.create({
   // ── MAP ──
   map: {
     ...StyleSheet.absoluteFillObject,
+    marginBottom: -40,
   },
 
   // ── TOP BAR ──
@@ -42,14 +43,17 @@ export const styles = StyleSheet.create({
   },
   notiDot: {
     position: "absolute",
-    top: 10,
-    right: 12,
-    width: 9,
-    height: 9,
-    borderRadius: 5,
+    top: 6,
+    right: 6,
+    minWidth: 16,
+    height: 16,
+    borderRadius: 8,
     backgroundColor: COLORS.danger,
     borderWidth: 1.5,
     borderColor: COLORS.bgWhite,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 3,
   },
 
   // ── SEARCH HERO OVERLAY ──
@@ -258,11 +262,7 @@ export const styles = StyleSheet.create({
     padding: 2,
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.5,
-    shadowRadius: 10,
-    elevation: 10,
+    overflow: "hidden",
   },
   myAvatar: {
     width: 38,
