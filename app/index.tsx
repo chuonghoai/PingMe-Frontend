@@ -101,8 +101,17 @@ export default function SplashScreen() {
     ).start();
 
     // Navigate after 3.2s
-    const timer = setTimeout(() => {
-      router.replace("/(auth)/login");
+    const timer = setTimeout(async () => {
+      try {
+        const token = await getAccessToken();
+        if (token) {
+          router.replace("/(main)/home" as any);
+        } else {
+          router.replace("/(auth)/login" as any);
+        }
+      } catch (error) {
+        router.replace("/(auth)/login" as any);
+      }
     }, 3200);
 
     return () => clearTimeout(timer);

@@ -6,6 +6,13 @@ export const COLORS = {
   iconGray: PINGME_COLORS.textSecondary,
   textSub: PINGME_COLORS.textSecondary,
   inputBackground: PINGME_COLORS.bgMid,
+  iconActive: PINGME_COLORS.primary,
+  textMain: PINGME_COLORS.textPrimary,
+  bgDarker: '#F5F6F8',
+  borderLight: '#E5E7EB',
+  errorRed: '#FF3B30',
+  borderColor: PINGME_COLORS.border,
+  lightYellow: '#FFFDF9',
 };
 
 export const styles = StyleSheet.create({

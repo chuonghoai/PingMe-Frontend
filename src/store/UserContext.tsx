@@ -7,24 +7,34 @@ export interface UserProfile {
   userId: string;
   firstName: string;
   lastName: string;
+  fullname: string;
+  username: string;
   email: string;
   avatarUrl: string;
   bio: string;
   level: number;
   currentExp: number;
   address: string;
+  pingCoins: number;
+  joinAt: string;
+  isHideMyLocation: boolean;
 }
 
 const DEFAULT_PROFILE: UserProfile = {
   userId: "",
-  firstName: "Người dùng",
-  lastName: "Mới",
+  firstName: "Nguoi dung",
+  lastName: "Moi",
+  fullname: "",
+  username: "",
   email: "chua_cap_nhat@email.com",
   avatarUrl: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png",
   bio: "Chưa có tiểu sử",
   level: 1,
   currentExp: 0,
   address: "Chưa cập nhật",
+  pingCoins: 0,
+  joinAt: "",
+  isHideMyLocation: false,
 };
 
 const UserContext = createContext<any>(null);
@@ -33,13 +43,27 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [userProfile, setUserProfile] = useState<UserProfile>(DEFAULT_PROFILE);
 
   useEffect(() => {
-    // Unconditionally wipe tokens on app launch to force manual login
-    const wipeSession = async () => {
-      const { clearTokens } = await import("@/utils/tokenStorage");
-      await clearTokens();
-      setUserProfile(DEFAULT_PROFILE);
+    const hydrateSession = async () => {
+      const { getAccessToken } = await import("@/utils/tokenStorage");
+      const token = await getAccessToken();
+      if (token) {
+        try {
+          // Attempt to hydrate profile via backend
+          const res: any = await apiClient.get('/users/me');
+          if (res && res.data) {
+            setUserProfile({
+              ...DEFAULT_PROFILE,
+              ...res.data,
+              userId: res.data.id || res.data.userId || "",
+            });
+          }
+
+        } catch (e) {
+          console.log("[UserProvider] Failed to hydrate session:", e);
+        }
+      }
     };
-    wipeSession();
+    hydrateSession();
   }, []);
 
   useEffect(() => {

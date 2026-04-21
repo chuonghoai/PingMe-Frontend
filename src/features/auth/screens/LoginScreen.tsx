@@ -84,7 +84,7 @@ export const LoginScreen = () => {
 
       <Input
         label="Email"
-        placeholder="Nhập email của bạn"
+        placeholder="Nhap email cua ban"
         value={email}
         onChangeText={setEmail}
         keyboardType="email-address"
@@ -92,8 +92,8 @@ export const LoginScreen = () => {
       />
       
       <Input
-        label="Mật khẩu"
-        placeholder="Nhập mật khẩu"
+        label="Mat khau"
+        placeholder="Nhap mat khau"
         value={password}
         onChangeText={setPassword}
         isPassword={true}
@@ -107,7 +107,7 @@ export const LoginScreen = () => {
             trackColor={{ false: "#CBD5E1", true: COLORS.primary }}
             thumbColor={Platform.OS === "android" ? "#F8FAFC" : undefined}
           />
-          <Text style={styles.rememberText}>Nhớ mật khẩu</Text>
+          <Text style={styles.rememberText}>Nho mat khau</Text>
         </View>
         <TouchableOpacity onPress={() => router.push("/(auth)/forgot-password")}>
           <Text style={styles.forgotText}>Quên mật khẩu?</Text>

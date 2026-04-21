@@ -20,20 +20,25 @@ class SocketService {
     });
   }
 
+  private isConnecting: boolean = false;
+
   public async connect() {
-    if (this.socket.connected) return;
+    if (this.socket.connected || this.socket.active || this.isConnecting) return;
+    
+    this.isConnecting = true;
+    try {
+      const token = await getAccessToken();
+      if (!token) return;
 
-    const token = await getAccessToken();
-    if (!token) return;
-
-    this.socket.auth = { token };
-    this.socket.connect();
+      this.socket.auth = { token };
+      this.socket.connect();
+    } finally {
+      this.isConnecting = false;
+    }
   }
 
   public disconnect() {
-    if (this.socket.connected) {
-      this.socket.disconnect();
-    }
+    this.socket.disconnect();
   }
 
   public emit(eventName: string, data: any) {
