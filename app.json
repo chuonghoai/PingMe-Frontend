@@ -59,14 +59,7 @@
           "isAndroidBackgroundLocationEnabled": true
         }
       ],
-      [
-        "expo-build-properties",
-        {
-          "android": {
-            "usesCleartextTraffic": true
-          }
-        }
-      ]
+      "expo-build-properties"
     ],
     "experiments": {
       "typedRoutes": true,

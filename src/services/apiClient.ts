@@ -19,7 +19,7 @@ const getBaseUrl = () => {
   }
 
   // iPhone thật hoặc Android thật: cần dùng IP LAN của máy tính
-  return process.env.EXPO_PUBLIC_API_URL_DEVICE ?? "http://192.168.1.32:3000";
+  return process.env.EXPO_PUBLIC_API_URL_DEVICE ?? "http://192.168.88.127:3000";
 };
 
 export const BASE_URL = getBaseUrl();
@@ -62,7 +62,6 @@ apiClient.interceptors.response.use(
     return response.data;
   },
   async (error) => {
-    console.log('Loi khi nhan response', error.message);
     const originalRequest = error.config;
 
     const isUnauthorized = error.response && error.response.status === 401;
@@ -83,7 +82,6 @@ apiClient.interceptors.response.use(
     const errMessage =
       error.response?.data?.error?.message ||
       error.response?.data?.message ||
-      error.message ||
       "Co loi xay ra, vui long thu lai";
 
     return Promise.reject(errMessage);
