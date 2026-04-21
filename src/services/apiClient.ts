@@ -1,8 +1,8 @@
-import axios from "axios";
-import { router } from "expo-router";
-import Constants from "expo-constants";
-import { Platform } from "react-native";
 import { clearTokens, getAccessToken } from "@/utils/tokenStorage";
+import axios from "axios";
+import Constants from "expo-constants";
+import { router } from "expo-router";
+import { Platform } from "react-native";
 
 const getBaseUrl = () => {
   if (Platform.OS === "web") {
@@ -15,7 +15,7 @@ const getBaseUrl = () => {
 
   if (Platform.OS === "android" && !isRealDevice) {
     // Android Emulator: 10.0.2.2 là địa chỉ đặc biệt trỏ tới localhost của máy host
-    return process.env.EXPO_PUBLIC_API_URL_ANDROID ?? "http://10.0.2.2:3000";
+    return "http://10.0.2.2:3000";
   }
 
   // iPhone thật hoặc Android thật: cần dùng IP LAN của máy tính
