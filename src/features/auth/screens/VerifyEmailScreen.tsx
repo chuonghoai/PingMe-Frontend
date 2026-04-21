@@ -1,9 +1,9 @@
-import { authApi } from "@/src/services/authApi";
+import { Button } from "@/components/Button/Button";
+import { Input } from "@/components/Input/Input";
+import { authApi } from "@/services/authApi";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from "react";
 import { Alert, Platform, Text, TouchableOpacity, View } from "react-native";
-import { Button } from "../../../components/Button/Button";
-import { Input } from "../../../components/Input/Input";
 import { COLORS, styles } from "./VerifyEmailScreen.styles";
 
 export const VerifyEmailScreen = () => {

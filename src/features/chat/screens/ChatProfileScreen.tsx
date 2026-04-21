@@ -1,4 +1,4 @@
-import { chatApi } from "@/src/services/chatApi";
+import { chatApi } from "@/services/chatApi";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import {
   Ban,

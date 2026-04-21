@@ -1,8 +1,8 @@
-import { chatApi } from "@/src/services/chatApi";
-import { useUser } from "@/src/store/UserContext";
-import { socketService } from "@/src/websockets/socketService";
-import React, { createContext, useContext, useEffect, useState } from "react";
+import { chatApi } from "@/services/chatApi";
+import { useUser } from "@/store/UserContext";
+import { socketService } from "@/websockets/socketService";
 import { useRouter } from "expo-router";
+import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 
 export const ChatContext = createContext<any>(null);
 
@@ -87,7 +87,6 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 
           // Format raw entity to match UI requirements (hoist unreadCount & hasMuted)
           const myParticipant = rawConv.participants?.find((p: any) => p.userId === userProfile?.userId) || {};
-          
           const formattedConv = {
             id: rawConv.id,
             type: rawConv.type,
@@ -119,7 +118,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
       console.log("📞 Có cuộc gọi đến:", data);
       
       router.push({
-        pathname: "/(main)/call-test",
+        pathname: "/(main)/call",
         params: {
           targetUserId: data.callerId,
           fullname: data.fullname,
@@ -128,6 +127,12 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
           isIncoming: "true",
         },
       });
+    };
+
+    // Khi kết bạn thành công → Refresh conversation list
+    const handleFriendAccepted = (data: any) => {
+      console.log("🎉 Kết bạn thành công:", data);
+      loadConversations(); // Refresh để hiện conversation mới
     };
 
     socketService.on("is_typing", (data: any) => {
@@ -139,6 +144,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     socketService.on("new_message", handleNewMessage);
     socketService.on("message_sent_success", handleSyncChatList);
     socketService.on("incoming_call", handleIncomingCall);
+    socketService.on("friend_accepted", handleFriendAccepted);
 
     // Dọn dẹp listener khi đăng xuất
     return () => {
@@ -147,9 +153,16 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
       socketService.off("online_users_list", handleOnlineUsersList);
       socketService.off("new_message", handleNewMessage);
       socketService.off("message_sent_success", handleSyncChatList);
-      socketService.on("incoming_call", handleIncomingCall);
+      socketService.off("incoming_call", handleIncomingCall);
+      socketService.off("friend_accepted", handleFriendAccepted);
     };
   }, [userProfile?.userId]);
+
+  // Tính tổng tin nhắn chưa đọc
+  const totalUnreadCount = useMemo(() => {
+    if (!conversations || conversations.length === 0) return 0;
+    return conversations.reduce((sum: number, conv: any) => sum + (conv.unreadCount || 0), 0);
+  }, [conversations]);
 
   return (
     <ChatContext.Provider
@@ -159,6 +172,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
         loadConversations,
         onlineUsers,
         clearUnreadCount,
+        totalUnreadCount,
       }}
     >
       {children}

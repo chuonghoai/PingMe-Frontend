@@ -1,71 +1,117 @@
 import { StyleSheet } from "react-native";
+import { PINGME_COLORS } from "@/constants/theme";
 
-// Bảng màu đồng bộ với SplashScreen
-export const COLORS = {
-  white: "#FFFFFF",
-  amberGold: "#F5A623",
-  darkAmber: "#D48806",
-};
+export const COLORS = PINGME_COLORS;
 
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
+    padding: 24,
     justifyContent: "center",
-    backgroundColor: COLORS.white,
+    backgroundColor: COLORS.bgWhite,
   },
-  // Styles cho Logo
+
+  // ── LOGO ──
   logoContainer: {
     alignItems: "center",
-    marginBottom: 20,
+    marginBottom: 40,
   },
   logoRow: {
     flexDirection: "row",
     alignItems: "center",
   },
   logoTextMain: {
-    fontSize: 56,
+    fontSize: 52,
     fontWeight: "900",
-    color: COLORS.darkAmber,
-    fontStyle: "italic",
+    color: COLORS.primary,
     letterSpacing: -2,
-    textShadowColor: "rgba(245, 166, 35, 0.3)",
-    textShadowOffset: { width: 2, height: 4 },
-    textShadowRadius: 8,
+    textShadowColor: "rgba(0, 194, 255, 0.4)",
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 16,
   },
   logoTextSecondary: {
-    fontSize: 56,
+    fontSize: 52,
     fontWeight: "900",
-    color: COLORS.amberGold,
-    fontStyle: "italic",
-    marginLeft: -4,
+    color: COLORS.secondary,
+    marginLeft: 2,
+    letterSpacing: -2,
+    textShadowColor: "rgba(139, 92, 246, 0.4)",
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 16,
   },
-  // Styles cho các text khác
+
+  // ── TITLE ──
+  titleWrapper: {
+    marginBottom: 32,
+  },
   title: {
-    fontSize: 28,
-    fontWeight: "bold",
-    marginBottom: 30,
-    textAlign: "center",
-    color: COLORS.darkAmber,
+    fontSize: 26,
+    fontWeight: "800",
+    color: COLORS.textPrimary,
+    letterSpacing: -0.5,
   },
+  subtitle: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    marginTop: 6,
+    fontWeight: "500",
+  },
+
+  // ── OPTIONS ROW ──
   row: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 20,
+    marginTop: 8,
+    marginBottom: 32,
   },
   rememberMe: {
     flexDirection: "row",
     alignItems: "center",
   },
   rememberText: {
-    marginLeft: 8,
+    marginLeft: 10,
     fontSize: 14,
-    color: "#333",
+    color: COLORS.textSecondary,
+    fontWeight: "600",
   },
   forgotText: {
-    color: COLORS.amberGold,
+    color: COLORS.primary,
+    fontSize: 14,
+    fontWeight: "700",
+  },
+
+  // ── BUTTONS ──
+  loginBtn: {
+    backgroundColor: COLORS.primary,
+    borderRadius: 12,
+    paddingVertical: 16,
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  loginBtnText: {
+    color: COLORS.white,
+    fontSize: 16,
+    fontWeight: "800",
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
+  },
+  registerBtnWrapper: {
+    marginTop: 20,
+    alignItems: "center",
+  },
+  registerTextPrefix: {
+    color: COLORS.textSecondary,
     fontSize: 14,
     fontWeight: "600",
+  },
+  registerTextAction: {
+    color: COLORS.secondary,
+    fontSize: 14,
+    fontWeight: "800",
+    textDecorationLine: "underline",
   },
 });

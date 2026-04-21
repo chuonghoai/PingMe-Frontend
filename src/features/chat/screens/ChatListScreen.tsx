@@ -1,4 +1,4 @@
-import { useUser } from "@/src/store/UserContext"; // Lấy UserContext để biết "Mình là ai"
+import { useUser } from "@/store/UserContext"; // Lấy UserContext để biết "Mình là ai"
 import { Stack, useRouter } from "expo-router"; // Thêm Stack
 import { Search, UserPlus } from "lucide-react-native";
 import React, { useContext } from "react";
@@ -15,9 +15,11 @@ import {
 } from "react-native";
 import { ChatContext } from "../store/ChatContext";
 import { COLORS, styles } from "./ChatListScreen.styles";
+import { AddFriendModal } from "../components/AddFriendModal";
 
 export const ChatListScreen = () => {
   const router = useRouter();
+  const [isAddFriendModalVisible, setIsAddFriendModalVisible] = React.useState(false);
 
   const handleClose = () => {
     if (router.canGoBack()) {
@@ -159,7 +161,7 @@ export const ChatListScreen = () => {
                 placeholderTextColor={COLORS.textSub}
               />
             </View>
-            <TouchableOpacity style={styles.addFriendBtn}>
+            <TouchableOpacity style={styles.addFriendBtn} onPress={() => setIsAddFriendModalVisible(true)}>
               <UserPlus size={20} color={COLORS.white} />
             </TouchableOpacity>
           </View>
@@ -168,7 +170,7 @@ export const ChatListScreen = () => {
         {isLoadingConversations && conversations?.length === 0 ? (
           <ActivityIndicator
             size="large"
-            color={COLORS.amberGold}
+            color={COLORS.primary}
             style={{ marginTop: 40 }}
           />
         ) : (
@@ -189,12 +191,13 @@ export const ChatListScreen = () => {
               <RefreshControl
                 refreshing={isLoadingConversations}
                 onRefresh={loadConversations}
-                colors={[COLORS.amberGold]}
+                colors={[COLORS.primary]}
               />
             }
           />
         )}
       </View>
+      <AddFriendModal visible={isAddFriendModalVisible} onClose={() => setIsAddFriendModalVisible(false)} />
     </View>
   );
 };

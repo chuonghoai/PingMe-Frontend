@@ -1,4 +1,4 @@
-import { chatApi } from "@/src/services/chatApi";
+import { chatApi } from "@/services/chatApi";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { ChevronLeft, PlayCircle } from "lucide-react-native";
 import React, { useEffect, useState } from "react";

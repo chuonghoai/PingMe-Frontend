@@ -1,4 +1,4 @@
-import { authApi } from "@/src/services/authApi";
+import { authApi } from "@/services/authApi";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from "react";
@@ -11,14 +11,17 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { Button } from "../../../components/Button/Button";
-import { Input } from "../../../components/Input/Input";
+import { Button } from "@/components/Button/Button";
+import { Input } from "@/components/Input/Input";
 import { styles } from "./ProfileSetupScreen.styles";
+import { setTokens } from "@/utils/tokenStorage";
+import { useUser } from "@/store/UserContext";
 
 export const ProfileSetupScreen = () => {
   const router = useRouter();
   const params = useLocalSearchParams();
   const userEmail = (params?.email as string) || "alice@gmail.com";
+  const { updateUserProfile } = useUser();
 
   const [fullname, setFullname] = useState("");
   const [phone, setPhone] = useState("");
@@ -43,11 +46,14 @@ export const ProfileSetupScreen = () => {
   ];
 
   const handleDateChange = (event: any, selectedDate?: Date) => {
+    // Android: dialog tự đóng sau khi chọn hoặc dismiss
     if (Platform.OS === "android") {
       setShowDatePicker(false);
     }
 
-    if (selectedDate && event.type !== "dismissed") {
+    // Chỉ cập nhật nếu user thực sự chọn ngày (không phải dismiss)
+    if (event?.type === "dismissed") return;
+    if (selectedDate) {
       setDob(selectedDate);
     }
   };
@@ -71,6 +77,16 @@ export const ProfileSetupScreen = () => {
       });
 
       if (response.success) {
+        // Tự động đăng nhập
+        if (response.data && response.data.accessToken) {
+          await setTokens(response.data.accessToken, response.data.refreshToken);
+          
+          updateUserProfile({
+            userId: response.data.user.userId,
+            email: response.data.user.email,
+          });
+        }
+        
         router.replace("/(onboarding)/location-permission");
       }
     } catch (error: any) {

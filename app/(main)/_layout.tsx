@@ -24,7 +24,7 @@ export default function MainLayout() {
       />
 
       <Stack.Screen
-        name="call-test"
+        name="call"
         options={{
           headerShown: false,
         }}

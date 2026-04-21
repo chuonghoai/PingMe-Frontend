@@ -1,7 +1,7 @@
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import { Switch, Text, View } from "react-native";
-import { Button } from "../../../components/Button/Button";
+import { Button } from "@/components/Button/Button";
 
 // Nạp Styles và Bảng màu từ file bên ngoài vào
 import { COLORS, styles } from "./LocationPermissionScreen.styles";

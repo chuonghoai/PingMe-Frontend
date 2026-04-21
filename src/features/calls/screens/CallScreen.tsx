@@ -14,6 +14,7 @@ export const CallScreen = () => {
     isCamOn,
     isFrontCam,
     formattedDuration,
+    callDuration,
     isSpeakerOn,
     localStream,
     remoteStream,
@@ -39,7 +40,11 @@ export const CallScreen = () => {
     if (status === "connecting") return "Đang kết nối...";
     if (status === "ringing") return "Đang đổ chuông...";
     if (status === "rejected") return "Đã từ chối cuộc gọi";
-    if (status === "ended") return "Cuộc gọi đã kết thúc";
+    if (status === "ended") {
+      if (callDuration > 0) return `Cuộc gọi đã kết thúc \u2022 ${formattedDuration}`;
+      return "Cuộc gọi đã kết thúc";
+    };
+    if (status === "busy") return "Người dùng đang bận";
     return formattedDuration;
   };
 
