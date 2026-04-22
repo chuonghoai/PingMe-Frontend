@@ -164,7 +164,14 @@ export const NotificationScreen = () => {
       setRespondingIds((prev) => new Set(prev).add(notificationId));
       const res: any = await respondFriendRequest(requestId, action);
       if (res.success) {
-        // Update notification to show result
+        // Persist responded state to backend
+        try {
+          await apiClient.patch(`/notifications/${notificationId}/responded`, { action });
+        } catch (e) {
+          console.log("Failed to persist notification response state:", e);
+        }
+
+        // Update notification locally to show result
         setNotifications((prev) =>
           prev.map((n) =>
             n.id === notificationId

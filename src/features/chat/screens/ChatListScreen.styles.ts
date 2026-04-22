@@ -57,7 +57,6 @@ export const styles = StyleSheet.create({
     backgroundColor: COLORS.bgMid,
     borderRadius: 20,
     paddingHorizontal: 14,
-    marginRight: 12,
     height: 44,
     borderWidth: 1.5,
     borderColor: COLORS.border,
@@ -70,19 +69,6 @@ export const styles = StyleSheet.create({
     fontSize: 15,
     color: COLORS.textPrimary,
     paddingVertical: 10,
-  },
-  addFriendBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: COLORS.primary,
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
   },
 
   chatItem: {

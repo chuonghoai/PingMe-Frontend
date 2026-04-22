@@ -17,7 +17,7 @@ import {
   Alert
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import MapView, { Marker, Circle, PROVIDER_GOOGLE, Polygon, Polyline } from "react-native-maps";
+import MapView, { Marker, Circle, PROVIDER_GOOGLE, Polygon } from "react-native-maps";
 import { startBackgroundLocationTracking, syncCachedLocationPoints } from "@/services/locationTrackingBackground";
 import * as Location from "expo-location";
 import * as ExpoBattery from "expo-battery";
@@ -38,7 +38,7 @@ import {
   Camera,
   UserCheck,
   UserPlus,
-  Globe
+  Clock
 } from "lucide-react-native";
 import * as Linking from "expo-linking";
 
@@ -382,29 +382,49 @@ interface ClusterData {
 const MomentClusterMarker = React.memo(({ cluster, onPress }: { cluster: ClusterData; onPress: () => void }) => {
   const [tracksViewChanges, setTracksViewChanges] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [imagesReady, setImagesReady] = useState(false);
 
-  // Stop tracking after 1 second as a fallback, or when the main image loads
+  const displayImageUrl = cluster.imageUrls && cluster.imageUrls.length > 0 
+    ? cluster.imageUrls[currentImageIndex] 
+    : cluster.latestImageUrl;
+
+  // Prefetch the main image + all avatar images before rendering
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setTracksViewChanges(false);
-    }, 1500);
-    return () => clearTimeout(timer);
-  }, []);
+    setImagesReady(false);
+    setTracksViewChanges(true);
 
+    const imageUrlsToLoad: string[] = [];
+    if (displayImageUrl) imageUrlsToLoad.push(displayImageUrl);
+    if (cluster.avatars) {
+      cluster.avatars.forEach(a => {
+        if (a.avatarUrl) imageUrlsToLoad.push(a.avatarUrl);
+      });
+    }
+
+    if (imageUrlsToLoad.length === 0) {
+      setImagesReady(true);
+      return;
+    }
+
+    Promise.all(imageUrlsToLoad.map(url => Image.prefetch(url).catch(() => false)))
+      .then(() => setImagesReady(true))
+      .catch(() => setImagesReady(true));
+  }, [displayImageUrl, cluster.avatars]);
+
+  // Cycle through images if cluster has multiple
   useEffect(() => {
     if (cluster.imageUrls && cluster.imageUrls.length > 1) {
       const interval = setInterval(() => {
         setCurrentImageIndex((prev) => (prev + 1) % cluster.imageUrls.length);
         setTracksViewChanges(true); 
-        setTimeout(() => setTracksViewChanges(false), 300);
+        setTimeout(() => setTracksViewChanges(false), 500);
       }, 5000);
       return () => clearInterval(interval);
     }
   }, [cluster.imageUrls]);
 
-  const displayImageUrl = cluster.imageUrls && cluster.imageUrls.length > 0 
-    ? cluster.imageUrls[currentImageIndex] 
-    : cluster.latestImageUrl;
+  // Don't render until images are prefetched
+  if (!imagesReady) return null;
 
   return (
     <Marker
@@ -436,7 +456,7 @@ const MomentClusterMarker = React.memo(({ cluster, onPress }: { cluster: Cluster
             style={{ width: '100%', height: '100%' }}
             resizeMode="cover"
             fadeDuration={0}
-            onLoad={() => setTimeout(() => setTracksViewChanges(false), 300)}
+            onLoad={() => setTimeout(() => setTracksViewChanges(false), 500)}
           />
         </View>
 
@@ -512,7 +532,6 @@ export const HomeScreen = () => {
     longitude: number;
   } | null>(null);
   const [friends, setFriends] = useState<FriendOnMap[]>([]);
-  const [hasAutoFitted, setHasAutoFitted] = useState(false);
 
   const [selectedFriend, setSelectedFriend] = useState<FriendPopupData | null>(null);
   const [region, setRegion] = useState(DEFAULT_REGION);
@@ -525,6 +544,7 @@ export const HomeScreen = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<UnifiedSearchResult[]>([]);
   const [isSearchLoading, setIsSearchLoading] = useState(false);
+  const [searchedPlace, setSearchedPlace] = useState<{ latitude: number; longitude: number; title: string; subtitle: string } | null>(null);
 
   // Determine if it's nighttime for dark map styling (6 PM to 6 AM)
   const isNightTime = useMemo(() => {
@@ -567,12 +587,22 @@ export const HomeScreen = () => {
     }
   }, [params.showMomentFeed]);
 
+  // Handle URL params for navigating from Profile Friend List
+  useEffect(() => {
+    if (params.targetFriendId && typeof params.targetFriendId === 'string') {
+      // Small timeout to let map render if we just switched tabs
+      setTimeout(() => {
+        handleFriendPress(params.targetFriendId as string, true);
+      }, 500);
+      router.setParams({ targetFriendId: undefined });
+    }
+  }, [params.targetFriendId]);
+
   const [momentClusters, setMomentClusters] = useState<ClusterData[]>([]);
   const [selectedClusterCoord, setSelectedClusterCoord] = useState<{ latitude: number; longitude: number } | null>(null);
 
   // ── Map Exploration (Fog of War) State ──
   const [exploredBoundaries, setExploredBoundaries] = useState<{ id: string; coords: { latitude: number; longitude: number }[] }[]>([]);
-  const [todaysRoute, setTodaysRoute] = useState<{lat: number, lng: number}[]>([]);
   const [explorationProgress, setExplorationProgress] = useState<string>("0");
 
   const initExploration = useCallback(async () => {
@@ -590,7 +620,6 @@ export const HomeScreen = () => {
       const res: any = await apiClient.get('/exploration/my-map');
       if (res && res.data) {
         setExploredBoundaries(res.data.boundaries || []);
-        setTodaysRoute(res.data.todaysPath || []);
         setExplorationProgress(res.data.progressPercent || "0");
       }
     } catch (e) {
@@ -792,11 +821,18 @@ export const HomeScreen = () => {
 
   const handleSearchSelect = async (item: UnifiedSearchResult) => {
     if (item.type === 'user') {
-      handleFriendPress(item.id);
+      handleFriendPress(item.id, true);
+      toggleSearch(false);
     } else if (item.type === 'place' && item.location) {
       // Nominatim payload already includes lat/lng natively
       setIsSearchLoading(true);
       try {
+        setSearchedPlace({
+          latitude: item.location.lat,
+          longitude: item.location.lng,
+          title: item.title,
+          subtitle: item.subtitle,
+        });
         mapRef.current?.animateToRegion({
           latitude: item.location.lat,
           longitude: item.location.lng,
@@ -1222,11 +1258,21 @@ export const HomeScreen = () => {
   const listTop = insets.top + 70;
 
   // ── Handle friend popup ──
-  const handleFriendPress = useCallback(async (friendId: string) => {
+  const handleFriendPress = useCallback(async (friendId: string, shouldCenter: boolean = false) => {
     try {
       const response: any = await getFriendPopup(friendId);
       if (response.success && response.data) {
         setSelectedFriend(response.data);
+
+        if (shouldCenter && response.data.location?.latitude && mapRef.current) {
+          mapRef.current.animateToRegion({
+            latitude: response.data.location.latitude,
+            longitude: response.data.location.longitude,
+            latitudeDelta: 0.01,
+            longitudeDelta: 0.01,
+          }, 800);
+        }
+
         popupSlide.setValue(300);
         Animated.spring(popupSlide, {
           toValue: 0,
@@ -1266,39 +1312,6 @@ export const HomeScreen = () => {
     }
   };
 
-  const fitAllFriends = useCallback(() => {
-    if (!mapRef.current) return;
-    
-    if (friends.length === 0) {
-      if (userLocation) {
-        mapRef.current.animateToRegion(
-          { ...userLocation, latitudeDelta: 0.035, longitudeDelta: 0.035 },
-          800
-        );
-      }
-      return;
-    }
-
-    const coords = [
-      ...(userLocation ? [{ latitude: userLocation.latitude, longitude: userLocation.longitude }] : []),
-      ...friends.map(f => ({ latitude: f.latitude, longitude: f.longitude }))
-    ];
-
-    if (coords.length > 0) {
-      mapRef.current.fitToCoordinates(coords, {
-        edgePadding: { top: 100, right: 60, bottom: 200, left: 60 },
-        animated: true,
-      });
-    }
-  }, [userLocation, friends]);
-
-  useEffect(() => {
-    if (friends.length > 0 && mapRef.current && !hasAutoFitted) {
-      setTimeout(() => fitAllFriends(), 1500); // Small delay to ensure MapView is fully loaded
-      setHasAutoFitted(true);
-    }
-  }, [friends, hasAutoFitted, fitAllFriends]);
-
   const centerOnMe = useCallback(() => {
     if (userLocation && mapRef.current) {
       mapRef.current.animateToRegion(
@@ -1333,6 +1346,9 @@ export const HomeScreen = () => {
         moveOnMarkerPress={false}
         pitchEnabled={false}
         loadingEnabled={false}
+        onPress={() => {
+          if (searchedPlace) setSearchedPlace(null);
+        }}
       >
         {/* ── My location with animated radar pulse ── */}
         {userLocation ? (
@@ -1380,24 +1396,21 @@ export const HomeScreen = () => {
           />
         ))}
 
-        {/* ── Exploration Route Polyline ── */}
-        {todaysRoute?.filter(p => p && typeof p.lat === 'number' && typeof p.lng === 'number' && !isNaN(p.lat)).length > 0 && (
-          <Polyline
-            coordinates={todaysRoute
-               .filter(p => p && typeof p.lat === 'number' && typeof p.lng === 'number' && !isNaN(p.lat))
-               .map(p => ({ latitude: p.lat, longitude: p.lng }))
-            }
-            strokeColor="#8B5CF6"
-            strokeWidth={4}
-            lineDashPattern={[1]}
-            zIndex={105}
+        {/* ── Searched Place Marker ── */}
+        {searchedPlace && (
+          <Marker
+            coordinate={{ latitude: searchedPlace.latitude, longitude: searchedPlace.longitude }}
+            title={searchedPlace.title}
+            description={searchedPlace.subtitle}
+            pinColor={COLORS.primary}
+            zIndex={999}
           />
         )}
-        
+
         {mapEvents.map((event) => (
-          <MapEventMarker 
-            key={`event_${event.id}`} 
-            event={event} 
+          <MapEventMarker
+            key={`event_${event.id}`}
+            event={event}
             onPress={(evt) => setSelectedMapEvent(evt)}
           />
         ))}
@@ -1516,6 +1529,8 @@ export const HomeScreen = () => {
                        {item.type === 'user' && (
                          item.isFriend ? (
                            <UserCheck size={14} color={COLORS.primary} style={{ marginRight: 4 }} />
+                         ) : item.friendshipStatus === 'PENDING' ? (
+                           <Clock size={14} color="#F59E0B" style={{ marginRight: 4 }} />
                          ) : (
                            <UserPlus size={14} color={COLORS.textMuted} style={{ marginRight: 4 }} />
                          )
@@ -1527,7 +1542,8 @@ export const HomeScreen = () => {
                   </View>
                   {item.type === 'user' ? (
                     <TouchableOpacity 
-                      style={styles.nearbyChatBtn}
+                      style={[styles.nearbyChatBtn, item.friendshipStatus === 'PENDING' && { opacity: 0.5 }]}
+                      disabled={item.friendshipStatus === 'PENDING'}
                       onPress={() => {
                         if (item.isFriend) {
                           handleStartChat(item.id);
@@ -1541,7 +1557,10 @@ export const HomeScreen = () => {
                                   try {
                                     const res: any = await sendFriendRequest(item.id);
                                     if (res.success) {
-                                      Alert.alert("Thành công", "Đã gửi lời mời kết bạn.");
+                                      // Update the search results to reflect PENDING status
+                                      setSearchResults(prev => prev.map(r => 
+                                        r.id === item.id ? { ...r, friendshipStatus: 'PENDING', subtitle: 'Đã gửi lời mời' } : r
+                                      ));
                                     } else {
                                       Alert.alert("Lỗi", res.message || "Không thể gửi lời mời kết bạn.");
                                     }
@@ -1554,7 +1573,7 @@ export const HomeScreen = () => {
                         }
                       }}
                     >
-                      {item.isFriend ? <MessageCircle size={18} color={COLORS.primary} strokeWidth={2} /> : <UserPlus size={18} color={COLORS.primary} strokeWidth={2} />}
+                      {item.isFriend ? <MessageCircle size={18} color={COLORS.primary} strokeWidth={2} /> : item.friendshipStatus === 'PENDING' ? <Clock size={18} color="#F59E0B" strokeWidth={2} /> : <UserPlus size={18} color={COLORS.primary} strokeWidth={2} />}
                     </TouchableOpacity>
                   ) : (
                     <TouchableOpacity style={styles.nearbyChatBtn}>
@@ -1595,14 +1614,6 @@ export const HomeScreen = () => {
         </TouchableOpacity>
       </View>
 
-      {/* ── FIT ALL FRIENDS BUTTON ── */}
-      <TouchableOpacity
-        style={[styles.topRoundBtn, { position: "absolute", right: 16, bottom: insets.bottom + 175, zIndex: 10 }]}
-        onPress={fitAllFriends}
-        activeOpacity={0.8}
-      >
-        <Globe size={22} color={COLORS.primary} strokeWidth={2.5} />
-      </TouchableOpacity>
 
       {/* ── MY LOCATION BUTTON ── */}
       <TouchableOpacity
@@ -1892,41 +1903,42 @@ export const HomeScreen = () => {
                 </>
               )}
 
-              {/* ── Add/Unfriend & Request Location Actions ── */}
+              {/* ── Navigation Actions ── */}
               <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 10, gap: 10 }}>
                 {selectedFriend.relationship.status === 'FRIEND' ? (
                   <>
                     <TouchableOpacity
-                      style={{ paddingVertical: 8, paddingHorizontal: 16, backgroundColor: COLORS.surfaceHighlight, borderRadius: 20, flexDirection: 'row', alignItems: 'center' }}
-                      onPress={() => socketService.emit('req_location_update', { friendId: selectedFriend.basicInfo.userId })}
-                    >
-                      <MapPin size={14} color={COLORS.textSecondary} style={{ marginRight: 6 }} />
-                      <Text style={{ fontSize: 12, color: COLORS.textSecondary, fontWeight: '500' }}>Cập nhật vị trí</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={{ paddingVertical: 8, paddingHorizontal: 16, backgroundColor: '#FEF2F2', borderRadius: 20, flexDirection: 'row', alignItems: 'center' }}
+                      style={{ flex: 1, paddingVertical: 10, paddingHorizontal: 12, backgroundColor: COLORS.surfaceHighlight, borderRadius: 20, flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}
                       onPress={() => {
-                        Alert.alert(
-                          "Hủy bạn",
-                          `Bạn có chắc chắn muốn hủy kết bạn với ${selectedFriend.basicInfo.fullName}?`,
-                          [
-                            { text: "Từ chối", style: "cancel" },
-                            { text: "Đồng ý", onPress: async () => {
-                                try {
-                                  await unfriend(selectedFriend.basicInfo.userId);
-                                  Alert.alert("Thành công", "Đã hủy kết bạn.");
-                                  closePopup();
-                                  fetchFriends();
-                                } catch (e: any) {
-                                  Alert.alert("Lỗi", e?.message || "Không thể hủy kết bạn");
-                                }
-                            }}
-                          ]
-                        );
+                        if (mapRef.current && selectedFriend.location?.latitude) {
+                          mapRef.current.animateToRegion({
+                            latitude: selectedFriend.location.latitude,
+                            longitude: selectedFriend.location.longitude,
+                            latitudeDelta: 0.01,
+                            longitudeDelta: 0.01,
+                          }, 800);
+                        }
                       }}
                     >
-                      <X size={14} color="#EF4444" style={{ marginRight: 6 }} />
-                      <Text style={{ fontSize: 12, color: '#EF4444', fontWeight: '500' }}>Hủy bạn</Text>
+                      <MapPin size={16} color={COLORS.textSecondary} style={{ marginRight: 6 }} />
+                      <Text style={{ fontSize: 12, color: COLORS.textSecondary, fontWeight: '600' }}>Định vị nhanh</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={{ flex: 1, paddingVertical: 10, paddingHorizontal: 12, backgroundColor: '#EFF6FF', borderRadius: 20, flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}
+                      onPress={() => {
+                        closePopup();
+                        router.push({
+                          pathname: "/(main)/friend-profile",
+                          params: {
+                            targetUserId: selectedFriend.basicInfo.userId,
+                            name: selectedFriend.basicInfo.fullName,
+                          }
+                        });
+                      }}
+                    >
+                      <User size={16} color="#3B82F6" style={{ marginRight: 6 }} />
+                      <Text style={{ fontSize: 12, color: '#3B82F6', fontWeight: '600' }}>Xem hồ sơ</Text>
                     </TouchableOpacity>
                   </>
                 ) : (

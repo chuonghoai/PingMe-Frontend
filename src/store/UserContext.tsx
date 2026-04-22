@@ -17,6 +17,8 @@ export interface UserProfile {
   pingCoins: number;
   joinAt: string;
   isHideMyLocation: boolean;
+  gender?: string;
+  dob?: string;
 }
 
 const DEFAULT_PROFILE: UserProfile = {
@@ -34,6 +36,8 @@ const DEFAULT_PROFILE: UserProfile = {
   pingCoins: 0,
   joinAt: "",
   isHideMyLocation: false,
+  gender: undefined,
+  dob: undefined,
 };
 
 const UserContext = createContext<any>(null);
