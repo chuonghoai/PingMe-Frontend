@@ -101,6 +101,19 @@ export const MomentFeedModal = ({
     ]);
   };
 
+  const handleDeleteMoment = async (momentId: string) => {
+    try {
+      const res: any = await momentsApi.deleteMoment(momentId);
+      if (res?.success) {
+        setMoments(prev => prev.filter(m => m.id !== momentId));
+      } else {
+        Alert.alert("Lỗi", "Không thể xóa moment.");
+      }
+    } catch (e) {
+      Alert.alert("Lỗi", "Không thể xóa moment.");
+    }
+  };
+
   const submitReport = async () => {
     if (selectedReason === "OTHER" && !reportDescription.trim()) return Alert.alert("Lỗi", "Vui lòng nhập lý do.");
     try {
@@ -124,6 +137,7 @@ export const MomentFeedModal = ({
             <View style={styles.momentUserInfo}>
               <Text style={styles.momentUserName}>{item.fullName}</Text>
               <Text style={styles.momentTimeText}>{new Date(item.createdAt).toLocaleTimeString()}</Text>
+              <Text style={styles.momentCaptionText}>{item.caption ?? ""}</Text>
             </View>
           </View>
 
@@ -132,7 +146,10 @@ export const MomentFeedModal = ({
               <Navigation size={18} color="#fff" />
             </TouchableOpacity>
             {isMine ? (
-              <TouchableOpacity style={[styles.actionBtn, styles.deleteBtn]} onPress={() => Alert.alert("Xóa?", "", [{ text: "Xóa", onPress: () => momentsApi.deleteMoment(item.id) }])}>
+              <TouchableOpacity style={[styles.actionBtn, styles.deleteBtn]} onPress={() => Alert.alert("Xóa moment?", "Bạn có chắc muốn xóa moment này không?", [
+                { text: "Hủy", style: "cancel" },
+                { text: "Xóa", style: "destructive", onPress: () => handleDeleteMoment(item.id) }
+              ])}>
                 <Trash2 size={18} color="#EF4444" />
               </TouchableOpacity>
             ) : (
