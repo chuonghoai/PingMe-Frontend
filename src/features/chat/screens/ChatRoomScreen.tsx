@@ -17,7 +17,6 @@ import {
   PhoneMissed,
   Play,
   Send,
-  Smile,
   Square,
   Trash2,
   Video as VideoIcon,
@@ -1072,9 +1071,6 @@ export const ChatRoomScreen = () => {
                 placeholderTextColor={COLORS.textSub}
                 multiline
               />
-              <TouchableOpacity style={styles.stickerButton}>
-                <Smile size={24} color={COLORS.iconGray} />
-              </TouchableOpacity>
             </View>
 
             {inputText.trim().length > 0 && (
