@@ -14,3 +14,21 @@ export const getFriendPopup = async (friendId: string) => {
 export const updateMyLocation = async (lat: number, lng: number) => {
   return apiClient.put("/users/me", { lat, lng });
 };
+
+export const getActiveEvents = async () => {
+  try {
+    const response: any = await apiClient.get('/map/events/active');
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const checkInEvent = async (eventId: string) => {
+  try {
+    const response: any = await apiClient.post(`/map/events/check-in/${eventId}`);
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};

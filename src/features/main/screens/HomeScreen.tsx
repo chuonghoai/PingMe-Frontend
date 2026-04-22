@@ -59,6 +59,8 @@ import { useUser } from "@/store/UserContext";
 import { ChatContext } from "@/features/chat/store/ChatContext";
 import { apiClient } from "@/services/apiClient";
 import { sendFriendRequest, unfriend } from "@/services/friendsApi";
+import { useMapEvents } from "../hooks/useMapEvents";
+import { MapEventMarker } from "../components/MapEventMarker";
 
 // ── Intimacy Aura Theme Colors ──
 const AURA_THEMES: Record<string, { bg: string; bgLight: string; border: string; text: string; accent: string }> = {
@@ -497,6 +499,7 @@ export const HomeScreen = () => {
   const { userProfile } = useUser();
   const { totalUnreadCount, fetchConversationsAndUnreadCount } = React.useContext(ChatContext);
   const searchInputRef = useRef<TextInput>(null);
+  const { events: mapEvents } = useMapEvents();
 
   const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
@@ -1388,6 +1391,10 @@ export const HomeScreen = () => {
             zIndex={105}
           />
         )}
+        
+        {mapEvents.map((event) => (
+          <MapEventMarker key={event.id} event={event} />
+        ))}
       </MapView>
 
       {/* ── Exploration Progress Bar (UI Overlay) ── */}
