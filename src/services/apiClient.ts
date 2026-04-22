@@ -7,6 +7,9 @@ const getBaseUrl = () => {
   if (Platform.OS === "web") {
     return process.env.EXPO_PUBLIC_API_URL_WEB ?? "http://localhost:3000";
   }
+  if (Platform.OS === "android") {
+    return process.env.EXPO_PUBLIC_API_URL_ANDROID ?? "http://10.0.2.2:3000";
+  }
   return process.env.EXPO_PUBLIC_API_URL_DEVICE ?? "http://192.168.1.32:3000";
 };
 

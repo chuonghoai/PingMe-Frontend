@@ -32,11 +32,13 @@ import {
   ImageIcon,
   Settings,
 } from "lucide-react-native";
+import * as ImagePicker from "expo-image-picker";
 import { useUser } from "@/store/UserContext";
 import { clearTokens, getRefreshToken } from "@/utils/tokenStorage";
 import { COLORS, styles } from "./ProfileScreen.styles";
 import { getFriendList, unfriend, FriendListResponseDto } from "@/services/friendsApi";
 import { apiClient } from "@/services/apiClient";
+import { mediaApi } from "@/services/mediaApi";
 
 // ── Friend List Modal ──
 const FriendListModal = ({
@@ -45,12 +47,14 @@ const FriendListModal = ({
   friends,
   onUnfriend,
   loadingId,
+  onSelectFriend,
 }: {
   visible: boolean;
   onClose: () => void;
   friends: FriendListResponseDto[];
   onUnfriend: (friendId: string) => void;
   loadingId: string | null;
+  onSelectFriend: (friendId: string) => void;
 }) => {
   return (
     <Modal visible={visible} animationType="slide" transparent>
@@ -77,7 +81,11 @@ const FriendListModal = ({
               </View>
             }
             renderItem={({ item }) => (
-              <View style={styles.friendItem}>
+              <TouchableOpacity 
+                style={styles.friendItem}
+                activeOpacity={0.7}
+                onPress={() => onSelectFriend(item.userId)}
+              >
                 <Image
                   source={{ uri: item.avatarUrl || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" }}
                   style={styles.friendAvatar}
@@ -99,7 +107,7 @@ const FriendListModal = ({
                     <UserMinus size={18} color={COLORS.danger} />
                   )}
                 </TouchableOpacity>
-              </View>
+              </TouchableOpacity>
             )}
           />
         </View>
@@ -114,6 +122,8 @@ const EditProfileModal = ({
   onClose,
   currentName: initialName,
   currentBio: initialBio,
+  currentGender: initialGender,
+  currentDob: initialDob,
   onSave,
   isSaving,
 }: {
@@ -121,16 +131,22 @@ const EditProfileModal = ({
   onClose: () => void;
   currentName: string;
   currentBio: string;
-  onSave: (name: string, bio: string) => void;
+  currentGender?: string;
+  currentDob?: string;
+  onSave: (name: string, bio: string, gender?: string, dob?: string) => void;
   isSaving: boolean;
 }) => {
   const [name, setName] = useState(initialName);
   const [bio, setBio] = useState(initialBio);
+  const [gender, setGender] = useState(initialGender);
+  const [dob, setDob] = useState(initialDob);
 
   useEffect(() => {
     setName(initialName);
     setBio(initialBio);
-  }, [initialName, initialBio]);
+    setGender(initialGender);
+    setDob(initialDob);
+  }, [initialName, initialBio, initialGender, initialDob]);
 
   return (
     <Modal visible={visible} animationType="slide" transparent>
@@ -167,9 +183,34 @@ const EditProfileModal = ({
               {bio.length}/200
             </Text>
 
+            <Text style={[styles.editLabel, { marginTop: 12 }]}>Ngày sinh (YYYY-MM-DD)</Text>
+            <TextInput
+              style={styles.editInput}
+              value={dob}
+              onChangeText={setDob}
+              placeholder="VD: 2000-01-01"
+              placeholderTextColor={COLORS.textMuted}
+            />
+
+            <Text style={[styles.editLabel, { marginTop: 16 }]}>Giới tính</Text>
+            <View style={styles.genderContainer}>
+              <TouchableOpacity
+                style={[styles.genderBtn, gender === "MALE" && styles.genderBtnActive]}
+                onPress={() => setGender("MALE")}
+              >
+                <Text style={[styles.genderBtnText, gender === "MALE" && styles.genderBtnTextActive]}>Nam</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.genderBtn, gender === "FEMALE" && styles.genderBtnActive]}
+                onPress={() => setGender("FEMALE")}
+              >
+                <Text style={[styles.genderBtnText, gender === "FEMALE" && styles.genderBtnTextActive]}>Nữ</Text>
+              </TouchableOpacity>
+            </View>
+
             <TouchableOpacity
               style={[styles.saveBtn, isSaving && { opacity: 0.6 }]}
-              onPress={() => onSave(name, bio)}
+              onPress={() => onSave(name, bio, gender, dob)}
               disabled={isSaving}
             >
               {isSaving ? (
@@ -200,6 +241,7 @@ export const ProfileScreen = () => {
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [unfriendingId, setUnfriendingId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 
   // Location privacy
   const [isHidingLocation, setIsHidingLocation] = useState(userProfile.isHideMyLocation || false);
@@ -285,17 +327,17 @@ export const ProfileScreen = () => {
     );
   };
 
-  const handleSaveProfile = async (name: string, bio: string) => {
+  const handleSaveProfile = async (name: string, bio: string, gender?: string, dob?: string) => {
     try {
       setIsSaving(true);
       const res: any = await apiClient.put("/users/me", {
         fullname: name,
-        phone: "",
-        gender: null,
-        dob: "",
+        bio: bio,
+        gender: gender,
+        dob: dob,
       });
       // Also update bio if endpoint supports it. For now we update locally.
-      updateUserProfile({ firstName: name.split(" ")[0], lastName: name.split(" ").slice(1).join(" "), bio, fullname: name });
+      updateUserProfile({ firstName: name.split(" ")[0], lastName: name.split(" ").slice(1).join(" "), bio, fullname: name, gender, dob });
       setShowEditProfile(false);
     } catch (err) {
       console.log("Lỗi cập nhật profile:", err);
@@ -315,6 +357,60 @@ export const ProfileScreen = () => {
     } catch (err) {
       console.log("Lỗi toggle location:", err);
       setIsHidingLocation(!value);
+    }
+  };
+
+  const handleChangeAvatar = async () => {
+    try {
+      // 1. Request permission
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permissionResult.granted) {
+        Alert.alert("Quyền truy cập", "Bạn cần cấp quyền truy cập thư viện ảnh để thay đổi avatar.");
+        return;
+      }
+
+      // 2. Open image picker
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (result.canceled || !result.assets || result.assets.length === 0) {
+        return;
+      }
+
+      const selectedImage = result.assets[0];
+      setIsUploadingAvatar(true);
+
+      // 3. Get Cloudinary signature from backend
+      const signatureData = await mediaApi.getSignature();
+
+      // 4. Upload to Cloudinary
+      const cloudinaryResponse = await mediaApi.uploadToCloudinary(
+        selectedImage.uri,
+        signatureData,
+        "image",
+        selectedImage.mimeType || "image/jpeg"
+      );
+
+      // 5. Save media record to backend DB
+      await mediaApi.createMediaRecord(cloudinaryResponse);
+
+      // 6. Update user avatar URL in backend
+      const newAvatarUrl = cloudinaryResponse.secure_url;
+      await apiClient.put("/users/me", { avatarUrl: newAvatarUrl });
+
+      // 7. Update local UserContext -> Map auto-updates
+      updateUserProfile({ avatarUrl: newAvatarUrl });
+
+      Alert.alert("Thành công", "Ảnh đại diện đã được cập nhật!");
+    } catch (err) {
+      console.log("Lỗi cập nhật avatar:", err);
+      Alert.alert("Lỗi", "Không thể cập nhật ảnh đại diện. Vui lòng thử lại.");
+    } finally {
+      setIsUploadingAvatar(false);
     }
   };
 
@@ -339,6 +435,18 @@ export const ProfileScreen = () => {
             }}
             style={styles.avatar}
           />
+          <TouchableOpacity
+            style={styles.cameraButton}
+            onPress={handleChangeAvatar}
+            disabled={isUploadingAvatar}
+            activeOpacity={0.7}
+          >
+            {isUploadingAvatar ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Camera size={18} color="#fff" />
+            )}
+          </TouchableOpacity>
         </View>
 
         <Text style={styles.name}>{displayName}</Text>
@@ -366,6 +474,40 @@ export const ProfileScreen = () => {
         <View style={styles.statItem}>
           <Text style={styles.statNumber}>{momentCount}</Text>
           <Text style={styles.statLabel}>Khoảnh khắc</Text>
+        </View>
+      </View>
+
+      {/* ── INFO SECTION ── */}
+      <View style={styles.infoContainer}>
+        <Text style={styles.cardTitle}>Thông tin cá nhân</Text>
+        
+        <View style={styles.infoRow}>
+          <Text style={styles.infoLabel}>Họ và tên gốc</Text>
+          <Text style={styles.infoValue}>{userProfile.fullname || "Chưa cập nhật"}</Text>
+        </View>
+
+        <View style={styles.infoRow}>
+          <Text style={styles.infoLabel}>Email</Text>
+          <Text style={styles.infoValue}>{userProfile.email || "Chưa cập nhật"}</Text>
+        </View>
+
+        <View style={styles.infoRow}>
+          <Text style={styles.infoLabel}>Ngày sinh</Text>
+          <Text style={styles.infoValue}>
+            {userProfile.dob ? new Date(userProfile.dob).toLocaleDateString('vi-VN') : "Chưa cập nhật"}
+          </Text>
+        </View>
+
+        <View style={styles.infoRow}>
+          <Text style={styles.infoLabel}>Giới tính</Text>
+          <Text style={styles.infoValue}>
+            {userProfile.gender === "MALE" ? "Nam" : userProfile.gender === "FEMALE" ? "Nữ" : "Chưa cập nhật"}
+          </Text>
+        </View>
+
+        <View style={[styles.infoRow, styles.infoRowNoBorder]}>
+          <Text style={styles.infoLabel}>Khám phá</Text>
+          <Text style={styles.infoValue}>0% (Việt Nam)</Text>
         </View>
       </View>
 
@@ -427,6 +569,10 @@ export const ProfileScreen = () => {
         friends={friends}
         onUnfriend={handleUnfriend}
         loadingId={unfriendingId}
+        onSelectFriend={(friendId) => {
+          setShowFriendList(false);
+          router.push({ pathname: '/(main)', params: { targetFriendId: friendId } });
+        }}
       />
 
       <EditProfileModal
@@ -434,6 +580,8 @@ export const ProfileScreen = () => {
         onClose={() => setShowEditProfile(false)}
         currentName={displayName}
         currentBio={userProfile.bio || ""}
+        currentGender={userProfile.gender}
+        currentDob={userProfile.dob ? String(userProfile.dob).split("T")[0] : undefined}
         onSave={handleSaveProfile}
         isSaving={isSaving}
       />

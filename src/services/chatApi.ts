@@ -21,6 +21,10 @@ export const chatApi = {
     return apiClient.get("/conversations");
   },
 
+  searchConversations: async (keyword: string) => {
+    return apiClient.get(`/conversations/search?q=${encodeURIComponent(keyword)}`);
+  },
+
   getMessages: async (conversationId: string, page = 1, limit = 20) => {
     return apiClient.get(
       `/messages/${conversationId}?page=${page}&limit=${limit}`,
@@ -45,5 +49,11 @@ export const chatApi = {
   },
   clearHistory: async (conversationId: string) => {
     return apiClient.post(`/conversations/${conversationId}/clear-history`);
+  },
+  muteConversation: async (conversationId: string) => {
+    return apiClient.post(`/conversations/${conversationId}/mute`);
+  },
+  searchMessagesInChat: async (conversationId: string, keyword: string) => {
+    return apiClient.get(`/messages/${conversationId}/search?q=${encodeURIComponent(keyword)}`);
   },
 };

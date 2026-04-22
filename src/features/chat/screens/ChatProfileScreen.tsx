@@ -28,7 +28,10 @@ import { COLORS, styles } from "./ChatProfileScreen.styles";
 export const ChatProfileScreen = () => {
   const router = useRouter();
   const { conversationId, targetUserId, name, avatarUrl } = useLocalSearchParams();
-  const { loadConversations } = useChat();
+  const { loadConversations, conversations } = useChat();
+
+  const currentConversation = conversations?.find((c: any) => c.id === conversationId);
+  const [isMuted, setIsMuted] = useState(currentConversation?.hasMuted || false);
 
   const [recentMedia, setRecentMedia] = useState<any[]>([]);
   const [isLoadingMedia, setIsLoadingMedia] = useState(true);
@@ -102,6 +105,18 @@ export const ChatProfileScreen = () => {
     ]);
   };
 
+  const handleToggleMute = async () => {
+    try {
+      const res: any = await chatApi.muteConversation(conversationId as string);
+      if (res.success) {
+        setIsMuted(res.data?.isMuted);
+        await loadConversations();
+      }
+    } catch (e) {
+      Alert.alert("Lỗi", "Không thể thay đổi cài đặt thông báo lúc này");
+    }
+  };
+
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -131,13 +146,6 @@ export const ChatProfileScreen = () => {
                 <Video size={24} color={COLORS.textMain} />
               </View>
               <Text style={styles.actionText}>Gọi video</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.actionBtn} onPress={() => {}}>
-              <View style={styles.actionIconBox}>
-                <User size={24} color={COLORS.textMain} />
-              </View>
-              <Text style={styles.actionText}>Hồ sơ</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -178,15 +186,35 @@ export const ChatProfileScreen = () => {
 
         {/* Cài đặt chung */}
         <View style={styles.optionsList}>
-          <TouchableOpacity style={styles.optionItem}>
+          <TouchableOpacity style={styles.optionItem} onPress={() => {
+            router.push({
+              pathname: "/(main)/friend-profile",
+              params: {
+                targetUserId,
+                conversationId,
+                name: displayName,
+              }
+            });
+          }}>
+            <User size={22} color={COLORS.textMain} />
+            <Text style={styles.optionText}>Xem thông tin cá nhân</Text>
+            <ChevronRight size={20} color={COLORS.textSub} />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.optionItem} onPress={() => router.push({
+            pathname: "/(main)/chat-search",
+            params: { conversationId }
+          })}>
             <Search size={22} color={COLORS.textMain} />
             <Text style={styles.optionText}>Tìm kiếm trong cuộc trò chuyện</Text>
             <ChevronRight size={20} color={COLORS.textSub} />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.optionItem}>
-            <BellOff size={22} color={COLORS.textMain} />
-            <Text style={styles.optionText}>Tắt thông báo</Text>
+          <TouchableOpacity style={styles.optionItem} onPress={handleToggleMute}>
+            <BellOff size={22} color={isMuted ? COLORS.primary : COLORS.textMain} />
+            <Text style={[styles.optionText, isMuted && { color: COLORS.primary }]}>
+              {isMuted ? "Bật thông báo" : "Tắt thông báo"}
+            </Text>
             <ChevronRight size={20} color={COLORS.textSub} />
           </TouchableOpacity>
 

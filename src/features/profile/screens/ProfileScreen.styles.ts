@@ -53,6 +53,24 @@ export const styles = StyleSheet.create({
     height: 120,
     borderRadius: 60,
   },
+  cameraButton: {
+    position: "absolute",
+    bottom: 4,
+    right: 4,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: COLORS.primary,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 3,
+    borderColor: COLORS.bgWhite,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 5,
+  },
   name: {
     fontSize: 26,
     fontWeight: "900",
@@ -127,6 +145,43 @@ export const styles = StyleSheet.create({
     backgroundColor: COLORS.border,
     height: "80%",
     alignSelf: "center",
+  },
+
+  // ── INFO CARD ──
+  infoContainer: {
+    backgroundColor: COLORS.bgWhite,
+    borderRadius: 24,
+    marginHorizontal: 20,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  infoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+  },
+  infoRowNoBorder: {
+    borderBottomWidth: 0,
+  },
+  infoLabel: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    width: 110,
+  },
+  infoValue: {
+    fontSize: 15,
+    color: COLORS.textPrimary,
+    fontWeight: "600",
+    flex: 1,
   },
 
   // ── SETTINGS CARD ──
@@ -302,5 +357,31 @@ export const styles = StyleSheet.create({
     fontWeight: "800",
     color: "#fff",
     letterSpacing: 0.3,
+  },
+  genderContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 8,
+  },
+  genderBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: 12,
+    marginHorizontal: 4,
+  },
+  genderBtnActive: {
+    borderColor: COLORS.primary,
+    backgroundColor: "rgba(255, 140, 66, 0.1)",
+  },
+  genderBtnText: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    fontWeight: "600",
+  },
+  genderBtnTextActive: {
+    color: COLORS.primary,
   },
 });

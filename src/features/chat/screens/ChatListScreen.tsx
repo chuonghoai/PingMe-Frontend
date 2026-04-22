@@ -1,7 +1,7 @@
 import { useUser } from "@/store/UserContext"; // Lấy UserContext để biết "Mình là ai"
 import { Stack, useRouter } from "expo-router"; // Thêm Stack
-import { Search, UserPlus } from "lucide-react-native";
-import React, { useContext } from "react";
+import { Search } from "lucide-react-native";
+import React, { useContext, useState, useEffect } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -15,11 +15,10 @@ import {
 } from "react-native";
 import { ChatContext } from "../store/ChatContext";
 import { COLORS, styles } from "./ChatListScreen.styles";
-import { AddFriendModal } from "../components/AddFriendModal";
+import { chatApi } from "@/services/chatApi";
 
 export const ChatListScreen = () => {
   const router = useRouter();
-  const [isAddFriendModalVisible, setIsAddFriendModalVisible] = React.useState(false);
 
   const handleClose = () => {
     if (router.canGoBack()) {
@@ -36,6 +35,34 @@ export const ChatListScreen = () => {
     onlineUsers,
   } = useContext(ChatContext);
   const { userProfile } = useUser();
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchResults, setSearchResults] = useState<{conversations: any[], messages: any[]}>({ conversations: [], messages: [] });
+
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchResults({ conversations: [], messages: [] });
+      setIsSearching(false);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setIsSearching(true);
+      try {
+        const res: any = await chatApi.searchConversations(searchQuery);
+        if (res.success && res.data) {
+          setSearchResults(res.data);
+        }
+      } catch (err) {
+        console.error("Search error", err);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   const formatTime = (dateString: string) => {
     if (!dateString) return "";
@@ -159,45 +186,113 @@ export const ChatListScreen = () => {
                 style={styles.searchInput}
                 placeholder="Tìm kiếm"
                 placeholderTextColor={COLORS.textSub}
+                value={searchQuery}
+                onChangeText={setSearchQuery}
               />
             </View>
-            <TouchableOpacity style={styles.addFriendBtn} onPress={() => setIsAddFriendModalVisible(true)}>
-              <UserPlus size={20} color={COLORS.white} />
-            </TouchableOpacity>
           </View>
         </View>
 
-        {isLoadingConversations && conversations?.length === 0 ? (
-          <ActivityIndicator
-            size="large"
-            color={COLORS.primary}
-            style={{ marginTop: 40 }}
-          />
+        {searchQuery.trim() ? (
+          isSearching ? (
+            <ActivityIndicator
+              size="large"
+              color={COLORS.primary}
+              style={{ marginTop: 40 }}
+            />
+          ) : (
+            <FlatList
+              data={[
+                ...(searchResults.conversations.length > 0 ? [{ isHeader: true, title: "Hội thoại" }] : []),
+                ...searchResults.conversations.map(c => ({ ...c, isConversation: true })),
+                ...(searchResults.messages.length > 0 ? [{ isHeader: true, title: "Tin nhắn" }] : []),
+                ...searchResults.messages.map(m => ({ ...m, isMessage: true }))
+              ]}
+              keyExtractor={(item, index) => item.id || `header-${index}`}
+              renderItem={({ item }) => {
+                if (item.isHeader) {
+                  return <Text style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 8, fontSize: 14, fontWeight: "bold", color: COLORS.textSub }}>{item.title}</Text>;
+                }
+                if (item.isConversation) {
+                  return renderItem({ item });
+                }
+                if (item.isMessage) {
+                  return (
+                    <TouchableOpacity
+                      style={styles.chatItem}
+                      onPress={() =>
+                        router.push({
+                          pathname: "/(main)/chat/[id]",
+                          params: {
+                            id: item.conversationId,
+                            name: item.displayName,
+                            targetUserId: item.targetUserId,
+                            avatarUrl: encodeURIComponent(item.displayAvatar || "https://ui-avatars.com/api/?name=User")
+                          },
+                        })
+                      }
+                    >
+                      <View style={styles.avatarContainer}>
+                        <Image source={{ uri: item.displayAvatar || "https://ui-avatars.com/api/?name=User" }} style={styles.avatar} />
+                      </View>
+                      <View style={styles.chatInfo}>
+                        <View style={styles.chatHeader}>
+                          <Text style={styles.chatName} numberOfLines={1}>{item.displayName}</Text>
+                          <Text style={styles.chatTime}>{formatTime(item.createdAt)}</Text>
+                        </View>
+                        <View style={styles.chatFooter}>
+                          <Text style={styles.lastMessage} numberOfLines={2}>
+                            {item.senderId === userProfile?.userId ? "Bạn: " : `${item.senderName}: `}
+                            {item.content}
+                          </Text>
+                        </View>
+                      </View>
+                    </TouchableOpacity>
+                  );
+                }
+                return null;
+              }}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ paddingBottom: 20 }}
+              ListEmptyComponent={
+                <View style={styles.emptyContainer}>
+                  <Text style={styles.emptyText}>Không tìm thấy kết quả nào cho "{searchQuery}".</Text>
+                </View>
+              }
+            />
+          )
         ) : (
-          <FlatList
-            data={conversations}
-            keyExtractor={(item) => item.id}
-            renderItem={renderItem}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingBottom: 20 }}
-            ListEmptyComponent={
-              <View style={styles.emptyContainer}>
-                <Text style={styles.emptyText}>
-                  Bạn chưa có cuộc trò chuyện nào.
-                </Text>
-              </View>
-            }
-            refreshControl={
-              <RefreshControl
-                refreshing={isLoadingConversations}
-                onRefresh={loadConversations}
-                colors={[COLORS.primary]}
-              />
-            }
-          />
+          isLoadingConversations && conversations?.length === 0 ? (
+            <ActivityIndicator
+              size="large"
+              color={COLORS.primary}
+              style={{ marginTop: 40 }}
+            />
+          ) : (
+            <FlatList
+              data={conversations}
+              keyExtractor={(item) => item.id}
+              renderItem={renderItem}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ paddingBottom: 20 }}
+              ListEmptyComponent={
+                <View style={styles.emptyContainer}>
+                  <Text style={styles.emptyText}>
+                    Bạn chưa có cuộc trò chuyện nào.
+                  </Text>
+                </View>
+              }
+              refreshControl={
+                <RefreshControl
+                  refreshing={isLoadingConversations}
+                  onRefresh={loadConversations}
+                  colors={[COLORS.primary]}
+                />
+              }
+            />
+          )
         )}
       </View>
-      <AddFriendModal visible={isAddFriendModalVisible} onClose={() => setIsAddFriendModalVisible(false)} />
     </View>
   );
 };

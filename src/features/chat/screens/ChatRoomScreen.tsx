@@ -882,7 +882,7 @@ export const ChatRoomScreen = () => {
             <VideoIcon size={22} color={COLORS.amberGold} />
           </TouchableOpacity>
 
-          {/* NÚT THÔNG TIN CUỘC TRÒ CHUYỆN */}
+          {/* NÚT THÔNG TIN HỒ SƠ BẠN BÈ */}
           <TouchableOpacity
             style={styles.headerIconButton}
             onPress={() => {
@@ -890,11 +890,10 @@ export const ChatRoomScreen = () => {
               router.push({
                 pathname: "/(main)/chat-profile",
                 params: {
-                  conversationId: id,
                   targetUserId: finalTargetId,
+                  conversationId: currentConversation?.id || id,
                   name: name,
-                  avatarUrl: paramAvatarUrl,
-                  isVideoCall: 'false'
+                  avatarUrl: encodeURIComponent(roomAvatarUrl),
                 }
               });
             }}
