@@ -685,8 +685,10 @@ export const HomeScreen = () => {
       setUnreadNotifCount((prev) => prev + 1);
     };
     socketService.on("new_notification", handleNewNotif);
+    socketService.on("new_map_event", handleNewNotif);
     return () => {
       socketService.off("new_notification", handleNewNotif);
+      socketService.off("new_map_event", handleNewNotif);
     };
   }, []);
 
