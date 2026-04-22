@@ -1,21 +1,25 @@
-import React, { useEffect, useState, useCallback } from "react";
+import { LinearGradient } from "expo-linear-gradient";
+import { MoreVertical, Navigation, Trash2, X } from "lucide-react-native";
+import React, { useCallback, useEffect, useState } from "react";
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  Image,
-  FlatList,
   ActivityIndicator,
   Alert,
   Dimensions,
+  FlatList,
+  Image,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { X, Navigation, Trash2 } from "lucide-react-native";
-import { LinearGradient } from "expo-linear-gradient";
 
-import { momentFeedStyles as styles } from "./MomentFeedModal.styles";
 import { momentsApi } from "@/services/momentsApi";
 import { useUser } from "@/store/UserContext";
+import { reportModalStyles, momentFeedStyles as styles } from "./MomentFeedModal.styles";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -39,6 +43,14 @@ interface MomentFeedModalProps {
   onClose: () => void;
   onNavigateToLocation: (lat: number, lng: number) => void;
 }
+
+// ── Các lý do báo cáo mặc định ──
+const REPORT_REASONS = [
+  { id: "SPAM", label: "Spam hoặc lừa đảo" },
+  { id: "NUDITY", label: "Nội dung nhạy cảm / tình dục" },
+  { id: "VIOLENCE", label: "Bạo lực hoặc nguy hiểm" },
+  { id: "OTHER", label: "Khác" },
+];
 
 // ── Time formatting helper ──
 const formatTimeAgo = (dateStr: string) => {
@@ -71,6 +83,12 @@ export const MomentFeedModal = ({
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+
+  // ── States cho Modal Báo cáo ──
+  const [reportModalVisible, setReportModalVisible] = useState(false);
+  const [momentIdToReport, setMomentIdToReport] = useState<string | null>(null);
+  const [selectedReason, setSelectedReason] = useState<string>("SPAM");
+  const [reportDescription, setReportDescription] = useState<string>("");
 
   // ── Fetch moments ──
   const fetchMoments = useCallback(
@@ -124,6 +142,53 @@ export const MomentFeedModal = ({
     }
   };
 
+  // ── Menu 3 chấm (Native Bottom Sheet/Alert) ──
+  const handleOptionsClick = (momentId: string) => {
+    Alert.alert(
+      "Tùy chọn",
+      "Bạn muốn làm gì với khoảnh khắc này?",
+      [
+        {
+          text: "Báo cáo vi phạm",
+          style: "destructive",
+          onPress: () => {
+            setMomentIdToReport(momentId);
+            setSelectedReason("SPAM");
+            setReportDescription("");
+            setReportModalVisible(true);
+          },
+        },
+        { text: "Hủy", style: "cancel" },
+      ]
+    );
+  };
+
+  // Handle Submit Report API
+  const handleSubmitReport = async () => {
+    if (!momentIdToReport) return;
+
+    if (selectedReason === "OTHER" && !reportDescription.trim()) {
+      Alert.alert("Lỗi", "Vui lòng nhập chi tiết lý do báo cáo.");
+      return;
+    }
+
+    try {
+      const res: any = await momentsApi.reportMoment(
+        momentIdToReport,
+        selectedReason,
+        reportDescription.trim()
+      );
+
+      if (res?.success) {
+        setReportModalVisible(false);
+        Alert.alert("Thành công", "Cảm ơn bạn đã báo cáo. Chúng tôi sẽ xem xét nội dung này.");
+      }
+    } catch (error) {
+      console.error("Lỗi khi báo cáo:", error);
+      Alert.alert("Lỗi", "Không thể gửi báo cáo lúc này. Vui lòng thử lại sau.");
+    }
+  };
+
   // ── Delete Moment ──
   const handleDelete = (momentId: string) => {
     Alert.alert("Xóa khoảnh khắc", "Bạn có chắc muốn xóa khoảnh khắc này?", [
@@ -146,9 +211,69 @@ export const MomentFeedModal = ({
 
   // ── Navigate to location ──
   const handleGoToLocation = (lat: number, lng: number) => {
+    console.log("Go to location:", lat, lng);
     onClose();
     setTimeout(() => onNavigateToLocation(lat, lng), 300);
   };
+
+  // ── Modal report moment ──
+  const renderReportModal = () => (
+    <Modal
+      visible={reportModalVisible}
+      transparent
+      animationType="fade"
+      onRequestClose={() => setReportModalVisible(false)}
+    >
+      <KeyboardAvoidingView
+        style={reportModalStyles.modalOverlay}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <View style={reportModalStyles.modalContent}>
+          <Text style={reportModalStyles.modalTitle}>Báo cáo vi phạm</Text>
+          <Text style={reportModalStyles.modalSubtitle}>Chọn lý do báo cáo khoảnh khắc này:</Text>
+
+          {REPORT_REASONS.map((reason) => (
+            <TouchableOpacity
+              key={reason.id}
+              style={reportModalStyles.radioRow}
+              onPress={() => setSelectedReason(reason.id)}
+            >
+              <View style={reportModalStyles.radioCircle}>
+                {selectedReason === reason.id && <View style={reportModalStyles.radioInner} />}
+              </View>
+              <Text style={reportModalStyles.radioText}>{reason.label}</Text>
+            </TouchableOpacity>
+          ))}
+
+          {selectedReason === "OTHER" && (
+            <TextInput
+              style={reportModalStyles.textInput}
+              placeholder="Nhập chi tiết vi phạm..."
+              placeholderTextColor="#9ca3af"
+              multiline
+              value={reportDescription}
+              onChangeText={setReportDescription}
+            />
+          )}
+
+          <View style={reportModalStyles.modalActions}>
+            <TouchableOpacity
+              style={[reportModalStyles.modalBtn, reportModalStyles.btnCancel]}
+              onPress={() => setReportModalVisible(false)}
+            >
+              <Text style={reportModalStyles.btnTextCancel}>Hủy</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[reportModalStyles.modalBtn, reportModalStyles.btnSubmit]}
+              onPress={handleSubmitReport}
+            >
+              <Text style={reportModalStyles.btnTextSubmit}>Gửi báo cáo</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </KeyboardAvoidingView>
+    </Modal>
+  );
 
   if (!visible) return null;
 
@@ -224,6 +349,16 @@ export const MomentFeedModal = ({
                 <Text style={styles.actionBtnText}>Xóa</Text>
               </>
             )}
+
+            {/* More horiz */}
+            <TouchableOpacity
+              style={styles.actionBtn}
+              onPress={() => handleOptionsClick(item.id)}
+              activeOpacity={0.7}
+            >
+              <MoreVertical size={18} color="#fff" strokeWidth={2} />
+            </TouchableOpacity>
+            <Text style={styles.actionBtnText}>Tùy chọn</Text>
           </View>
         </View>
       </View>
@@ -284,6 +419,9 @@ export const MomentFeedModal = ({
           }
         />
       )}
+
+      {/* Render Report Modal */}
+      {renderReportModal()}
     </View>
   );
 };

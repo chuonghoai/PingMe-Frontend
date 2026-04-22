@@ -1,5 +1,5 @@
-import { Platform, StyleSheet } from "react-native";
 import { PINGME_COLORS } from "@/constants/theme";
+import { StyleSheet } from "react-native";
 
 const COLORS = PINGME_COLORS;
 
@@ -191,5 +191,94 @@ export const momentFeedStyles = StyleSheet.create({
   loadingContainer: {
     padding: 20,
     alignItems: "center",
+  },
+});
+
+// Styles Modal báo cáo
+export const reportModalStyles = StyleSheet.create({
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: "#1f2937",
+    borderRadius: 16,
+    padding: 20,
+    width: "100%",
+    maxWidth: 400,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#fff",
+    marginBottom: 8,
+  },
+  modalSubtitle: {
+    fontSize: 14,
+    color: "#9ca3af",
+    marginBottom: 16,
+  },
+  radioRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 10,
+  },
+  radioCircle: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: "#00C2FF",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
+  },
+  radioInner: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: "#00C2FF",
+  },
+  radioText: {
+    fontSize: 15,
+    color: "#e5e7eb",
+  },
+  textInput: {
+    backgroundColor: "#374151",
+    color: "#fff",
+    borderRadius: 8,
+    padding: 12,
+    height: 80,
+    textAlignVertical: "top",
+    marginTop: 8,
+    marginBottom: 8,
+  },
+  modalActions: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    marginTop: 20,
+    gap: 12,
+  },
+  modalBtn: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+  },
+  btnCancel: {
+    backgroundColor: "#374151",
+  },
+  btnSubmit: {
+    backgroundColor: "#EF4444",
+  },
+  btnTextCancel: {
+    color: "#fff",
+    fontWeight: "600",
+  },
+  btnTextSubmit: {
+    color: "#fff",
+    fontWeight: "600",
   },
 });
