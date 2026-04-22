@@ -63,7 +63,7 @@ export const ChatProfileScreen = () => {
 
   const handleCall = (isVideo: boolean) => {
     router.push({
-      pathname: "/(main)/call-test",
+      pathname: "/(main)/call",
       params: {
         targetUserId,
         isVideoCall: String(isVideo),
@@ -78,12 +78,12 @@ export const ChatProfileScreen = () => {
     Alert.alert("Xác nhận", `Bạn có chắc chắn muốn chặn ${displayName}?`, [
       { text: "Hủy", style: "cancel" },
       { text: "Chặn", style: "destructive", onPress: async () => {
-          try {
-            await chatApi.blockUser(conversationId as string);
-            await loadConversations();
-            alert("Đã chặn người dùng");
-            router.back(); // Trở về chat room
-          } catch (e) { alert("Lỗi khi chặn"); }
+        try {
+          await chatApi.blockUser(conversationId as string);
+          await loadConversations();
+          alert("Đã chặn người dùng");
+          router.back(); // Trở về chat room
+        } catch (e) { alert("Lỗi khi chặn"); }
       }}
     ]);
   };
@@ -144,7 +144,7 @@ export const ChatProfileScreen = () => {
 
         {/* Media Section */}
         <View style={styles.section}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.sectionHeader}
             onPress={() => router.push({
               pathname: "/(main)/chat-media",
@@ -164,7 +164,7 @@ export const ChatProfileScreen = () => {
               {recentMedia.slice(0, 4).map((msg, index) => (
                 <View key={msg.id || index} style={styles.mediaItem}>
                   {msg.media?.secureUrl ? (
-                     <Image source={{ uri: msg.media.secureUrl }} style={styles.mediaImage} />
+                    <Image source={{ uri: msg.media.secureUrl }} style={styles.mediaImage} />
                   ) : (
                     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
                       <ImageIcon size={24} color={COLORS.textSub} />
