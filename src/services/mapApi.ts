@@ -24,9 +24,12 @@ export const getActiveEvents = async () => {
   }
 };
 
-export const checkInEvent = async (eventId: string) => {
+export const checkInEvent = async (eventId: string, lat: number, lng: number) => {
   try {
-    const response: any = await apiClient.post(`/map/events/check-in/${eventId}`);
+    const response: any = await apiClient.post(`/map/events/check-in/${eventId}`, {
+      latitude: lat,
+      longitude: lng
+    });
     return response;
   } catch (error) {
     throw error;

@@ -11,9 +11,10 @@ interface MapEventMarkerProps {
         longitude: number;
         rewardItem: string;
     };
+    onPress: (event: any) => void;
 }
 
-export const MapEventMarker = React.memo(({ event }: MapEventMarkerProps) => {
+export const MapEventMarker = React.memo(({ event, onPress }: MapEventMarkerProps) => {
     const [tracksViewChanges, setTracksViewChanges] = useState(true);
 
     const itemDef = useMemo(() => (ITEM_DEFINITIONS as any)[event.rewardItem], [event.rewardItem]);
@@ -30,7 +31,7 @@ export const MapEventMarker = React.memo(({ event }: MapEventMarkerProps) => {
             tracksViewChanges={tracksViewChanges}
             anchor={{ x: 0.5, y: 0.8 }}
             onPress={() => {
-                // TODO: 
+                onPress(event);
                 console.log(`Pressed event: ${event.latitude} ${event.longitude}`);
             }}
         >

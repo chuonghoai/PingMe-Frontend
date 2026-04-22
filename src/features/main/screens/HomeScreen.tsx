@@ -61,6 +61,7 @@ import { apiClient } from "@/services/apiClient";
 import { sendFriendRequest, unfriend } from "@/services/friendsApi";
 import { useMapEvents } from "../hooks/useMapEvents";
 import { MapEventMarker } from "../components/MapEventMarker";
+import { MapEventDetailModal } from "../components/MapEventDetailModal";
 
 // ── Intimacy Aura Theme Colors ──
 const AURA_THEMES: Record<string, { bg: string; bgLight: string; border: string; text: string; accent: string }> = {
@@ -499,7 +500,8 @@ export const HomeScreen = () => {
   const { userProfile } = useUser();
   const { totalUnreadCount, fetchConversationsAndUnreadCount } = React.useContext(ChatContext);
   const searchInputRef = useRef<TextInput>(null);
-  const { events: mapEvents } = useMapEvents();
+  const { events: mapEvents, refreshEvents } = useMapEvents();
+  const [selectedMapEvent, setSelectedMapEvent] = useState<any | null>(null);
 
   const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
@@ -1393,7 +1395,11 @@ export const HomeScreen = () => {
         )}
         
         {mapEvents.map((event) => (
-          <MapEventMarker key={event.id} event={event} />
+          <MapEventMarker 
+            key={`event_${event.id}`} 
+            event={event} 
+            onPress={(evt) => setSelectedMapEvent(evt)}
+          />
         ))}
       </MapView>
 
@@ -2073,6 +2079,17 @@ export const HomeScreen = () => {
               1000
             );
           }
+        }}
+      />
+
+      <MapEventDetailModal
+        visible={!!selectedMapEvent}
+        event={selectedMapEvent}
+        userLocation={userLocation}
+        onClose={() => setSelectedMapEvent(null)}
+        onSuccess={() => {
+          setSelectedMapEvent(null);
+          refreshEvents();
         }}
       />
     </View>
