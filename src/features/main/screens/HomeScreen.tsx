@@ -2055,7 +2055,7 @@ export const HomeScreen = () => {
           setShowMomentFeed(false);
           setSelectedClusterCoord(null);
         }}
-        onNavigateToLocation={(lat, lng) => {
+        onNavigateToLocation={(lat: number, lng: number) => {
           setShowMomentFeed(false);
           setSelectedClusterCoord(null);
           if (mapRef.current) {

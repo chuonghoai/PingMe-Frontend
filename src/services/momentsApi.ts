@@ -30,4 +30,18 @@ export const momentsApi = {
   getMapClusters: async () => {
     return apiClient.get("/moments/map-clusters");
   },
+
+  // Report a moment
+  reportMoment: async (momentId: string, reason: string, description?: string) => {
+    try {
+      const response = await apiClient.post(`/moments/${momentId}/report`, {
+        reason,
+        description,
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Lỗi khi báo cáo khoảnh khắc:", error);
+      throw error;
+    }
+  },
 };

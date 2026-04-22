@@ -2,6 +2,7 @@ import { chatApi } from "@/services/chatApi";
 import { mediaApi } from "@/services/mediaApi";
 import { useUser } from "@/store/UserContext";
 import { socketService } from "@/websockets/socketService";
+import { useHeaderHeight } from '@react-navigation/elements';
 import { Audio, ResizeMode, Video } from "expo-av";
 import * as ImagePicker from "expo-image-picker";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
@@ -16,7 +17,6 @@ import {
   PhoneMissed,
   Play,
   Send,
-  Smile,
   Square,
   Trash2,
   Video as VideoIcon,
@@ -47,11 +47,14 @@ export const ChatRoomScreen = () => {
     : "https://ui-avatars.com/api/?name=" + encodeURIComponent((name as string) || "User");
 
   const { userProfile } = useUser();
-  const { conversations, clearUnreadCount, loadConversations } = useChat();
+  const { conversations, clearUnreadCount, loadConversations, onlineUsers } = useChat();
 
   const currentConversation = conversations?.find((c: any) => c.id === id);
   const otherParticipant = currentConversation?.participants?.find((p: any) => p.userId !== userProfile?.userId) || currentConversation?.participants?.[0];
   const actualTargetUserId = otherParticipant?.userId || otherParticipant?.user?.id || otherParticipant?.id;
+  const isTargetOnline = onlineUsers?.includes(actualTargetUserId);
+
+  const headerHeight = useHeaderHeight();
 
   const [inputText, setInputText] = useState("");
   const [messages, setMessages] = useState<any[]>([]);
@@ -807,7 +810,8 @@ export const ChatRoomScreen = () => {
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? headerHeight : 30}
     >
       <Stack.Screen options={{ headerShown: false }} />
 
@@ -830,8 +834,14 @@ export const ChatRoomScreen = () => {
             {name || "Người dùng"}
           </Text>
           <View style={styles.headerStatusContainer}>
-            <View style={styles.statusDot} />
-            <Text style={styles.headerStatus}>Đang hoạt động</Text>
+            <View style={[
+              styles.statusDot,
+              { backgroundColor: isTargetOnline ? '#4CAF50' : '#9E9E9E' }
+            ]} />
+
+            <Text style={styles.headerStatus}>
+              {isTargetOnline ? "Đang hoạt động" : "Ngoại tuyến"}
+            </Text>
           </View>
         </View>
 
@@ -1061,9 +1071,6 @@ export const ChatRoomScreen = () => {
                 placeholderTextColor={COLORS.textSub}
                 multiline
               />
-              <TouchableOpacity style={styles.stickerButton}>
-                <Smile size={24} color={COLORS.iconGray} />
-              </TouchableOpacity>
             </View>
 
             {inputText.trim().length > 0 && (
