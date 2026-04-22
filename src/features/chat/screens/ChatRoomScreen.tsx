@@ -47,11 +47,12 @@ export const ChatRoomScreen = () => {
     : "https://ui-avatars.com/api/?name=" + encodeURIComponent((name as string) || "User");
 
   const { userProfile } = useUser();
-  const { conversations, clearUnreadCount, loadConversations } = useChat();
+  const { conversations, clearUnreadCount, loadConversations, onlineUsers } = useChat();
 
   const currentConversation = conversations?.find((c: any) => c.id === id);
   const otherParticipant = currentConversation?.participants?.find((p: any) => p.userId !== userProfile?.userId) || currentConversation?.participants?.[0];
   const actualTargetUserId = otherParticipant?.userId || otherParticipant?.user?.id || otherParticipant?.id;
+  const isTargetOnline = onlineUsers?.includes(actualTargetUserId);
 
   const [inputText, setInputText] = useState("");
   const [messages, setMessages] = useState<any[]>([]);
@@ -830,8 +831,14 @@ export const ChatRoomScreen = () => {
             {name || "Người dùng"}
           </Text>
           <View style={styles.headerStatusContainer}>
-            <View style={styles.statusDot} />
-            <Text style={styles.headerStatus}>Đang hoạt động</Text>
+            <View style={[
+              styles.statusDot,
+              { backgroundColor: isTargetOnline ? '#4CAF50' : '#9E9E9E' }
+            ]} />
+
+            <Text style={styles.headerStatus}>
+              {isTargetOnline ? "Đang hoạt động" : "Ngoại tuyến"}
+            </Text>
           </View>
         </View>
 
