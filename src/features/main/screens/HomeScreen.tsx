@@ -59,6 +59,9 @@ import { useUser } from "@/store/UserContext";
 import { ChatContext } from "@/features/chat/store/ChatContext";
 import { apiClient } from "@/services/apiClient";
 import { sendFriendRequest, unfriend } from "@/services/friendsApi";
+import { useMapEvents } from "../hooks/useMapEvents";
+import { MapEventMarker } from "../components/MapEventMarker";
+import { MapEventDetailModal } from "../components/MapEventDetailModal";
 
 // ── Intimacy Aura Theme Colors ──
 const AURA_THEMES: Record<string, { bg: string; bgLight: string; border: string; text: string; accent: string }> = {
@@ -517,6 +520,8 @@ export const HomeScreen = () => {
   const { userProfile } = useUser();
   const { totalUnreadCount, fetchConversationsAndUnreadCount } = React.useContext(ChatContext);
   const searchInputRef = useRef<TextInput>(null);
+  const { events: mapEvents, refreshEvents } = useMapEvents();
+  const [selectedMapEvent, setSelectedMapEvent] = useState<any | null>(null);
 
   const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
@@ -714,8 +719,10 @@ export const HomeScreen = () => {
       setUnreadNotifCount((prev) => prev + 1);
     };
     socketService.on("new_notification", handleNewNotif);
+    socketService.on("new_map_event", handleNewNotif);
     return () => {
       socketService.off("new_notification", handleNewNotif);
+      socketService.off("new_map_event", handleNewNotif);
     };
   }, []);
 
@@ -1400,6 +1407,13 @@ export const HomeScreen = () => {
           />
         )}
 
+        {mapEvents.map((event) => (
+          <MapEventMarker
+            key={`event_${event.id}`}
+            event={event}
+            onPress={(evt) => setSelectedMapEvent(evt)}
+          />
+        ))}
       </MapView>
 
       {/* ── Exploration Progress Bar (UI Overlay) ── */}
@@ -2068,7 +2082,7 @@ export const HomeScreen = () => {
           setShowMomentFeed(false);
           setSelectedClusterCoord(null);
         }}
-        onNavigateToLocation={(lat, lng) => {
+        onNavigateToLocation={(lat: number, lng: number) => {
           setShowMomentFeed(false);
           setSelectedClusterCoord(null);
           if (mapRef.current) {
@@ -2077,6 +2091,17 @@ export const HomeScreen = () => {
               1000
             );
           }
+        }}
+      />
+
+      <MapEventDetailModal
+        visible={!!selectedMapEvent}
+        event={selectedMapEvent}
+        userLocation={userLocation}
+        onClose={() => setSelectedMapEvent(null)}
+        onSuccess={() => {
+          setSelectedMapEvent(null);
+          refreshEvents();
         }}
       />
     </View>

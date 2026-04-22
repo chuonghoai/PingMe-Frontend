@@ -1,23 +1,23 @@
-import React, { useEffect, useState, useCallback } from "react";
+import { LinearGradient } from "expo-linear-gradient";
+import { MoreVertical, Navigation, Trash2, X } from "lucide-react-native";
+import React, { useCallback, useEffect, useState } from "react";
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  Image,
-  FlatList,
-  ActivityIndicator,
   Alert,
-  Dimensions,
+  FlatList,
+  Image,
+  KeyboardAvoidingView,
+  Modal,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { X, Navigation, Trash2 } from "lucide-react-native";
-import { LinearGradient } from "expo-linear-gradient";
 
-import { momentFeedStyles as styles } from "./MomentFeedModal.styles";
 import { momentsApi } from "@/services/momentsApi";
 import { useUser } from "@/store/UserContext";
-
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
+import { momentFeedStyles as styles } from "./MomentFeedModal.styles";
 
 interface MomentItem {
   id: string;
@@ -32,6 +32,13 @@ interface MomentItem {
   isMine?: boolean;
 }
 
+const REPORT_REASONS = [
+  { id: "SPAM", label: "Spam hoặc lừa đảo" },
+  { id: "NUDITY", label: "Nội dung nhạy cảm / tình dục" },
+  { id: "VIOLENCE", label: "Bạo lực hoặc nguy hiểm" },
+  { id: "OTHER", label: "Khác" },
+];
+
 interface MomentFeedModalProps {
   visible: boolean;
   mode: "global" | "local";
@@ -39,22 +46,6 @@ interface MomentFeedModalProps {
   onClose: () => void;
   onNavigateToLocation: (lat: number, lng: number) => void;
 }
-
-// ── Time formatting helper ──
-const formatTimeAgo = (dateStr: string) => {
-  const now = new Date();
-  const date = new Date(dateStr);
-  const diffMs = now.getTime() - date.getTime();
-  const diffMin = Math.floor(diffMs / 60000);
-  const diffHour = Math.floor(diffMs / 3600000);
-  const diffDay = Math.floor(diffMs / 86400000);
-
-  if (diffMin < 1) return "Vừa xong";
-  if (diffMin < 60) return `${diffMin} phút trước`;
-  if (diffHour < 24) return `${diffHour} giờ trước`;
-  if (diffDay < 7) return `${diffDay} ngày trước`;
-  return date.toLocaleDateString("vi-VN");
-};
 
 export const MomentFeedModal = ({
   visible,
@@ -72,157 +63,99 @@ export const MomentFeedModal = ({
   const [hasMore, setHasMore] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
-  // ── Fetch moments ──
-  const fetchMoments = useCallback(
-    async (pageNum: number = 1, append: boolean = false) => {
-      try {
-        if (pageNum === 1) setIsLoading(true);
-        else setIsLoadingMore(true);
+  // Report States
+  const [reportModalVisible, setReportModalVisible] = useState(false);
+  const [momentIdToReport, setMomentIdToReport] = useState<string | null>(null);
+  const [selectedReason, setSelectedReason] = useState("SPAM");
+  const [reportDescription, setReportDescription] = useState("");
 
-        let res: any;
-        if (mode === "global") {
-          res = await momentsApi.getGlobalFeed(pageNum);
-        } else if (localCoord) {
-          res = await momentsApi.getLocalFeed(
-            localCoord.latitude,
-            localCoord.longitude,
-            pageNum
-          );
-        }
+  const fetchMoments = useCallback(async (pageNum = 1, append = false) => {
+    try {
+      pageNum === 1 ? setIsLoading(true) : setIsLoadingMore(true);
+      let res: any = mode === "global"
+        ? await momentsApi.getGlobalFeed(pageNum)
+        : await momentsApi.getLocalFeed(localCoord!.latitude, localCoord!.longitude, pageNum);
 
-        if (res?.success && res?.data) {
-          const newMoments = res.data.moments || [];
-          setMoments((prev) =>
-            append ? [...prev, ...newMoments] : newMoments
-          );
-          setHasMore(res.data.hasMore || false);
-          setPage(pageNum);
-        }
-      } catch (error) {
-        console.log("[MomentFeed] Fetch error:", error);
-      } finally {
-        setIsLoading(false);
-        setIsLoadingMore(false);
+      if (res?.success) {
+        setMoments(prev => append ? [...prev, ...res.data.moments] : res.data.moments);
+        setHasMore(res.data.hasMore);
+        setPage(pageNum);
       }
-    },
-    [mode, localCoord]
-  );
-
-  useEffect(() => {
-    if (visible) {
-      setMoments([]);
-      setPage(1);
-      setHasMore(true);
-      fetchMoments(1, false);
+    } finally {
+      setIsLoading(false);
+      setIsLoadingMore(false);
     }
-  }, [visible, mode]);
+  }, [mode, localCoord]);
 
-  // ── Load more ──
-  const loadMore = () => {
-    if (!isLoadingMore && hasMore) {
-      fetchMoments(page + 1, true);
-    }
-  };
+  useEffect(() => { if (visible) fetchMoments(1, false); }, [visible, mode]);
 
-  // ── Delete Moment ──
-  const handleDelete = (momentId: string) => {
-    Alert.alert("Xóa khoảnh khắc", "Bạn có chắc muốn xóa khoảnh khắc này?", [
-      { text: "Hủy", style: "cancel" },
+  const handleOptionsClick = (momentId: string) => {
+    Alert.alert("Tùy chọn", "Chọn hành động", [
       {
-        text: "Xóa",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            await momentsApi.deleteMoment(momentId);
-            setMoments((prev) => prev.filter((m) => m.id !== momentId));
-          } catch (error) {
-            console.log("[MomentFeed] Delete error:", error);
-            Alert.alert("Lỗi", "Không thể xóa khoảnh khắc");
-          }
-        },
+        text: "Báo cáo vi phạm", style: "destructive", onPress: () => {
+          setMomentIdToReport(momentId);
+          setReportModalVisible(true);
+        }
       },
+      { text: "Hủy", style: "cancel" }
     ]);
   };
 
-  // ── Navigate to location ──
-  const handleGoToLocation = (lat: number, lng: number) => {
-    onClose();
-    setTimeout(() => onNavigateToLocation(lat, lng), 300);
+  const handleDeleteMoment = async (momentId: string) => {
+    try {
+      const res: any = await momentsApi.deleteMoment(momentId);
+      if (res?.success) {
+        setMoments(prev => prev.filter(m => m.id !== momentId));
+      } else {
+        Alert.alert("Lỗi", "Không thể xóa moment.");
+      }
+    } catch (e) {
+      Alert.alert("Lỗi", "Không thể xóa moment.");
+    }
   };
 
-  if (!visible) return null;
+  const submitReport = async () => {
+    if (selectedReason === "OTHER" && !reportDescription.trim()) return Alert.alert("Lỗi", "Vui lòng nhập lý do.");
+    try {
+      await momentsApi.reportMoment(momentIdToReport!, selectedReason, reportDescription);
+      setReportModalVisible(false);
+      Alert.alert("Thành công", "Cảm ơn bạn đã báo cáo.");
+    } catch (e) { Alert.alert("Lỗi", "Không thể gửi báo cáo."); }
+  };
 
   const renderMomentItem = ({ item }: { item: MomentItem }) => {
     const isMine = item.userId === userProfile?.userId;
-
     return (
       <View style={styles.momentCard}>
         <View style={styles.momentImageContainer}>
           <Image source={{ uri: item.imageUrl }} style={styles.momentImage} />
+          <LinearGradient colors={["rgba(0,0,0,0.4)", "transparent"]} style={styles.momentGradientTop} />
+          <LinearGradient colors={["transparent", "rgba(0,0,0,0.7)"]} style={styles.momentGradientBottom} />
 
-          {/* Gradient overlays */}
-          <LinearGradient
-            colors={["rgba(0,0,0,0.4)", "transparent"]}
-            style={styles.momentGradientTop}
-          />
-          <LinearGradient
-            colors={["transparent", "rgba(0,0,0,0.7)"]}
-            style={styles.momentGradientBottom}
-          />
-
-          {/* User info */}
           <View style={styles.momentUserRow}>
-            <Image
-              source={{
-                uri:
-                  item.avatarUrl ||
-                  `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                    item.fullName?.charAt(0) || "U"
-                  )}&background=8B5CF6&color=fff&size=128`,
-              }}
-              style={styles.momentAvatar}
-            />
+            <Image source={{ uri: item.avatarUrl || "https://ui-avatars.com/api/?name=U" }} style={styles.momentAvatar} />
             <View style={styles.momentUserInfo}>
               <Text style={styles.momentUserName}>{item.fullName}</Text>
-              <Text style={styles.momentTimeText}>
-                {formatTimeAgo(item.createdAt)}
-              </Text>
+              <Text style={styles.momentTimeText}>{new Date(item.createdAt).toLocaleTimeString()}</Text>
+              <Text style={styles.momentCaptionText}>{item.caption ?? ""}</Text>
             </View>
           </View>
 
-          {/* Caption */}
-          {item.caption ? (
-            <View style={styles.momentCaption}>
-              <Text style={styles.momentCaptionText} numberOfLines={3}>
-                {item.caption}
-              </Text>
-            </View>
-          ) : null}
-
-          {/* Action buttons (right side) */}
           <View style={styles.momentActions}>
-            {/* Go to location */}
-            <TouchableOpacity
-              style={styles.actionBtn}
-              onPress={() => handleGoToLocation(item.latitude, item.longitude)}
-              activeOpacity={0.7}
-            >
-              <Navigation size={18} color="#fff" strokeWidth={2} />
+            <TouchableOpacity style={styles.actionBtn} onPress={() => { onClose(); onNavigateToLocation(item.latitude, item.longitude); }}>
+              <Navigation size={18} color="#fff" />
             </TouchableOpacity>
-            <Text style={styles.actionBtnText}>Đi đến</Text>
-
-            {/* Delete (only for own moments) */}
-            {isMine && (
-              <>
-                <TouchableOpacity
-                  style={[styles.actionBtn, styles.deleteBtn]}
-                  onPress={() => handleDelete(item.id)}
-                  activeOpacity={0.7}
-                >
-                  <Trash2 size={18} color="#EF4444" strokeWidth={2} />
-                </TouchableOpacity>
-                <Text style={styles.actionBtnText}>Xóa</Text>
-              </>
+            {isMine ? (
+              <TouchableOpacity style={[styles.actionBtn, styles.deleteBtn]} onPress={() => Alert.alert("Xóa moment?", "Bạn có chắc muốn xóa moment này không?", [
+                { text: "Hủy", style: "cancel" },
+                { text: "Xóa", style: "destructive", onPress: () => handleDeleteMoment(item.id) }
+              ])}>
+                <Trash2 size={18} color="#EF4444" />
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity style={styles.actionBtn} onPress={() => handleOptionsClick(item.id)}>
+                <MoreVertical size={18} color="#fff" />
+              </TouchableOpacity>
             )}
           </View>
         </View>
@@ -231,59 +164,55 @@ export const MomentFeedModal = ({
   };
 
   return (
-    <View style={styles.overlay}>
-      {/* ── Header ── */}
-      <View style={[styles.header, { paddingTop: insets.top + 8, paddingBottom: 8 }]}>
-        <TouchableOpacity style={styles.headerClose} onPress={onClose}>
-          <X size={22} color="#fff" strokeWidth={2.5} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>
-          {mode === "global" ? "Feed Khoảnh Khắc" : "Khoảnh khắc tại đây"}
-        </Text>
-        <View style={styles.headerSpacer} />
-      </View>
+    <Modal
+      visible={visible}
+      animationType="slide"
+      transparent={false}
+      onRequestClose={onClose}
+    >
+      <View style={styles.overlay}>
+        <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
+          <TouchableOpacity onPress={onClose}><X size={22} color="#fff" /></TouchableOpacity>
+          <Text style={styles.headerTitle}>{mode === "global" ? "Feed" : "Tại đây"}</Text>
+          <View style={{ width: 22 }} />
+        </View>
 
-      {/* ── Feed List ── */}
-      {isLoading ? (
-        <View style={styles.emptyContainer}>
-          <ActivityIndicator size="large" color="#00C2FF" />
-        </View>
-      ) : moments.length === 0 ? (
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyIcon}>📷</Text>
-          <Text style={styles.emptyTitle}>
-            {mode === "global"
-              ? "Chưa có khoảnh khắc nào"
-              : "Chưa có ảnh tại đây"}
-          </Text>
-          <Text style={styles.emptyText}>
-            {mode === "global"
-              ? "Hãy chụp khoảnh khắc đầu tiên và ghim lên bản đồ!"
-              : "Chưa có ai chụp ảnh tại vị trí này."}
-          </Text>
-        </View>
-      ) : (
         <FlatList
           data={moments}
-          keyExtractor={(item) => item.id}
           renderItem={renderMomentItem}
-          contentContainerStyle={[
-            styles.feedListContent,
-            { paddingTop: insets.top + 60 },
-          ]}
-          style={styles.feedList}
-          showsVerticalScrollIndicator={false}
-          onEndReached={loadMore}
-          onEndReachedThreshold={0.3}
-          ListFooterComponent={
-            isLoadingMore ? (
-              <View style={styles.loadingContainer}>
-                <ActivityIndicator size="small" color="#00C2FF" />
-              </View>
-            ) : null
-          }
+          onEndReached={() => hasMore && fetchMoments(page + 1, true)}
+          contentContainerStyle={{ paddingTop: insets.top + 60 }}
         />
-      )}
-    </View>
+
+        <Modal visible={reportModalVisible} transparent animationType="fade">
+          <KeyboardAvoidingView style={localStyles.overlay} behavior="padding">
+            <View style={localStyles.content}>
+              <Text style={localStyles.title}>Báo cáo</Text>
+              {REPORT_REASONS.map(r => (
+                <TouchableOpacity key={r.id} style={localStyles.option} onPress={() => setSelectedReason(r.id)}>
+                  <View style={[localStyles.circle, selectedReason === r.id && localStyles.activeCircle]} />
+                  <Text style={{ color: "#fff" }}>{r.label}</Text>
+                </TouchableOpacity>
+              ))}
+              {selectedReason === "OTHER" && <TextInput style={localStyles.input} multiline onChangeText={setReportDescription} />}
+              <View style={{ flexDirection: "row", justifyContent: "flex-end", gap: 10, marginTop: 10 }}>
+                <TouchableOpacity onPress={() => setReportModalVisible(false)}><Text style={{ color: "#9ca3af" }}>Hủy</Text></TouchableOpacity>
+                <TouchableOpacity onPress={submitReport}><Text style={{ color: "#EF4444" }}>Gửi</Text></TouchableOpacity>
+              </View>
+            </View>
+          </KeyboardAvoidingView>
+        </Modal>
+      </View>
+    </Modal >
   );
 };
+
+const localStyles = StyleSheet.create({
+  overlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.6)", justifyContent: "center", padding: 20 },
+  content: { backgroundColor: "#1f2937", borderRadius: 16, padding: 20 },
+  title: { color: "#fff", fontSize: 18, fontWeight: "bold", marginBottom: 10 },
+  option: { flexDirection: "row", alignItems: "center", marginBottom: 15 },
+  circle: { width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: "#00C2FF", marginRight: 10 },
+  activeCircle: { backgroundColor: "#00C2FF" },
+  input: { backgroundColor: "#374151", color: "#fff", borderRadius: 8, padding: 10, height: 60, marginTop: 5 }
+});
