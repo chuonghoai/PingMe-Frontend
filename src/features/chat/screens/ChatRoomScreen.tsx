@@ -2,6 +2,7 @@ import { chatApi } from "@/services/chatApi";
 import { mediaApi } from "@/services/mediaApi";
 import { useUser } from "@/store/UserContext";
 import { socketService } from "@/websockets/socketService";
+import { useHeaderHeight } from '@react-navigation/elements';
 import { Audio, ResizeMode, Video } from "expo-av";
 import * as ImagePicker from "expo-image-picker";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
@@ -53,6 +54,8 @@ export const ChatRoomScreen = () => {
   const otherParticipant = currentConversation?.participants?.find((p: any) => p.userId !== userProfile?.userId) || currentConversation?.participants?.[0];
   const actualTargetUserId = otherParticipant?.userId || otherParticipant?.user?.id || otherParticipant?.id;
   const isTargetOnline = onlineUsers?.includes(actualTargetUserId);
+
+  const headerHeight = useHeaderHeight();
 
   const [inputText, setInputText] = useState("");
   const [messages, setMessages] = useState<any[]>([]);
@@ -808,7 +811,8 @@ export const ChatRoomScreen = () => {
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? headerHeight : 30}
     >
       <Stack.Screen options={{ headerShown: false }} />
 
