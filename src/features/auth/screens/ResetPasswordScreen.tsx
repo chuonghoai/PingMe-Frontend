@@ -25,12 +25,12 @@ export const ResetPasswordScreen = () => {
 
   const handleResetPassword = async () => {
     if (!newPassword || newPassword.length < 6) {
-      showMessage("Loi", "Mat khau phai co it nhat 6 ky tu");
+      showMessage("Lỗi", "Mật khẩu phải có ít nhất 6 ký tự");
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      showMessage("Loi", "Mat khau nhap lai khong khop");
+      showMessage("Lỗi", "Mật khẩu nhập lại không khớp");
       return;
     }
 
@@ -44,13 +44,13 @@ export const ResetPasswordScreen = () => {
 
       if (response.success) {
         showMessage(
-          "Thanh cong",
-          "Dat lai mat khau thanh cong, vui long dang nhap lai",
+          "Thành công",
+          "Đặt lại mật khẩu thành công, vui lòng đăng nhập lại",
         );
         router.replace("/(auth)/login");
       }
     } catch (error: any) {
-      showMessage("Loi", error.toString());
+      showMessage("Lỗi", error.toString());
       router.replace({
         pathname: "/(auth)/verify-email",
         params: { email, action: "reset" },
@@ -62,30 +62,30 @@ export const ResetPasswordScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Tao mat khau moi</Text>
+      <Text style={styles.title}>Tạo mật khẩu mới</Text>
       <Text style={styles.subtitle}>
-        Vui long nhap mat khau moi cho tai khoan{" "}
+        Vui lòng nhập mật khẩu mới cho tài khoản{" "}
         <Text style={{ fontWeight: "bold" }}>{email}</Text>
       </Text>
 
       <Input
-        label="Mat khau moi"
-        placeholder="Nhap mat khau moi"
+        label="Mật khẩu mới"
+        placeholder="Nhập mật khẩu mới"
         value={newPassword}
         onChangeText={setNewPassword}
         secureTextEntry
       />
 
       <Input
-        label="Xac nhan mat khau"
-        placeholder="Nhap lai mat khau moi"
+        label="Xác nhận mật khẩu"
+        placeholder="Nhập lại mật khẩu mới"
         value={confirmPassword}
         onChangeText={setConfirmPassword}
         secureTextEntry
       />
 
       <Button
-        title={isLoading ? "Dang xu ly..." : "Luu mat khau moi"}
+        title={isLoading ? "Đang xử lý..." : "Lưu mật khẩu mới"}
         onPress={handleResetPassword}
         disabled={isLoading}
         style={{ marginTop: 20, backgroundColor: COLORS.amberGold }}

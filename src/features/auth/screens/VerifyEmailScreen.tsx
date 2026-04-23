@@ -29,7 +29,7 @@ export const VerifyEmailScreen = () => {
 
   const handleVerify = async () => {
     if (!otp || otp.length < 4) {
-      showMessage("Loi", "Vui long nhap ma OTP hop le");
+      showMessage("Lỗi", "Vui lòng nhập mã OTP hợp lệ");
       return;
     }
 
@@ -43,8 +43,8 @@ export const VerifyEmailScreen = () => {
 
     if (!password) {
       showMessage(
-        "Loi",
-        "Khong tim thay mat khau. Vui long quay lai man hinh dang ky.",
+        "Lỗi",
+        "Không tìm thấy mật khẩu. Vui lòng quay lại màn hình đăng ký.",
       );
       return;
     }
@@ -54,14 +54,14 @@ export const VerifyEmailScreen = () => {
       const response: any = await authApi.register({ email, otp, password });
 
       if (response.success) {
-        showMessage("Thanh cong", "Dang ky tai khoan thanh cong!");
+        showMessage("Thành công", "Đăng ký tài khoản thành công!");
         router.replace({
           pathname: "/(onboarding)/profile-setup",
           params: { email },
         });
       }
     } catch (error: any) {
-      showMessage("Dang ky that bai", error.toString());
+      showMessage("Đăng ký thất bại", error.toString());
     } finally {
       setIsLoading(false);
     }
@@ -76,10 +76,10 @@ export const VerifyEmailScreen = () => {
           : await authApi.sendOtp(email);
 
       if (res.success) {
-        showMessage("Thanh cong", "Ma OTP da duoc gui lai");
+        showMessage("Thành công", "Mã OTP đã được gửi lại");
       }
     } catch (error: any) {
-      showMessage("Loi", error.toString());
+      showMessage("Lỗi", error.toString());
     } finally {
       setIsResending(false);
     }
@@ -95,16 +95,16 @@ export const VerifyEmailScreen = () => {
       </View>
 
       <Text style={styles.icon}>Email</Text>
-      <Text style={styles.title}>Xac thuc Email</Text>
+      <Text style={styles.title}>Xác thực Email</Text>
 
       <Text style={styles.subtitle}>
-        Chung toi da gui mot ma xac thuc gom 6 chu so den email{"\n"}
-        <Text style={styles.highlightEmail}>{email || "cua ban"}</Text>
+        Chúng tôi đã gửi một mã xác thực gồm 6 chữ số đến email{"\n"}
+        <Text style={styles.highlightEmail}>{email}</Text> của bạn
       </Text>
 
       <Input
-        label="Ma OTP"
-        placeholder="Nhap ma xac thuc"
+        label="Mã OTP"
+        placeholder="Nhập mã xác thực"
         value={otp}
         onChangeText={setOtp}
         keyboardType="number-pad"
@@ -113,23 +113,23 @@ export const VerifyEmailScreen = () => {
       />
 
       <Button
-        title={isLoading ? "Dang xac thuc..." : "Xac thuc"}
+        title={isLoading ? "Đang xác thực..." : "Xác thực"}
         onPress={handleVerify}
         disabled={isLoading}
         style={{ marginTop: 20, backgroundColor: COLORS.amberGold }}
       />
 
       <View style={styles.resendContainer}>
-        <Text style={styles.resendText}>Chua nhan duoc ma? </Text>
+        <Text style={styles.resendText}>Chưa nhận được mã? </Text>
         <TouchableOpacity onPress={handleResendOtp} disabled={isResending}>
           <Text style={[styles.resendLink, isResending && styles.disabledLink]}>
-            {isResending ? "Dang gui lai..." : "Gui lai ma"}
+            {isResending ? "Đang gửi lại..." : "Gửi lại mã"}
           </Text>
         </TouchableOpacity>
       </View>
 
       <Button
-        title="Quay lai Dang nhap"
+        title="Quay lại Đăng nhập"
         variant="outline"
         onPress={() => router.replace("/(auth)/login")}
         style={{ marginTop: 40, borderColor: COLORS.amberGold }}

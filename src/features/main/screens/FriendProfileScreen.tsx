@@ -4,7 +4,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { getFriendPopup } from "@/services/mapApi";
 import { unfriend } from "@/services/friendsApi";
 import { COLORS, styles } from "./FriendProfileScreen.styles";
-import { ChevronLeft, Info, Calendar as CalendarIcon, User, Users, AlertTriangle, UserMinus, ChevronRight } from "lucide-react-native";
+import { ChevronLeft, Info, Calendar as CalendarIcon, User, Users, AlertTriangle, UserMinus, ChevronRight, Phone } from "lucide-react-native";
 
 export const FriendProfileScreen = () => {
   const router = useRouter();
@@ -125,6 +125,14 @@ export const FriendProfileScreen = () => {
             <Text style={styles.infoLabelText}>Họ và tên</Text>
           </View>
           <Text style={styles.infoValueText}>{basicInfo.fullName}</Text>
+        </View>
+
+        <View style={styles.infoRow}>
+          <View style={styles.infoLabelContainer}>
+            <Phone size={20} color={COLORS.textSecondary} />
+            <Text style={styles.infoLabelText}>Số điện thoại</Text>
+          </View>
+          <Text style={styles.infoValueText}>{basicInfo.phone || "Không cung cấp"}</Text>
         </View>
 
         <View style={styles.infoRow}>

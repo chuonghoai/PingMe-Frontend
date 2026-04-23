@@ -11,7 +11,7 @@ export const LocationPermissionScreen = () => {
   const [isAllowed, setIsAllowed] = useState(false);
 
   const handleFinish = () => {
-    router.replace("/(main)/home");
+    router.replace("/(onboarding)/welcome" as any);
   };
 
   return (

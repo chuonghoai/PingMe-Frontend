@@ -39,7 +39,7 @@ apiClient.interceptors.request.use(
         config.headers.Authorization = `Bearer ${token}`;
       }
     } catch (error) {
-      console.log("Loi khi lay token", error);
+      console.log("Lỗi khi lấy token", error);
     }
     return config;
   },

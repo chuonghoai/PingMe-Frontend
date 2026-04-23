@@ -60,7 +60,7 @@ export const ProfileSetupScreen = () => {
 
   const handleSubmit = async () => {
     if (!fullname.trim() || !phone.trim()) {
-      showMessage("Loi", "Vui long nhap day du ho ten va so dien thoai.");
+      showMessage("Lỗi", "Vui lòng nhập đầy đủ họ tên và số điện thoại.");
       return;
     }
 
@@ -84,13 +84,15 @@ export const ProfileSetupScreen = () => {
           updateUserProfile({
             userId: response.data.user.userId,
             email: response.data.user.email,
+            fullname: fullname.trim(),
+            phone: phone.trim(),
           });
         }
         
         router.replace("/(onboarding)/location-permission");
       }
     } catch (error: any) {
-      showMessage("Cap nhat ho so that bai", error.toString());
+      showMessage("Cập nhật hồ sơ thất bại", error.toString());
     } finally {
       setIsLoading(false);
     }
@@ -98,7 +100,7 @@ export const ProfileSetupScreen = () => {
 
   const displayGender =
     genderOptions.find((item) => item.value === gender)?.label ||
-    "Chon gioi tinh";
+    "Chọn giới tính";
   const displayDob = `${dob.getDate().toString().padStart(2, "0")}/${(
     dob.getMonth() + 1
   )
@@ -107,27 +109,27 @@ export const ProfileSetupScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Hoan thien ho so</Text>
+      <Text style={styles.title}>Hoàn thiện hồ sơ</Text>
       <Text style={styles.subtitle}>
-        Cung cap them thong tin de trai nghiem PingMe tot nhat
+        Cung cấp thêm thông tin để trải nghiệm PingMe tốt nhất
       </Text>
 
       <Input
-        label="Ho va ten"
-        placeholder="Nhap ho va ten cua ban"
+        label="Họ và tên"
+        placeholder="Nhập họ và tên của bạn"
         value={fullname}
         onChangeText={setFullname}
       />
 
       <Input
-        label="So dien thoai"
-        placeholder="Nhap so dien thoai"
+        label="Số điện thoại"
+        placeholder="Nhập số điện thoại"
         value={phone}
         onChangeText={setPhone}
         keyboardType="phone-pad"
       />
 
-      <Text style={styles.label}>Gioi tinh</Text>
+      <Text style={styles.label}>Giới tính</Text>
       <TouchableOpacity
         style={styles.selectorBox}
         onPress={() => setShowGenderPicker(true)}
@@ -135,7 +137,7 @@ export const ProfileSetupScreen = () => {
         <Text style={styles.selectorText}>{displayGender}</Text>
       </TouchableOpacity>
 
-      <Text style={styles.label}>Ngay sinh</Text>
+      <Text style={styles.label}>Ngày sinh</Text>
       <TouchableOpacity
         style={styles.selectorBox}
         onPress={() => setShowDatePicker(true)}
@@ -155,7 +157,7 @@ export const ProfileSetupScreen = () => {
 
       {showDatePicker && Platform.OS === "ios" && (
         <Button
-          title="Xac nhan ngay sinh"
+          title="Xác nhận ngày sinh"
           onPress={() => setShowDatePicker(false)}
           style={{ marginBottom: 15 }}
         />
@@ -168,7 +170,7 @@ export const ProfileSetupScreen = () => {
           onPress={() => setShowGenderPicker(false)}
         >
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Chon gioi tinh</Text>
+            <Text style={styles.modalTitle}>Chọn giới tính</Text>
             <FlatList
               data={genderOptions}
               keyExtractor={(item) => item.value}
@@ -197,7 +199,7 @@ export const ProfileSetupScreen = () => {
 
       <View style={{ marginTop: 20 }}>
         <Button
-          title={isLoading ? "Dang cap nhat..." : "Tiep tuc"}
+          title={isLoading ? "Đang cập nhật..." : "Tiếp tục"}
           onPress={handleSubmit}
           disabled={isLoading}
         />

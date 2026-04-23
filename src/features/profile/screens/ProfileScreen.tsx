@@ -492,6 +492,11 @@ export const ProfileScreen = () => {
         </View>
 
         <View style={styles.infoRow}>
+          <Text style={styles.infoLabel}>Số điện thoại</Text>
+          <Text style={styles.infoValue}>{userProfile.phone || "Chưa cập nhật"}</Text>
+        </View>
+
+        <View style={styles.infoRow}>
           <Text style={styles.infoLabel}>Ngày sinh</Text>
           <Text style={styles.infoValue}>
             {userProfile.dob ? new Date(userProfile.dob).toLocaleDateString('vi-VN') : "Chưa cập nhật"}
@@ -559,7 +564,7 @@ export const ProfileScreen = () => {
         onPress={handleLogout}
       >
         <LogOut size={20} color={COLORS.danger} />
-        <Text style={styles.logoutBtnText}>Dang xuat</Text>
+        <Text style={styles.logoutBtnText}>Đăng xuất</Text>
       </TouchableOpacity>
 
       {/* ── MODALS ── */}

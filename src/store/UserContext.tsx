@@ -19,6 +19,7 @@ export interface UserProfile {
   isHideMyLocation: boolean;
   gender?: string;
   dob?: string;
+  phone?: string;
 }
 
 const DEFAULT_PROFILE: UserProfile = {
@@ -38,6 +39,7 @@ const DEFAULT_PROFILE: UserProfile = {
   isHideMyLocation: false,
   gender: undefined,
   dob: undefined,
+  phone: undefined,
 };
 
 const UserContext = createContext<any>(null);
