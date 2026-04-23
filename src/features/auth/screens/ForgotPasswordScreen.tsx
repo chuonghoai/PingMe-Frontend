@@ -22,7 +22,7 @@ export const ForgotPasswordScreen = () => {
 
   const handleSendOtp = async () => {
     if (!email) {
-      showMessage("Loi", "Vui long nhap email cua ban");
+      showMessage("Lỗi", "Vui lòng nhập email của bạn");
       return;
     }
 
@@ -31,7 +31,7 @@ export const ForgotPasswordScreen = () => {
       const response: any = await authApi.forgotPassword(email);
 
       if (response.success) {
-        showMessage("Thanh cong", "Ma xac nhan da duoc gui den email cua ban");
+        showMessage("Thành công", "Mã xác nhận đã được gửi đến email của bạn");
 
         router.push({
           pathname: "/(auth)/verify-email",
@@ -39,7 +39,7 @@ export const ForgotPasswordScreen = () => {
         });
       }
     } catch (error: any) {
-      showMessage("Loi", error.toString());
+      showMessage("Lỗi", error.toString());
     } finally {
       setIsLoading(false);
     }
@@ -47,14 +47,14 @@ export const ForgotPasswordScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Quen mat khau?</Text>
+      <Text style={styles.title}>Quên mật khẩu?</Text>
       <Text style={styles.subtitle}>
-        Nhap email da dang ky cua ban de nhan ma xac thuc dat lai mat khau.
+        Nhập email đã đăng ký của bạn để nhận mã xác thực đặt lại mật khẩu.
       </Text>
 
       <Input
         label="Email"
-        placeholder="Nhap email cua ban"
+        placeholder="Nhập email của bạn"
         value={email}
         onChangeText={setEmail}
         keyboardType="email-address"
@@ -62,14 +62,14 @@ export const ForgotPasswordScreen = () => {
       />
 
       <Button
-        title={isLoading ? "Dang gui..." : "Gui ma xac nhan"}
+        title={isLoading ? "Đang gửi..." : "Gửi mã xác nhận"}
         onPress={handleSendOtp}
         disabled={isLoading}
         style={{ marginTop: 20, backgroundColor: COLORS.amberGold }}
       />
 
       <Button
-        title="Quay lai Dang nhap"
+        title="Quay lại Đăng nhập"
         variant="outline"
         onPress={() => router.back()}
         style={{ marginTop: 15, borderColor: COLORS.amberGold }}

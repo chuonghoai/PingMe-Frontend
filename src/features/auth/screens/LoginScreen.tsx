@@ -38,7 +38,7 @@ export const LoginScreen = () => {
     }
 
     if (!isValidEmail(email)) {
-      showMessage("Loi", "Email khong hop le");
+      showMessage("Lỗi", "Email không hợp lệ");
       console.log("Email khong hop le");
       return;
     }
@@ -85,7 +85,7 @@ export const LoginScreen = () => {
 
       <Input
         label="Email"
-        placeholder="Nhap email cua ban"
+        placeholder="Nhập email của bạn"
         value={email}
         onChangeText={setEmail}
         keyboardType="email-address"
@@ -93,8 +93,8 @@ export const LoginScreen = () => {
       />
 
       <Input
-        label="Mat khau"
-        placeholder="Nhap mat khau"
+        label="Mật khẩu"
+        placeholder="Nhập mật khẩu"
         value={password}
         onChangeText={setPassword}
         isPassword={true}
@@ -108,7 +108,7 @@ export const LoginScreen = () => {
             trackColor={{ false: "#CBD5E1", true: COLORS.primary }}
             thumbColor={Platform.OS === "android" ? "#F8FAFC" : undefined}
           />
-          <Text style={styles.rememberText}>Nho mat khau</Text>
+          <Text style={styles.rememberText}>Nhớ mật khẩu</Text>
         </View>
         <TouchableOpacity onPress={() => router.push("/(auth)/forgot-password")}>
           <Text style={styles.forgotText}>Quên mật khẩu?</Text>

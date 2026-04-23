@@ -91,7 +91,7 @@ export const RegisterScreen = () => {
 
         <Input
           label="Email"
-          placeholder="Nhap email"
+          placeholder="Nhập email"
           value={email}
           onChangeText={setEmail}
           keyboardType="email-address"
@@ -99,16 +99,16 @@ export const RegisterScreen = () => {
         />
 
         <Input
-          label="Mat khau"
-          placeholder="Tao mat khau"
+          label="Mật khẩu"
+          placeholder="Tạo mật khẩu"
           value={password}
           onChangeText={setPassword}
           isPassword={true}
         />
 
         <Input
-          label="Xac nhan mat khau"
-          placeholder="Nhap lai mat khau"
+          label="Xác nhận mật khẩu"
+          placeholder="Nhập lại mật khẩu"
           value={confirmPassword}
           onChangeText={setConfirmPassword}
           isPassword={true}

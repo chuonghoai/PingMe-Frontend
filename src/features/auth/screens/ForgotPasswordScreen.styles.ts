@@ -1,12 +1,14 @@
 import { StyleSheet } from "react-native";
 
+import { PINGME_COLORS } from "@/constants/theme";
+
 // Bảng màu đồng bộ GoGo (Sau này bạn có thể đưa cục này ra file theme.ts chung)
 export const COLORS = {
-  white: "#FFFFFF",
-  amberGold: "#F5A623",
-  darkAmber: "#D48806",
-  successGreen: "#34C759", // Giữ màu xanh lá cho thông báo thành công
-  grayText: "#666666",
+  white: PINGME_COLORS.bgWhite,
+  amberGold: PINGME_COLORS.primary,
+  darkAmber: PINGME_COLORS.primary,
+  successGreen: PINGME_COLORS.online, // Giữ màu xanh lá cho thông báo thành công
+  grayText: PINGME_COLORS.textSecondary,
 };
 
 export const styles = StyleSheet.create({

@@ -1,13 +1,15 @@
 import { StyleSheet } from "react-native";
 
+import { PINGME_COLORS } from "@/constants/theme";
+
 export const COLORS = {
-  primary: "#1877F2",
-  amberGold: "#FFC107",
-  background: "#F0F2F5",
-  text: "#1C1E21",
-  textMuted: "#65676B",
-  white: "#FFFFFF",
-  border: "#CCD0D5",
+  primary: PINGME_COLORS.primary,
+  amberGold: PINGME_COLORS.warning,
+  background: PINGME_COLORS.bgSurface,
+  text: PINGME_COLORS.textPrimary,
+  textMuted: PINGME_COLORS.textMuted,
+  white: PINGME_COLORS.bgWhite,
+  border: PINGME_COLORS.border,
 };
 
 export const styles = StyleSheet.create({

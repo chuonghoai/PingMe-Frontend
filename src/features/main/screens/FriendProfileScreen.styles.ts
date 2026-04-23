@@ -2,18 +2,20 @@ import { StyleSheet, Dimensions } from 'react-native';
 
 const { width } = Dimensions.get('window');
 
+import { PINGME_COLORS } from "@/constants/theme";
+
 export const COLORS = {
-  primary: '#FF8C42',      
-  secondary: '#FFB07B',
-  background: '#FDFCF0',    
-  cardBackground: '#FFFFFF',
-  textMain: '#2D3436',      
-  textSecondary: '#636E72', 
-  textMuted: '#B2BEC3',     
-  border: '#F1F2F6',        
-  danger: '#FF4757',        
-  success: '#2ED573',
-  infoBoxBg: '#F8F9FA',
+  primary: PINGME_COLORS.primary,
+  secondary: PINGME_COLORS.primaryLight,
+  background: PINGME_COLORS.bgMid,
+  cardBackground: PINGME_COLORS.bgWhite,
+  textMain: PINGME_COLORS.textPrimary,
+  textSecondary: PINGME_COLORS.textSecondary,
+  textMuted: PINGME_COLORS.textMuted,
+  border: PINGME_COLORS.border,
+  danger: PINGME_COLORS.danger,
+  success: PINGME_COLORS.online,
+  infoBoxBg: PINGME_COLORS.bgMid,
 };
 
 export const styles = StyleSheet.create({

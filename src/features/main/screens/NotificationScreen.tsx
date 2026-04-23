@@ -19,24 +19,26 @@ import { socketService } from "@/websockets/socketService";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
+import { PINGME_COLORS } from "@/constants/theme";
+
 const COLORS = {
-  background: "#FFF8F0",
-  white: "#FFFFFF",
-  primary: "#FF8C42",
-  primaryLight: "rgba(255, 140, 66, 0.08)",
-  purple: "#6C5CE7",
-  purpleLight: "rgba(108, 92, 231, 0.08)",
-  green: "#00B894",
-  greenLight: "rgba(0, 184, 148, 0.08)",
-  red: "#E74C3C",
-  textMain: "#1A1A2E",
-  textSub: "#6B7280",
-  border: "#F3F0EB",
-  unread: "#FFF0E6",
-  gold: "#FFD700",
-  goldLight: "rgba(255, 215, 0, 0.15)",
-  pink: "#FF6B81",
-  pinkLight: "rgba(255, 107, 129, 0.1)",
+  background: PINGME_COLORS.bgMid,
+  white: PINGME_COLORS.bgWhite,
+  primary: PINGME_COLORS.primary,
+  primaryLight: PINGME_COLORS.primaryLight,
+  purple: PINGME_COLORS.secondary,
+  purpleLight: "rgba(139, 92, 246, 0.08)",
+  green: PINGME_COLORS.accent,
+  greenLight: "rgba(16, 185, 129, 0.08)",
+  red: PINGME_COLORS.danger,
+  textMain: PINGME_COLORS.textPrimary,
+  textSub: PINGME_COLORS.textSecondary,
+  border: PINGME_COLORS.border,
+  unread: PINGME_COLORS.primaryLight,
+  gold: PINGME_COLORS.warning,
+  goldLight: "rgba(251, 191, 36, 0.15)",
+  pink: PINGME_COLORS.accentWarm,
+  pinkLight: "rgba(255, 92, 53, 0.1)",
 };
 
 interface NotificationItem {

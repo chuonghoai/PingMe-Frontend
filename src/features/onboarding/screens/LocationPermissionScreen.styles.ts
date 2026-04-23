@@ -1,10 +1,12 @@
 import { StyleSheet } from "react-native";
 
+import { PINGME_COLORS } from "@/constants/theme";
+
 // Bảng màu đồng bộ
 export const COLORS = {
-  white: "#FFFFFF",
-  amberGold: "#F5A623",
-  darkAmber: "#D48806",
+  white: PINGME_COLORS.bgWhite,
+  amberGold: PINGME_COLORS.primary,
+  darkAmber: PINGME_COLORS.primary,
 };
 
 export const styles = StyleSheet.create({
