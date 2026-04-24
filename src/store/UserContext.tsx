@@ -47,25 +47,29 @@ const UserContext = createContext<any>(null);
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [userProfile, setUserProfile] = useState<UserProfile>(DEFAULT_PROFILE);
 
+  const fetchUserProfile = async () => {
+    try {
+      const res: any = await apiClient.get('/users/me');
+      if (res && res.data) {
+        setUserProfile({
+          ...DEFAULT_PROFILE,
+          ...res.data,
+          userId: res.data.id || res.data.userId || "",
+        });
+        return res.data;
+      }
+    } catch (e) {
+      console.log("[UserProvider] Failed to fetch profile:", e);
+    }
+    return null;
+  };
+
   useEffect(() => {
     const hydrateSession = async () => {
       const { getAccessToken } = await import("@/utils/tokenStorage");
       const token = await getAccessToken();
       if (token) {
-        try {
-          // Attempt to hydrate profile via backend
-          const res: any = await apiClient.get('/users/me');
-          if (res && res.data) {
-            setUserProfile({
-              ...DEFAULT_PROFILE,
-              ...res.data,
-              userId: res.data.id || res.data.userId || "",
-            });
-          }
-
-        } catch (e) {
-          console.log("[UserProvider] Failed to hydrate session:", e);
-        }
+        await fetchUserProfile();
       }
     };
     hydrateSession();
@@ -93,7 +97,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <UserContext.Provider value={{ userProfile, updateUserProfile, logout }}>
+    <UserContext.Provider value={{ userProfile, updateUserProfile, logout, fetchUserProfile }}>
       {children}
     </UserContext.Provider>
   );

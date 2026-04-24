@@ -229,7 +229,7 @@ const EditProfileModal = ({
 // ── Main ProfileScreen ──
 export const ProfileScreen = () => {
   const router = useRouter();
-  const { userProfile, updateUserProfile, logout } = useUser();
+  const { userProfile, updateUserProfile, logout, fetchUserProfile } = useUser();
 
   const [friends, setFriends] = useState<FriendListResponseDto[]>([]);
   const [friendCount, setFriendCount] = useState(0);
@@ -251,6 +251,7 @@ export const ProfileScreen = () => {
       const [friendsRes, statsRes]: any[] = await Promise.all([
         getFriendList(),
         apiClient.get("/users/me/stats"),
+        fetchUserProfile(),
       ]);
 
       if (friendsRes.success && friendsRes.data) {
@@ -263,7 +264,7 @@ export const ProfileScreen = () => {
     } catch (error) {
       console.log("Lỗi load profile data:", error);
     }
-  }, []);
+  }, [fetchUserProfile]);
 
   useEffect(() => {
     loadData();

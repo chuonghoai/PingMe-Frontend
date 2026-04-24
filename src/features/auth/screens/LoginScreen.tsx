@@ -17,7 +17,7 @@ import { COLORS, styles } from "./LoginScreen.styles";
 
 export const LoginScreen = () => {
   const router = useRouter();
-  const { updateUserProfile } = useUser();
+  const { updateUserProfile, fetchUserProfile } = useUser();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
@@ -50,10 +50,8 @@ export const LoginScreen = () => {
       if (response.success) {
         await setTokens(response.data.accessToken, response.data.refreshToken);
 
-        updateUserProfile({
-          userId: response.data.user.userId,
-          email: response.data.user.email,
-        });
+        // Fetch full profile info immediately after login
+        await fetchUserProfile();
 
         showMessage("Thành công", "Đăng nhập thành công!");
         router.replace("/(main)/home");
