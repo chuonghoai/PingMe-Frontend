@@ -3,7 +3,6 @@ import React, { useState } from "react";
 import { Switch, Text, View } from "react-native";
 import { Button } from "@/components/Button/Button";
 
-// Nạp Styles và Bảng màu từ file bên ngoài vào
 import { COLORS, styles } from "./LocationPermissionScreen.styles";
 
 export const LocationPermissionScreen = () => {
@@ -31,7 +30,6 @@ export const LocationPermissionScreen = () => {
           <Switch
             value={isAllowed}
             onValueChange={setIsAllowed}
-            // Đổi màu thanh gạt khi "Bật" sang màu vàng hổ phách
             trackColor={{ false: "#767577", true: COLORS.amberGold }}
             thumbColor={"#f4f3f4"}
             style={{ transform: [{ scaleX: 1.5 }, { scaleY: 1.5 }] }}
@@ -41,7 +39,6 @@ export const LocationPermissionScreen = () => {
         <Button
           title="Hoàn tất & Bắt đầu"
           disabled={!isAllowed}
-          // Áp dụng màu nền đồng bộ
           style={{
             opacity: isAllowed ? 1 : 0.5,
             marginTop: 20,

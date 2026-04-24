@@ -50,7 +50,6 @@ export const LoginScreen = () => {
       if (response.success) {
         await setTokens(response.data.accessToken, response.data.refreshToken);
 
-        // Fetch full profile info immediately after login
         await fetchUserProfile();
 
         showMessage("Thành công", "Đăng nhập thành công!");

@@ -1,5 +1,5 @@
-import { useUser } from "@/store/UserContext"; // Lấy UserContext để biết "Mình là ai"
-import { Stack, useRouter } from "expo-router"; // Thêm Stack
+import { useUser } from "@/store/UserContext";
+import { Stack, useRouter } from "expo-router";
 import { Search } from "lucide-react-native";
 import React, { useContext, useState, useEffect } from "react";
 import {
@@ -101,7 +101,6 @@ export const ChatListScreen = () => {
     const snippet = item.lastMessageSnippet || "Chưa có tin nhắn nào";
     const hasUnread = item.unreadCount > 0;
 
-    // KIỂM TRA TRẠNG THÁI ONLINE
     const isOnline = onlineUsers.includes(otherParticipant?.userId);
 
     return (
@@ -122,7 +121,6 @@ export const ChatListScreen = () => {
         <View style={styles.avatarContainer}>
           <Image source={{ uri: displayAvatar }} style={styles.avatar} />
 
-          {/* RENDER CHẤM ONLINE/OFFLINE (Chỉ áp dụng cho Chat 1-1) */}
           {!isGroup && (
             <View
               style={[styles.onlineBadge, !isOnline && styles.offlineBadge]}
@@ -162,7 +160,6 @@ export const ChatListScreen = () => {
 
   return (
     <View style={styles.overlay}>
-      {/* TẮT HEADER MẶC ĐỊNH CỦA EXPO ROUTER */}
       <Stack.Screen options={{ headerShown: false }} />
 
       <TouchableWithoutFeedback onPress={handleClose}>

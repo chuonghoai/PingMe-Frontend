@@ -1,7 +1,6 @@
 import { Dimensions, Platform, StyleSheet } from "react-native";
 
 const { width, height } = Dimensions.get("window");
-// Tone màu chủ đạo của project
 const COLORS = {
     black: "#000000",
     white: "#FFFFFF",

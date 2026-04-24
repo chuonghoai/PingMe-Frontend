@@ -89,8 +89,8 @@ export const VerifyEmailScreen = () => {
     <View style={styles.container}>
       <View style={styles.logoContainer}>
         <View style={styles.logoRow}>
-          <Text style={styles.logoTextMain}>Go</Text>
-          <Text style={styles.logoTextSecondary}>Go</Text>
+          <Text style={styles.logoTextMain}>Ping</Text>
+          <Text style={styles.logoTextSecondary}>Me</Text>
         </View>
       </View>
 

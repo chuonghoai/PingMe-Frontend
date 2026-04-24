@@ -58,7 +58,6 @@ export const MapEventDetailModal = ({ visible, event, userLocation, onClose, onS
         <TouchableOpacity style={StyleSheet.absoluteFill} activeOpacity={1} onPress={onClose} />
         
         <View style={styles.bottomSheet}>
-          {/* Header */}
           <View style={styles.header}>
             <View style={styles.headerIndicator} />
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
@@ -66,7 +65,6 @@ export const MapEventDetailModal = ({ visible, event, userLocation, onClose, onS
             </TouchableOpacity>
           </View>
 
-          {/* Nội dung Event */}
           <View style={styles.content}>
             <View style={styles.titleRow}>
               <View style={styles.iconWrapper}>

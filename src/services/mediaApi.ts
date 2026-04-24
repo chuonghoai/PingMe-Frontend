@@ -10,7 +10,6 @@ export interface CloudinarySignature {
 }
 
 export const mediaApi = {
-  // 1. Get auth signature from backend for secure Cloudinary upload
   getSignature: async (): Promise<CloudinarySignature> => {
     const response: any = await apiClient.get("/media/signature");
     if (response.success && response.data) {
@@ -20,7 +19,6 @@ export const mediaApi = {
     throw new Error("Không thể lấy signature từ server");
   },
 
-  // 2. Direct upload to Cloudinary using FormData
   uploadToCloudinary: async (
     fileUri: string,
     signatureData: CloudinarySignature,
@@ -29,7 +27,6 @@ export const mediaApi = {
   ): Promise<any> => {
     const formData = new FormData();
 
-    // Generate a file name and map mimeType
     const filename = fileUri.split("/").pop() || `upload_${Date.now()}`;
     const type = mimeType || (resourceType === "video" ? "video/mp4" : resourceType === "image" ? "image/jpeg" : "application/octet-stream");
 
@@ -39,7 +36,6 @@ export const mediaApi = {
       type: type,
     } as any);
 
-    // Bắt buộc phải truyền ĐÚNG các tham số đã dùng để tạo ra signature (folder, tags, timestamp)
     formData.append("timestamp", String(signatureData.timestamp));
     formData.append("signature", signatureData.signature);
     formData.append("api_key", signatureData.api_key);
@@ -54,7 +50,6 @@ export const mediaApi = {
     console.log('Bat dau upload len cloudinary', signatureData);
     console.log(formData);
 
-    // URL upload phải xài biến cloud_name thay vì cloudName
     const uploadUrl = `https://api.cloudinary.com/v1_1/${signatureData.cloud_name}/${resourceType}/upload`;
 
     const response = await fetch(uploadUrl, {
@@ -75,7 +70,6 @@ export const mediaApi = {
     return await response.json();
   },
 
-  // 3. Save uploaded media record to backend Database
   createMediaRecord: async (cloudinaryResponse: any): Promise<any> => {
     const dto = {
       public_id: cloudinaryResponse.public_id,
@@ -86,16 +80,14 @@ export const mediaApi = {
       height: cloudinaryResponse.height,
       bytes: cloudinaryResponse.bytes,
       duration: cloudinaryResponse.duration,
-      is_audio: cloudinaryResponse.resource_type === "video" && !cloudinaryResponse.width, // Basic heuristic if raw doesn't determine audio
+      is_audio: cloudinaryResponse.resource_type === "video" && !cloudinaryResponse.width,
     };
 
     const response: any = await apiClient.post("/media", dto);
     if (response.success && response.data) {
-      // Return the created database media entity
       return response.data;
     }
 
-    // Some implementations might return the object directly
     if (response.id) return response;
 
     throw new Error("Không thể lưu thông tin media vào hệ thống máy chủ");

@@ -46,7 +46,6 @@ export const ChatMediaScreen = () => {
                     setMediaList(prev => [...prev, ...filteredMedia]);
                 }
 
-                // Nếu API trả về ít hơn limit tức là đã hết
                 if (filteredMedia.length < 15) {
                     setHasMore(false);
                 }

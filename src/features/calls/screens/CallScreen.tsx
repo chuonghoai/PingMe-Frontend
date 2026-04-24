@@ -35,7 +35,6 @@ export const CallScreen = () => {
     }
   }, [isVideoCall]);
 
-  // Render text trạng thái
   const getStatusText = () => {
     if (status === "connecting") return "Đang kết nối...";
     if (status === "ringing") return "Đang đổ chuông...";
@@ -48,7 +47,6 @@ export const CallScreen = () => {
     return formattedDuration;
   };
 
-  // 1. GIAO DIỆN NGƯỜI NHẬN - LÚC ĐANG ĐỔ CHUÔNG
   if (isIncoming && (status === "ringing" || status === "rejected")) {
     return (
       <SafeAreaView style={styles.container}>
@@ -58,14 +56,12 @@ export const CallScreen = () => {
           <Image source={{ uri: avatarUrl }} style={styles.avatarBig} />
           <Text style={styles.nameText}>{fullname}</Text>
           <Text style={styles.statusText}>
-            {/* Đổi text nếu trạng thái là rejected */}
             {status === "rejected"
               ? "Đã từ chối cuộc gọi"
               : (isVideoCall ? "Cuộc gọi Video đến" : "Cuộc gọi Thoại đến")}
           </Text>
         </View>
 
-        {/* Chỉ hiện 2 nút Chấp nhận/Từ chối khi đang đổ chuông */}
         {status === "ringing" && (
           <View style={styles.controlsContainer}>
             <View style={{ alignItems: "center" }}>
@@ -103,14 +99,12 @@ export const CallScreen = () => {
     );
   };
 
-  // 2. GIAO DIỆN KHI GỌI / ĐÃ NGHE MÁY
   const isAccepted = status === "accepted";
 
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
 
-      {/* BACKGROUND VIDEO (Đối phương) - Chỉ hiện khi Video Call VÀ đã Accept */}
       {isVideoCall && isAccepted && (
         <View style={styles.remoteVideoPlaceholder}>
           {remoteStream ? (
@@ -127,7 +121,6 @@ export const CallScreen = () => {
         </View>
       )}
 
-      {/* THÔNG TIN NGƯỜI GỌI (Avatar, Tên) */}
       {(!isVideoCall || !isAccepted) && (
         <View style={styles.infoContainer}>
           <Image source={{ uri: avatarUrl }} style={styles.avatarBig} />
@@ -136,7 +129,6 @@ export const CallScreen = () => {
         </View>
       )}
 
-      {/* THÊM TÊN/THỜI GIAN NHỎ GÓC TRÊN KHI ĐANG CALL VIDEO (Đã nhấc máy) */}
       {isVideoCall && isAccepted && (
         <View style={{ position: 'absolute', top: 60, left: 20, zIndex: 10 }}>
           <Text style={{ color: '#fff', fontSize: 20, fontWeight: 'bold', textShadowColor: 'rgba(0,0,0,0.5)', textShadowRadius: 3 }}>
@@ -147,9 +139,7 @@ export const CallScreen = () => {
       )}
       {renderLocalCamera()}
 
-      {/* CÁC NÚT ĐIỀU KHIỂN */}
       <View style={styles.controlsContainer}>
-        {/* Nút Mic */}
         <TouchableOpacity
           style={[styles.controlBtn, !isMicOn && styles.controlBtnActive]}
           onPress={toggleMic}
@@ -157,7 +147,6 @@ export const CallScreen = () => {
           {isMicOn ? <Mic size={24} color={COLORS.white} /> : <MicOff size={24} color={COLORS.background} />}
         </TouchableOpacity>
 
-        {/* Nút Speaker */}
         <TouchableOpacity
           style={[styles.controlBtn, !isSpeakerOn && styles.controlBtnActive]}
           onPress={toggleSpeaker}
@@ -165,7 +154,6 @@ export const CallScreen = () => {
           {isSpeakerOn ? <Volume2 size={24} color={COLORS.white} /> : <VolumeX size={24} color={COLORS.background} />}
         </TouchableOpacity>
 
-        {/* Nút Video / Xoay Camera (Chỉ hiện khi gọi Video) */}
         {isVideoCall && (
           <>
             <TouchableOpacity
@@ -181,7 +169,6 @@ export const CallScreen = () => {
           </>
         )}
 
-        {/* Nút Kết Thúc Cuộc Gọi */}
         <TouchableOpacity style={styles.dangerBtn} onPress={endCall}>
           <PhoneOff size={28} color={COLORS.white} />
         </TouchableOpacity>

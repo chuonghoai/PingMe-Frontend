@@ -223,7 +223,6 @@ export const useCallController = () => {
       setStatus("ended");
     };
 
-    // Luôn luôn đăng ký lắng nghe dù WebRTC đã khởi tạo xong hay chưa
     socketService.on("call_response_received", handleCallResponse);
     socketService.on("webrtc_offer_received", handleWebrtcOffer);
     socketService.on("webrtc_answer_received", handleWebrtcAnswer);
@@ -319,7 +318,7 @@ export const useCallController = () => {
   const toggleMic = () => {
     if (localStream) {
       localStream.getAudioTracks().forEach((track) => {
-        track.enabled = !isMicOn; // Tắt/bật luồng âm thanh
+        track.enabled = !isMicOn;
       });
     }
     setIsMicOn(!isMicOn);
@@ -328,7 +327,7 @@ export const useCallController = () => {
   const toggleCam = () => {
     if (localStream) {
       localStream.getVideoTracks().forEach((track) => {
-        track.enabled = !isCamOn; // Tắt/bật luồng hình ảnh
+        track.enabled = !isCamOn;
       });
     }
     setIsCamOn(!isCamOn);
@@ -337,7 +336,6 @@ export const useCallController = () => {
   const switchCamera = () => {
     if (localStream) {
       localStream.getVideoTracks().forEach((track: any) => {
-        // Hàm _switchCamera là API nội bộ của thư viện react-native-webrtc để đảo cam
         track._switchCamera();
       });
     }

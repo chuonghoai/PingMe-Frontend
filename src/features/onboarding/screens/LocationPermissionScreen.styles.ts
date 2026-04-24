@@ -2,7 +2,6 @@ import { StyleSheet } from "react-native";
 
 import { PINGME_COLORS } from "@/constants/theme";
 
-// Bảng màu đồng bộ
 export const COLORS = {
   white: PINGME_COLORS.bgWhite,
   amberGold: PINGME_COLORS.primary,
@@ -12,7 +11,7 @@ export const COLORS = {
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5", // Nền xám nhạt để làm nổi bật card màu trắng
+    backgroundColor: "#f5f5f5",
     justifyContent: "center",
     padding: 20,
   },
@@ -34,7 +33,7 @@ export const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: "bold",
     marginBottom: 12,
-    color: COLORS.darkAmber, // Đổi màu tiêu đề sang Vàng sậm
+    color: COLORS.darkAmber,
   },
   description: {
     textAlign: "center",

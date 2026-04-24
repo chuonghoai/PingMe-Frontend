@@ -337,7 +337,6 @@ export const ProfileScreen = () => {
         gender: gender,
         dob: dob,
       });
-      // Also update bio if endpoint supports it. For now we update locally.
       updateUserProfile({ firstName: name.split(" ")[0], lastName: name.split(" ").slice(1).join(" "), bio, fullname: name, gender, dob });
       setShowEditProfile(false);
     } catch (err) {
@@ -363,14 +362,12 @@ export const ProfileScreen = () => {
 
   const handleChangeAvatar = async () => {
     try {
-      // 1. Request permission
       const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permissionResult.granted) {
         Alert.alert("Quyền truy cập", "Bạn cần cấp quyền truy cập thư viện ảnh để thay đổi avatar.");
         return;
       }
 
-      // 2. Open image picker
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
@@ -385,10 +382,8 @@ export const ProfileScreen = () => {
       const selectedImage = result.assets[0];
       setIsUploadingAvatar(true);
 
-      // 3. Get Cloudinary signature from backend
       const signatureData = await mediaApi.getSignature();
 
-      // 4. Upload to Cloudinary
       const cloudinaryResponse = await mediaApi.uploadToCloudinary(
         selectedImage.uri,
         signatureData,
@@ -396,14 +391,11 @@ export const ProfileScreen = () => {
         selectedImage.mimeType || "image/jpeg"
       );
 
-      // 5. Save media record to backend DB
       await mediaApi.createMediaRecord(cloudinaryResponse);
 
-      // 6. Update user avatar URL in backend
       const newAvatarUrl = cloudinaryResponse.secure_url;
       await apiClient.put("/users/me", { avatarUrl: newAvatarUrl });
 
-      // 7. Update local UserContext -> Map auto-updates
       updateUserProfile({ avatarUrl: newAvatarUrl });
 
       Alert.alert("Thành công", "Ảnh đại diện đã được cập nhật!");

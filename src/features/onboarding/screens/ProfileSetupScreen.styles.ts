@@ -39,7 +39,6 @@ export const styles = StyleSheet.create({
     marginTop: 10,
   },
 
-  // Nút nhấn giả lập ô Input để mở Popup
   selectorBox: {
     borderWidth: 1,
     borderColor: COLORS.border,
@@ -54,7 +53,6 @@ export const styles = StyleSheet.create({
     color: COLORS.text,
   },
 
-  // Khung Modal cho Chọn Giới tính
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",

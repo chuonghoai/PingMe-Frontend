@@ -43,22 +43,18 @@ export const BackgroundNotificationHandler = () => {
   ).current;
 
   useEffect(() => {
-    // 1. Xin quyền Notification của HĐH (Android 13+ / iOS)
     async function requestPermissions() {
       await notifee.requestPermission();
     }
     requestPermissions();
 
-    // 2. Định nghĩa các Kênh thông báo trên Android (Bắt buộc)
     async function createChannels() {
-      // Kênh Chat thường
       await notifee.createChannel({
         id: 'chat_messages',
         name: 'Tin nhắn mới',
         importance: AndroidImportance.HIGH,
       });
 
-      // Kênh Cuộc gọi (Vượt qua Màn hình khóa, Đổ chuông to)
       await notifee.createChannel({
         id: 'incoming_calls',
         name: 'Cuộc gọi đến',
@@ -71,21 +67,18 @@ export const BackgroundNotificationHandler = () => {
       createChannels();
     }
 
-    // 3. Lắng nghe trạng thái của App (Mở / Ẩn nền)
     const subscription = AppState.addEventListener('change', nextAppState => {
       appState.current = nextAppState;
     });
 
-    // 4. Hook vào Socket.io lắng nghe TIN NHẮN (hiện thông báo)
     const onReceiveMessage = async (msg: any) => {
-      // Chỉ báo Noti khi người dùng đang không mở App
       if (appState.current.match(/inactive|background/)) {
         await notifee.displayNotification({
           title: `💬 Tin nhắn từ ${msg.senderName || 'Ai đó'}`,
           body: msg.content || 'Đã gửi một ảnh tĩnh.',
           android: {
             channelId: 'chat_messages',
-            smallIcon: 'ic_launcher', // Yêu cầu icon mặc định
+            smallIcon: 'ic_launcher',
             pressAction: {
               id: 'default',
             },
@@ -94,7 +87,6 @@ export const BackgroundNotificationHandler = () => {
       }
     };
 
-    // 5. Hook vào Socket.io lắng nghe CUỘC GỌI TOÀN MÀN HÌNH (Zalo-style)
     const onIncomingCall = async (callData: any) => {
       if (appState.current.match(/inactive|background/)) {
         await notifee.displayNotification({
@@ -104,7 +96,6 @@ export const BackgroundNotificationHandler = () => {
             channelId: 'incoming_calls',
             smallIcon: 'ic_launcher',
             category: AndroidCategory.CALL,
-            // Cài đặt Full-Screen Intent đánh thức màn hình sáng lên
             fullScreenAction: {
               id: 'default',
               mainComponent: 'PingMe', 
@@ -160,20 +151,17 @@ export const BackgroundNotificationHandler = () => {
     };
   }, []);
 
-  // Lắng nghe thao tác Bấm vào Noti khi app đang ở Nền (Mở phòng Call)
   useEffect(() => {
     return notifee.onForegroundEvent(({ type, detail }) => {
       switch (type) {
         case EventType.ACTION_PRESS:
           if (detail.pressAction?.id === 'accept_call') {
             console.log("Chap nhan cuoc goi tu Notifee");
-            // Routing tới chức năng cuộc gọi tương lai
           } else if (detail.pressAction?.id === 'reject_call') {
-            // Huy cuoc goi
+            // TODO
           }
           break;
         case EventType.PRESS:
-          // Bấm vào tin nhắn
           router.push("/(main)/chat" as any);
           break;
       }

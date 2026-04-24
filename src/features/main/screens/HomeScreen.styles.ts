@@ -59,7 +59,7 @@ export const styles = StyleSheet.create({
   // ── SEARCH HERO OVERLAY ──
   searchOverlayBackground: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(255, 255, 255, 0.85)", // Glassmorphism backdrop
+    backgroundColor: "rgba(255, 255, 255, 0.85)",
     zIndex: 40,
   },
   heroSearchContainer: {
@@ -74,7 +74,7 @@ export const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 10,
     zIndex: 50,
-    overflow: "hidden", // Important for hiding input when button
+    overflow: "hidden",
   },
   heroSearchExpanded: {
     ...StyleSheet.absoluteFillObject,

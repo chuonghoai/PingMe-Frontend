@@ -34,13 +34,11 @@ TaskManager.defineTask(BACKGROUND_LOCATION_TASK, async ({ data, error }) => {
     points = [...points, ...newPoints];
 
     try {
-      // Save back to storage first to secure data
       await AsyncStorage.setItem('cached_route_points', JSON.stringify(points));
     } catch (err) {
       console.log("[BackgroundLocation] Cache write error:", err);
     }
 
-    // Try to sync to backend
     if (points.length >= 1) {
       try {
         const token = await getAccessToken();
@@ -54,7 +52,6 @@ TaskManager.defineTask(BACKGROUND_LOCATION_TASK, async ({ data, error }) => {
             body: JSON.stringify({ points })
           });
           if (res.ok) {
-            // Success, clear cache
             await AsyncStorage.removeItem('cached_route_points');
           }
         }
@@ -102,8 +99,8 @@ export const startBackgroundLocationTracking = async () => {
       if (!isRegistered) {
         await Location.startLocationUpdatesAsync(BACKGROUND_LOCATION_TASK, {
           accuracy: Location.Accuracy.Balanced,
-          distanceInterval: 10, // Cập nhật mỗi 10 mét
-          deferredUpdatesInterval: 5000, // Cập nhật mảng data 1 lần/ 5 giây
+          distanceInterval: 10,
+          deferredUpdatesInterval: 5000,
           foregroundService: {
             notificationTitle: "PingMe đang hoạt động",
             notificationBody: "Đang lưu vết hành trình bản đồ của bạn.",

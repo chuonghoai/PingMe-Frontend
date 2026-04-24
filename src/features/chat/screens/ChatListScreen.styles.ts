@@ -9,7 +9,7 @@ export const COLORS = {
 export const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(15, 23, 42, 0.4)", // Darker, cooler scrim
+    backgroundColor: "rgba(15, 23, 42, 0.4)",
     justifyContent: "flex-end",
   },
   bottomSheet: {

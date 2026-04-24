@@ -46,12 +46,10 @@ export const ProfileSetupScreen = () => {
   ];
 
   const handleDateChange = (event: any, selectedDate?: Date) => {
-    // Android: dialog tự đóng sau khi chọn hoặc dismiss
     if (Platform.OS === "android") {
       setShowDatePicker(false);
     }
 
-    // Chỉ cập nhật nếu user thực sự chọn ngày (không phải dismiss)
     if (event?.type === "dismissed") return;
     if (selectedDate) {
       setDob(selectedDate);
@@ -77,7 +75,6 @@ export const ProfileSetupScreen = () => {
       });
 
       if (response.success) {
-        // Tự động đăng nhập
         if (response.data && response.data.accessToken) {
           await setTokens(response.data.accessToken, response.data.refreshToken);
           

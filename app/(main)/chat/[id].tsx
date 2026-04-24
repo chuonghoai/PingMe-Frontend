@@ -9,7 +9,7 @@ export default function ChatRoom() {
       <Stack.Screen
         options={{
           headerShown: true,
-          title: (name as string) || "Trò chuyện", // Hiển thị tên người chat lên Header
+          title: (name as string) || "Trò chuyện",
           headerBackTitle: "Quay lại",
         }}
       />

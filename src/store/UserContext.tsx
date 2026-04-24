@@ -92,7 +92,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const logout = () => {
-    socketService.disconnect(); // Explicitly disconnect → backend marks user offline
+    socketService.disconnect();
     setUserProfile(DEFAULT_PROFILE);
   };
 

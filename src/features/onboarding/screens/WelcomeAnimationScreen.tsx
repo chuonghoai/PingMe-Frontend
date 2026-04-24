@@ -16,10 +16,10 @@ const { height, width } = Dimensions.get("window");
 // ── PingMe Retro-Electronic Color Palette ──
 const COLORS = {
   white: "#FFFFFF",
-  primary: "#00C2FF", // Vibrant Cyan
-  secondary: "#8B5CF6", // Vibrant Purple
-  accent: "#10B981", // Neon Emerald Green
-  bgDark: "#0A0E17", // Deep Space
+  primary: "#00C2FF",
+  secondary: "#8B5CF6",
+  accent: "#10B981",
+  bgDark: "#0A0E17",
   bgWhite: "#FFFFFF",
 };
 
@@ -38,13 +38,11 @@ export const WelcomeAnimationScreen = () => {
   useEffect(() => {
     // Sequence of animations
     Animated.sequence([
-      // 1. Fade in the dark background
       Animated.timing(bgOpacityAnim, {
         toValue: 1,
         duration: 500,
         useNativeDriver: true,
       }),
-      // 2. Pop in the text and slide up
       Animated.parallel([
         Animated.spring(textScaleAnim, {
           toValue: 1,
@@ -64,7 +62,6 @@ export const WelcomeAnimationScreen = () => {
           useNativeDriver: true,
         }),
       ]),
-      // 3. Fade in particle/decorative elements
       Animated.timing(particlesOpacityAnim, {
         toValue: 1,
         duration: 500,
@@ -74,7 +71,6 @@ export const WelcomeAnimationScreen = () => {
 
     // Navigate to home after 3.5 seconds
     const timer = setTimeout(() => {
-      // Fade out before leaving
       Animated.timing(bgOpacityAnim, {
         toValue: 0,
         duration: 400,

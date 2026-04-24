@@ -48,10 +48,8 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
       return;
     }
 
-    // Tải danh sách chat
     loadConversations();
 
-    // Sự kiện ai đó online
     const handleUserOnline = (data: { userId: string }) => {
       console.log("🔥 Ai đó vừa online:", data.userId);
       setOnlineUsers((prev) => {
@@ -60,7 +58,6 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
       });
     };
 
-    // Sự kiện ai đó offline
     const handleUserOffline = (data: { userId: string; lastActiveAt: any }) => {
       console.log("💤 Ai đó vừa offline:", data.userId);
       setOnlineUsers((prev) => prev.filter((id) => id !== data.userId));
@@ -85,7 +82,6 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
             currentList.splice(index, 1);
           }
 
-          // Format raw entity to match UI requirements (hoist unreadCount & hasMuted)
           const myParticipant = rawConv.participants?.find((p: any) => p.userId === userProfile?.userId) || {};
           const formattedConv = {
             id: rawConv.id,
@@ -113,7 +109,6 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
       }
     };
 
-    // Incoming call
     const handleIncomingCall = (data: any) => {
       console.log("📞 Có cuộc gọi đến:", data);
       
@@ -129,10 +124,9 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
       });
     };
 
-    // Khi kết bạn thành công → Refresh conversation list
     const handleFriendAccepted = (data: any) => {
       console.log("🎉 Kết bạn thành công:", data);
-      loadConversations(); // Refresh để hiện conversation mới
+      loadConversations();
     };
 
     socketService.on("is_typing", (data: any) => {
@@ -146,7 +140,6 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     socketService.on("incoming_call", handleIncomingCall);
     socketService.on("friend_accepted", handleFriendAccepted);
 
-    // Dọn dẹp listener khi đăng xuất
     return () => {
       socketService.off("user_online", handleUserOnline);
       socketService.off("user_offline", handleUserOffline);
@@ -158,7 +151,6 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     };
   }, [userProfile?.userId]);
 
-  // Tính tổng tin nhắn chưa đọc
   const totalUnreadCount = useMemo(() => {
     if (!conversations || conversations.length === 0) return 0;
     return conversations.reduce((sum: number, conv: any) => sum + (conv.unreadCount || 0), 0);

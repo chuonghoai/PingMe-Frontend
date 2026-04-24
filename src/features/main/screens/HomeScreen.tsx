@@ -84,14 +84,14 @@ interface FriendOnMap {
 }
 
 interface UnifiedSearchResult {
-  id: string; // userId or place_id
+  id: string;
   type: 'user' | 'place';
   title: string;
   subtitle: string;
-  avatarUrl?: string; // only for 'user'
-  location?: { lat: number; lng: number }; // only for 'place'
-  isFriend?: boolean; // only for 'user'
-  friendshipStatus?: string | null; // 'ACCEPTED' | 'PENDING' | 'REJECTED' | null
+  avatarUrl?: string;
+  location?: { lat: number; lng: number };
+  isFriend?: boolean;
+  friendshipStatus?: string | null;
   requestId?: string | null;
 }
 
@@ -157,18 +157,15 @@ const DEFAULT_REGION = {
   longitudeDelta: 0.02,
 };
 
-// ── Radar Pulse using native geographical Circles ──
-// This completely avoids Android custom view bitmap rendering limitations.
 const RING_COUNT = 3;
 const RING_CYCLE_MS = 3000;
 const RING_STAGGER_MS = 1000;
-// Max radius in geographical meters (adjust based on how big you want the pulse)
 const MAX_RADIUS_METERS = 200;
 
 const computeGeographicalRing = (elapsed: number) => {
   const progress = Math.min(elapsed / RING_CYCLE_MS, 1);
   const eased = 1 - Math.pow(1 - progress, 3);
-  const radius = eased * MAX_RADIUS_METERS; // Expands from 0 to MAX_RADIUS_METERS
+  const radius = eased * MAX_RADIUS_METERS;
 
   let opacity = 0;
   if (progress < 0.05) opacity = (progress / 0.05) * 0.4;
@@ -183,7 +180,6 @@ const RadarPulseCircles = React.memo(({ coordinate }: { coordinate: { latitude: 
   const [tick, setTick] = useState(0);
 
   useEffect(() => {
-    // 150ms tick gives approx ~6.6 fps
     const id = setInterval(() => setTick((t) => t + 1), 150);
     return () => clearInterval(id);
   }, []);
@@ -221,7 +217,6 @@ const UserAvatarMarker = React.memo(({ coordinate, userProfile, initials }: { co
   const avatarUrl = userProfile?.avatarUrl
     || `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&background=6C5CE7&color=fff&size=128`;
 
-  // Prefetch: tải ảnh vào cache trước
   useEffect(() => {
     setTracksViewChanges(true);
     setImageReady(false);
@@ -388,7 +383,6 @@ const MomentClusterMarker = React.memo(({ cluster, onPress }: { cluster: Cluster
     ? cluster.imageUrls[currentImageIndex] 
     : cluster.latestImageUrl;
 
-  // Prefetch the main image + all avatar images before rendering
   useEffect(() => {
     setImagesReady(false);
     setTracksViewChanges(true);
@@ -411,7 +405,6 @@ const MomentClusterMarker = React.memo(({ cluster, onPress }: { cluster: Cluster
       .catch(() => setImagesReady(true));
   }, [displayImageUrl, cluster.avatars]);
 
-  // Cycle through images if cluster has multiple
   useEffect(() => {
     if (cluster.imageUrls && cluster.imageUrls.length > 1) {
       const interval = setInterval(() => {
@@ -423,7 +416,6 @@ const MomentClusterMarker = React.memo(({ cluster, onPress }: { cluster: Cluster
     }
   }, [cluster.imageUrls]);
 
-  // Don't render until images are prefetched
   if (!imagesReady) return null;
 
   return (
@@ -434,7 +426,6 @@ const MomentClusterMarker = React.memo(({ cluster, onPress }: { cluster: Cluster
       tracksViewChanges={tracksViewChanges}
       zIndex={800}
     >
-      {/* Explicit bounding box to guarantee all elements sit within positive (>= 0) coordinates to prevent map clipping */}
       <View style={{ minWidth: 52, height: 44 }}>
         {/* Main thumbnail container offset to the bottom-right of the bounding box */}
         <View style={{
@@ -582,7 +573,6 @@ export const HomeScreen = () => {
     if (params.showMomentFeed === "true") {
       setMomentFeedMode("global");
       setShowMomentFeed(true);
-      // Clean up param by replacing route without it to avoid re-triggering (optional but good practice)
       router.setParams({ showMomentFeed: undefined, targetMomentId: undefined });
     }
   }, [params.showMomentFeed]);
@@ -735,7 +725,6 @@ export const HomeScreen = () => {
     }
 
     if (searchQuery.trim().length === 0) {
-      // If empty query, simply display nearby users as defaults
       setSearchResults(nearbyUsers.map((u: any) => {
         const isFriend = u.isFriend === true;
         return {
@@ -755,14 +744,14 @@ export const HomeScreen = () => {
       try {
         const query = searchQuery.toLowerCase();
         
-        // 1. Fetch Global Users from Backend Search (includes isFriend & friendshipStatus)
+        // Fetch Global Users from Backend Search (includes isFriend & friendshipStatus)
         let userResults: UnifiedSearchResult[] = [];
         try {
           const userRes: any = await searchUsersGlobally(query);
           if (userRes?.success && userRes?.data) {
             userResults = userRes.data.map((u: any) => {
               const isFriend = u.isFriend === true;
-              const status = u.friendshipStatus; // 'ACCEPTED' | 'PENDING' | null
+              const status = u.friendshipStatus;
               
               let subtitle = 'Chưa kết bạn';
               if (isFriend) subtitle = 'Bạn bè';
@@ -784,7 +773,7 @@ export const HomeScreen = () => {
            console.log("[GlobalSearch] error fetching users:", error);
         }
 
-        // 2. Query OSM Nominatim Autocomplete API (Free, No Key Required, bypasses Google Android key limits)
+        // Query OSM Nominatim Autocomplete API (Free, No Key Required, bypasses Google Android key limits)
         const nomBaseUrl = "https://nominatim.openstreetmap.org/search";
         const res = await fetch(`${nomBaseUrl}?q=${encodeURIComponent(searchQuery)}&format=json&addressdetails=1&limit=5&countrycodes=vn`, {
           headers: {
@@ -814,7 +803,7 @@ export const HomeScreen = () => {
       } finally {
         setIsSearchLoading(false);
       }
-    }, 400); // 400ms typing debounce
+    }, 400);
 
     return () => clearTimeout(timer);
   }, [searchQuery, isSearching, nearbyUsers]);
@@ -824,7 +813,6 @@ export const HomeScreen = () => {
       handleFriendPress(item.id, true);
       toggleSearch(false);
     } else if (item.type === 'place' && item.location) {
-      // Nominatim payload already includes lat/lng natively
       setIsSearchLoading(true);
       try {
         setSearchedPlace({
@@ -866,7 +854,7 @@ export const HomeScreen = () => {
       onStartShouldSetPanResponder: () => true,
       onPanResponderMove: Animated.event([null, { dy: pingPanY }], { useNativeDriver: false }),
       onPanResponderRelease: (e, gestureState) => {
-        if (gestureState.dy > 80) { // Swiped down
+        if (gestureState.dy > 80) {
           Animated.timing(pingPanY, {
             toValue: 500,
             duration: 200,
@@ -901,9 +889,9 @@ export const HomeScreen = () => {
           return;
         }
 
-        // Step 1: Try getLastKnownPositionAsync first (fastest)
+        // Try getLastKnownPositionAsync first
         let initialLoc = await Location.getLastKnownPositionAsync({
-          maxAge: 300000, // 5 minutes — very wide window for emulator
+          maxAge: 300000,
         });
 
         if (initialLoc) {
@@ -930,7 +918,7 @@ export const HomeScreen = () => {
           });
         }
 
-        // Step 2: Start watchPositionAsync
+        // Start watchPositionAsync
         let gotFirstLocation = !!initialLoc;
 
         const watchPromise = new Promise<void>(async (resolve) => {
@@ -939,7 +927,7 @@ export const HomeScreen = () => {
               {
                 accuracy: Location.Accuracy.High,
                 timeInterval: 5000,
-                distanceInterval: 0, // Trigger even if standing still (critical for static emulators)
+                distanceInterval: 0,
               },
               (newLoc) => {
                 if (!isMounted) return;
@@ -957,8 +945,6 @@ export const HomeScreen = () => {
 
                 setUserLocation(newCoords);
 
-                // ── FOREGROUND DIRECT SYNC ──
-                // Even if Background permissions are denied, foreground movement will be synced directly!
                 const syncPoint = { lat: newCoords.latitude, lng: newCoords.longitude };
                 apiClient.post('/exploration/sync', { points: [syncPoint] })
                   .then(() => fetchExplorationMap())
@@ -977,7 +963,7 @@ export const HomeScreen = () => {
                   isCharging: batteryRef.current.isCharging
                 });
 
-                resolve(); // Resolve once we get the first location
+                resolve();
               }
             );
             console.log("[Map] Location watcher started successfully");
@@ -987,7 +973,7 @@ export const HomeScreen = () => {
           }
         });
 
-        // Step 3: Wait up to 20s for the first location from the watcher
+        // Wait up to 20s for the first location from the watcher
         if (!initialLoc) {
           const timeoutPromise = new Promise<void>((resolve) =>
             setTimeout(() => {
@@ -1031,7 +1017,6 @@ export const HomeScreen = () => {
             f.userId === data.userId ? { ...f, fullName: f.fullName || data.fullName, latitude: data.lat, longitude: data.lng, onlineStatus: "ONLINE" } : f
           );
         } else {
-          // Add the newly online friend to the map
           return [
             ...prev,
             {
@@ -1052,12 +1037,10 @@ export const HomeScreen = () => {
       );
     };
     const handleUserOffline = (data: { userId: string }) => {
-      // Remove offline friend from map immediately
       setFriends((prev) => prev.filter((f) => f.userId !== data.userId));
     };
 
     const handleReceiveNudge = (data: any) => {
-      // In a real app, you might show a Custom Toast or trigger vibration
       console.log("[Map] Received nudge from:", data?.senderName);
       alert(`👋 ${data?.senderName || 'Một người bạn'} vừa chọc bạn!`);
     };
@@ -1080,7 +1063,6 @@ export const HomeScreen = () => {
 
     const handleProximityMeetup = (data: { user1: string, user2: string, lat: number, lng: number }) => {
       setPingEvent(data);
-      // Auto dismiss after 4s
       setTimeout(() => {
         if (pingEventRef.current) {
           const evt = pingEventRef.current;
@@ -1168,12 +1150,12 @@ export const HomeScreen = () => {
       fetchFriends();
       fetchMomentClusters();
       fetchExplorationMap();
-    }, 10000); // Reload friends map and moment clusters every 10 seconds
+    }, 10000);
 
     return () => clearInterval(intervalId);
   }, []);
 
-  // ── Fetch Nearby Users (tất cả user gần đây, không chỉ bạn bè) ──
+  // ── Fetch Nearby Users ──
   const fetchNearbyUsers = useCallback(async () => {
     if (!userLocation) {
       console.log("[Map] fetchNearbyUsers: No user location yet");
@@ -1185,7 +1167,7 @@ export const HomeScreen = () => {
       const response: any = await getNearbyUsers(
         userLocation.latitude,
         userLocation.longitude,
-        5000 // bán kính 5km
+        5000
       );
       console.log("[Map] Nearby users response:", JSON.stringify(response));
       if (response.success && response.data) {
@@ -1220,7 +1202,7 @@ export const HomeScreen = () => {
   };
 
   // ── Search Animated Styles ──
-  const searchTop = insets.top > 0 ? insets.top : 10; // Đẩy lên sát mép màn hình (kể cả vùng tai thỏ)
+  const searchTop = insets.top > 0 ? insets.top : 10;
 
   const searchHeight = searchAnim.interpolate({
     inputRange: [0, 1],
@@ -1229,12 +1211,12 @@ export const HomeScreen = () => {
 
   const searchWidth = searchAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [100, screenWidth - 32] // Collapsed: 100px width pill. Expanded: Full width minus 32px margins.
+    outputRange: [100, screenWidth - 32]
   });
-  
+
   const searchLeft = searchAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [(screenWidth / 2) - 50, 16] // Collapsed: center. Expanded: left 16.
+    outputRange: [(screenWidth / 2) - 50, 16]
   });
 
   const searchBorderRadius = searchAnim.interpolate({
@@ -1557,7 +1539,6 @@ export const HomeScreen = () => {
                                   try {
                                     const res: any = await sendFriendRequest(item.id);
                                     if (res.success) {
-                                      // Update the search results to reflect PENDING status
                                       setSearchResults(prev => prev.map(r => 
                                         r.id === item.id ? { ...r, friendshipStatus: 'PENDING', subtitle: 'Đã gửi lời mời' } : r
                                       ));

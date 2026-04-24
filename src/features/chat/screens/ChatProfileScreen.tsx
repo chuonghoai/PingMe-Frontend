@@ -48,10 +48,8 @@ export const ChatProfileScreen = () => {
   const fetchRecentMedia = async () => {
     try {
       setIsLoadingMedia(true);
-      // Lấy 10 media gần nhất
       const res: any = await chatApi.getConversationMedia(conversationId as string, 1, 10);
       if (res.success && res.data) {
-        // Lọc loại bỏ Audio nếu API chưa lọc
         const filteredMedia = res.data.messages.filter(
           (m: any) => m.type === "IMAGE" || m.type === "VIDEO"
         );
@@ -85,7 +83,7 @@ export const ChatProfileScreen = () => {
           await chatApi.blockUser(conversationId as string);
           await loadConversations();
           alert("Đã chặn người dùng");
-          router.back(); // Trở về chat room
+          router.back();
         } catch (e) { alert("Lỗi khi chặn"); }
       }}
     ]);

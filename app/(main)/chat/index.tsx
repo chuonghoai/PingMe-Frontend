@@ -4,7 +4,6 @@ import { ChatListScreen } from "@/features/chat/screens/ChatListScreen";
 export default function ChatList() {
   return (
     <>
-      {/* Đổi màu header cho hợp với Dark Mode của danh sách */}
       <Stack.Screen
         options={{
           headerShown: true,

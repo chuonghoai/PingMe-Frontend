@@ -32,15 +32,12 @@ export const MediaViewerScreen = () => {
     const { url, type } = useLocalSearchParams();
     const videoRef = useRef<Video>(null);
 
-    // States cho Video
     const [isPlaying, setIsPlaying] = useState(true);
     const [duration, setDuration] = useState(0);
     const [position, setPosition] = useState(0);
 
-    // State cho Menu 3 chấm
     const [showMenu, setShowMenu] = useState(false);
 
-    // Định dạng thời gian (mm:ss)
     const formatTime = (millis: number) => {
         const totalSeconds = Math.floor(millis / 1000);
         const minutes = Math.floor(totalSeconds / 60);
@@ -66,12 +63,11 @@ export const MediaViewerScreen = () => {
     const handleSeek = async (event: any) => {
         if (!duration) return;
         const { locationX } = event.nativeEvent;
-        const percent = locationX / width; // width là độ rộng màn hình (tạm dùng cho thanh progress full-width trừ padding)
+        const percent = locationX / width;
         const seekTime = percent * duration;
         await videoRef.current?.setPositionAsync(seekTime);
     };
 
-    // Tính năng tải xuống (Download)
     const handleDownload = async () => {
         setShowMenu(false);
         try {
@@ -91,25 +87,20 @@ export const MediaViewerScreen = () => {
             const fileExt = type === "VIDEO" ? ".mp4" : ".jpg";
             const localPath = `${FileSystem.documentDirectory}${filename}${fileExt.includes('.') ? '' : fileExt}`;
 
-            // 1. Tải file về vùng nhớ tạm của app
             const { uri } = await FileSystem.downloadAsync(fileUri, localPath);
             let finalUri = uri;
 
-            // 2. Nếu là ảnh, dùng chiêu "rửa" ảnh để xóa ngày tháng cũ (EXIF)
             if (type === "IMAGE") {
                 const manipResult = await ImageManipulator.manipulateAsync(
                     uri,
-                    [], // Không thu phóng hay cắt xén gì cả
-                    { compress: 1, format: ImageManipulator.SaveFormat.JPEG } // Giữ nguyên chất lượng 100%, tự động loại bỏ EXIF
+                    [],
+                    { compress: 1, format: ImageManipulator.SaveFormat.JPEG }
                 );
                 finalUri = manipResult.uri;
             }
 
-            // 3. Khởi tạo đối tượng Asset từ file đã xử lý
             const asset = await MediaLibrary.createAssetAsync(finalUri);
 
-            // 4. Lưu vào một Album riêng biệt (Đổi tên "PingMe" thành tên App của bạn)
-            // Tham số false ở cuối nghĩa là di chuyển (move) file gốc vào album thay vì copy thành 2 bản
             await MediaLibrary.createAlbumAsync("PingMe", asset, false);
 
             ToastAndroid.show(
@@ -147,7 +138,6 @@ export const MediaViewerScreen = () => {
             {/* CONTENT */}
             <View style={styles.content}>
                 {type === "IMAGE" ? (
-                    // Khung chứa ảnh (Cưỡng ép render đúng kích thước, cho phép zoom)
                     <ScrollView
                         maximumZoomScale={3}
                         minimumZoomScale={1}
@@ -158,11 +148,10 @@ export const MediaViewerScreen = () => {
                         <Image
                             source={{ uri: String(url) }}
                             style={styles.image}
-                            resizeMode="contain" // Chứa trọn vẹn không cắt
+                            resizeMode="contain"
                         />
                     </ScrollView>
                 ) : (
-                    // Khung chứa Video (Không zoom, ResizeMode.CONTAIN)
                     <>
                         <Video
                             ref={videoRef}
@@ -173,9 +162,7 @@ export const MediaViewerScreen = () => {
                             onPlaybackStatusUpdate={handlePlaybackStatusUpdate}
                         />
 
-                        {/* BỘ ĐIỀU KHIỂN VIDEO */}
                         <View style={styles.videoControls}>
-                            {/* Nút Play/Pause & Skip */}
                             <View style={styles.controlRow}>
                                 <TouchableOpacity style={styles.controlBtn} onPress={() => skipVideo(-5000)}>
                                     <Rewind size={24} color="#FFF" />
@@ -193,7 +180,6 @@ export const MediaViewerScreen = () => {
                                 </TouchableOpacity>
                             </View>
 
-                            {/* Thanh Progress */}
                             <TouchableOpacity
                                 style={styles.progressContainer}
                                 activeOpacity={0.8}
@@ -209,7 +195,6 @@ export const MediaViewerScreen = () => {
                                 </View>
                             </TouchableOpacity>
 
-                            {/* Thời gian */}
                             <View style={styles.timeRow}>
                                 <Text style={styles.timeText}>{formatTime(position)}</Text>
                                 <Text style={styles.timeText}>{formatTime(duration)}</Text>

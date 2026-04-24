@@ -92,7 +92,6 @@ export const IntimacyDetailsModal: React.FC<IntimacyDetailsModalProps> = ({
 
         {/* Modal Content */}
         <View style={s.container}>
-          {/* Drag handle */}
           <View style={s.dragHandle} />
 
           <ScrollView
@@ -101,7 +100,7 @@ export const IntimacyDetailsModal: React.FC<IntimacyDetailsModalProps> = ({
             contentContainerStyle={{ paddingBottom: 40 }}
             style={{ maxHeight: Dimensions.get("window").height * 0.78 }}
           >
-            {/* ═══════ HEADER CARD ═══════ */}
+            {/* HEADER CARD */}
             <View style={[s.headerCard, { borderColor: currentTier.color }]}>
               <View style={s.headerContent}>
                 {/* Tier Badge */}
@@ -125,7 +124,7 @@ export const IntimacyDetailsModal: React.FC<IntimacyDetailsModalProps> = ({
               </View>
             </View>
 
-            {/* ═══════ LEVEL & PROGRESS BAR ═══════ */}
+            {/* LEVEL & PROGRESS BAR */}
             <View style={s.section}>
               <View style={s.levelRow}>
                 <View style={s.levelBox}>
@@ -155,7 +154,7 @@ export const IntimacyDetailsModal: React.FC<IntimacyDetailsModalProps> = ({
               </View>
             </View>
 
-            {/* ═══════ TIERS ROADMAP ═══════ */}
+            {/* TIERS ROADMAP */}
             <View style={s.section}>
               <View style={s.sectionHeader}>
                 <Trophy size={18} color={COLORS.primary} />
@@ -202,7 +201,7 @@ export const IntimacyDetailsModal: React.FC<IntimacyDetailsModalProps> = ({
               </View>
             </View>
 
-            {/* ═══════ STREAK SECTION ═══════ */}
+            {/* STREAK SECTION */}
             <View style={s.section}>
               <View style={s.sectionHeader}>
                 <Flame size={18} color="#F59E0B" />
@@ -245,7 +244,7 @@ export const IntimacyDetailsModal: React.FC<IntimacyDetailsModalProps> = ({
               </View>
             </View>
 
-            {/* ═══════ HOW TO EARN EXP ═══════ */}
+            {/* HOW TO EARN EXP */}
             <View style={s.section}>
               <View style={s.sectionHeader}>
                 <Zap size={18} color="#EF4444" />

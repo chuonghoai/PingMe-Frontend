@@ -138,7 +138,7 @@ export const MomentCameraScreen = ({
 
       Alert.alert("Thành công", "Khoảnh khắc đã được ghim lên bản đồ! 📍");
       onMomentCreated?.();
-      onClose(); // Đóng camera sau khi đăng thành công
+      onClose();
     } catch (error) {
       Alert.alert("Lỗi", "Không thể đăng khoảnh khắc.");
     } finally {
@@ -203,7 +203,6 @@ export const MomentCameraScreen = ({
           </View>
         </View>
 
-        {/* Nút mở Feed thay vì vẽ lại danh sách */}
         <TouchableOpacity style={styles.historySection} onPress={onOpenGlobalFeed}>
           <View style={styles.historyRow}>
             <Image

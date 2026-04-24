@@ -2,12 +2,11 @@ import { StyleSheet } from "react-native";
 
 import { PINGME_COLORS } from "@/constants/theme";
 
-// Bảng màu đồng bộ GoGo (Sau này bạn có thể đưa cục này ra file theme.ts chung)
 export const COLORS = {
   white: PINGME_COLORS.bgWhite,
   amberGold: PINGME_COLORS.primary,
   darkAmber: PINGME_COLORS.primary,
-  successGreen: PINGME_COLORS.online, // Giữ màu xanh lá cho thông báo thành công
+  successGreen: PINGME_COLORS.online,
   grayText: PINGME_COLORS.textSecondary,
 };
 
@@ -18,7 +17,6 @@ export const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: COLORS.white,
   },
-  // Khối Logo đồng bộ
   logoContainer: {
     alignItems: "center",
     marginBottom: 24,
@@ -49,7 +47,7 @@ export const styles = StyleSheet.create({
     fontWeight: "bold",
     marginBottom: 12,
     textAlign: "center",
-    color: COLORS.darkAmber, // Đổi từ Xanh dương sang Vàng sậm
+    color: COLORS.darkAmber,
   },
   subtitle: {
     fontSize: 14,
@@ -59,7 +57,6 @@ export const styles = StyleSheet.create({
     lineHeight: 22,
   },
 
-  // Styles cho trạng thái thành công
   successContainer: {
     alignItems: "center",
     paddingVertical: 20,

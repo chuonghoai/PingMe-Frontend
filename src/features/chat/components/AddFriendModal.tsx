@@ -50,9 +50,6 @@ export const AddFriendModal: React.FC<Props> = ({ visible, onClose }) => {
     try {
       setIsLoadingRequests(true);
       const res: any = await getFriendRequests();
-      // apiClient interceptor unwraps response.data, so res could be:
-      // 1. { success: true, data: [...] } from backend
-      // 2. Direct array if backend returns plain array
       if (Array.isArray(res)) {
         setPendingRequests(res);
       } else if (res?.success && Array.isArray(res.data)) {

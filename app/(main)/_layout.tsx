@@ -15,7 +15,6 @@ export default function MainLayout() {
         }}
       />
 
-      {/* Cấu hình thêm cho màn hình Chat Room (ẩn header mặc định) */}
       <Stack.Screen
         name="chat/[id]"
         options={{

@@ -20,7 +20,6 @@ export const GlobalGiftAnimation = () => {
 
   useEffect(() => {
     const handleReceiveGift = (data: any) => {
-      // Only show animation if I'm the receiver
       if (data.receiverId === userProfile?.userId) {
         setGiftEvent({
           itemEmoji: data.itemEmoji || "🎁",

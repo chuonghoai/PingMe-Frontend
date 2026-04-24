@@ -91,13 +91,11 @@ export const ChatRoomScreen = () => {
   const [playbackDurationMillis, setPlaybackDurationMillis] = useState(0);
   const [progressBarWidth, setProgressBarWidth] = useState(0);
 
-  // Ref quản lý trạng thái typing
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [isTyping, setIsTyping] = useState(false);
 
   const flatListRef = useRef<FlatList>(null);
 
-  // Animated Value cho cụm Media
   const mediaWidthAnim = useRef(new Animated.Value(100)).current;
   const mediaOpacityAnim = useRef(new Animated.Value(1)).current;
 
@@ -109,7 +107,7 @@ export const ChatRoomScreen = () => {
       : undefined;
   }, [sound]);
 
-  // 1. TẢI LỊCH SỬ TIN NHẮN
+  // Fetch history messages
   useEffect(() => {
     if (id) {
       fetchMessages();
@@ -198,11 +196,9 @@ export const ChatRoomScreen = () => {
     };
   }, [id, userProfile]);
 
-  // 3. HIỆU ỨNG UX & LOGIC TYPING
   const handleTextChange = (text: string) => {
     setInputText(text);
 
-    // Xử lý hiệu ứng co giãn nút Media
     if (text.length > 0) {
       Animated.parallel([
         Animated.timing(mediaWidthAnim, {
@@ -231,7 +227,6 @@ export const ChatRoomScreen = () => {
       ]).start();
     }
 
-    // Logic bắn event typing
     if (!isTyping) {
       setIsTyping(true);
       socketService.emit("typing", { conversationId: id, isTyping: true });
@@ -245,7 +240,7 @@ export const ChatRoomScreen = () => {
     }, 3000);
   };
 
-  // 5. MEDIA & AUDIO LOGIC
+  // Handle pick media
   const handlePickMedia = async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (permissionResult.granted === false) {
@@ -296,7 +291,6 @@ export const ChatRoomScreen = () => {
     }
   };
 
-  // === CAMERA CAPTURE (Chụp ảnh / Quay video trực tiếp) ===
   const handleCaptureMedia = async () => {
     const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
     if (permissionResult.granted === false) {
@@ -346,7 +340,6 @@ export const ChatRoomScreen = () => {
     }
   };
 
-  // === STICKER HANDLER ===
   const handleSendSticker = (stickerUrl: string) => {
     const tempId = `temp_${Date.now()}_${Math.floor(Math.random() * 100000)}`;
     const tempMessage = {
@@ -466,8 +459,8 @@ export const ChatRoomScreen = () => {
     if (!audioUri) return;
     const tempId = `temp_${Date.now()}_${Math.floor(Math.random() * 100000)}`;
     const uriToSend = audioUri;
-    cancelAudio(); // Reset UI immediately
-    setIsRecordUIVisible(false); // Close UI
+    cancelAudio();
+    setIsRecordUIVisible(false);
 
     const tempMessage = {
       id: tempId,
@@ -482,7 +475,6 @@ export const ChatRoomScreen = () => {
 
     try {
       const signature = await mediaApi.getSignature();
-      // Cloudinary processes audio faster when treating it as video upload
       const cloudinaryRes = await mediaApi.uploadToCloudinary(uriToSend, signature, "video", "audio/m4a");
       const mediaRecord = await mediaApi.createMediaRecord(cloudinaryRes);
 
@@ -500,13 +492,12 @@ export const ChatRoomScreen = () => {
     }
   };
 
-  // 4. XỬ LÝ GỬI TIN NHẮN (Optimistic UI)
+  // Send text message
   const handleSend = () => {
     if (inputText.trim()) {
       const tempId = `temp_${Date.now()}_${Math.floor(Math.random() * 100000)}`;
       const textToSend = inputText.trim();
 
-      // 4.1. Tạo tin nhắn tạm (Gắn cờ isTemporary)
       const tempMessage = {
         id: tempId,
         content: textToSend,
@@ -515,7 +506,6 @@ export const ChatRoomScreen = () => {
         isTemporary: true,
       };
 
-      // 4.2. Render ngay lập tức lên màn hình
       setMessages((prev) => [tempMessage, ...prev]);
       setInputText("");
 
@@ -523,7 +513,6 @@ export const ChatRoomScreen = () => {
       setIsTyping(false);
       socketService.emit("typing", { conversationId: id, isTyping: false });
 
-      // 4.4. Bắn event lên Backend
       socketService.emit("send_message", {
         conversationId: id,
         content: textToSend,
@@ -546,7 +535,6 @@ export const ChatRoomScreen = () => {
     const type = item.type || "TEXT";
     const media = item.media;
 
-    // === SYSTEM MESSAGE: Centered notification bubble ===
     if (type === "SYSTEM") {
       return (
         <View style={{
@@ -575,7 +563,7 @@ export const ChatRoomScreen = () => {
       );
     }
 
-    // === CALL LOG MESSAGE ===
+    // Call log message
     if (type === "CALL") {
       let callData: any = {};
       try { callData = JSON.parse(displayContent); } catch (e) { }
@@ -687,7 +675,6 @@ export const ChatRoomScreen = () => {
       );
     }
 
-    // KIỂM TRA: Nếu chỉ có ảnh/video mà không có chữ
     const isMediaOnly = (!displayContent || displayContent.length === 0) && (type === "IMAGE" || type === "VIDEO");
 
     return (
@@ -695,7 +682,6 @@ export const ChatRoomScreen = () => {
         style={[
           styles.messageBubble,
           isMe ? styles.myMessage : styles.theirMessage,
-          // Xóa border màu cam, background và padding nếu chỉ là ảnh/video
           isMediaOnly && { backgroundColor: 'transparent', borderWidth: 0, padding: 0, elevation: 0 }
         ]}
       >
@@ -738,9 +724,6 @@ export const ChatRoomScreen = () => {
               params: { url: item.media.secureUrl, type: "VIDEO" }
             })}
           >
-            {/* Tạm thời ở ngoài chat room, bạn có thể để video resizeMode="cover" 
-                 và tắt tiếng/shouldPlay={false} để nó giống như thumbnail. 
-               */}
             <Video
               source={{ uri: media.secureUrl }}
               style={{
@@ -760,7 +743,6 @@ export const ChatRoomScreen = () => {
           </TouchableOpacity>
         )}
 
-        {/* --- AUDIO: Sử dụng component AudioPlayer đã tạo --- */}
         {type === "AUDIO" && media?.secureUrl && (
           <View style={{ marginTop: displayContent ? 8 : 0 }}>
             <AudioPlayer uri={media.secureUrl} isMe={isMe} />
@@ -846,7 +828,7 @@ export const ChatRoomScreen = () => {
         </View>
 
         <View style={styles.headerActions}>
-          {/* NÚT GỌI THOẠI (AUDIO CALL) */}
+          {/* Audio call button*/}
           <TouchableOpacity
             style={styles.headerIconButton}
             onPress={() => {
@@ -869,7 +851,7 @@ export const ChatRoomScreen = () => {
             <Phone size={22} color={COLORS.amberGold} />
           </TouchableOpacity>
 
-          {/* NÚT GỌI VIDEO (VIDEO CALL) */}
+          {/* Video call button*/}
           <TouchableOpacity
             style={styles.headerIconButton}
             onPress={() => {
@@ -892,7 +874,7 @@ export const ChatRoomScreen = () => {
             <VideoIcon size={22} color={COLORS.amberGold} />
           </TouchableOpacity>
 
-          {/* NÚT THÔNG TIN HỒ SƠ BẠN BÈ */}
+          {/* Info button*/}
           <TouchableOpacity
             style={styles.headerIconButton}
             onPress={() => {
@@ -913,7 +895,7 @@ export const ChatRoomScreen = () => {
         </View>
       </View>
 
-      {/* --- DANH SÁCH TIN NHẮN --- */}
+      {/* --- Message List --- */}
       {isLoading ? (
         <View
           style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
@@ -959,8 +941,7 @@ export const ChatRoomScreen = () => {
                   try {
                     await chatApi.unblockUser(id as string);
                     await loadConversations();
-                    // Emit hoặc Load lại ChatList để cập nhật currentConversation
-                    socketService.emit("mark_read", { conversationId: id }); // Mẹo trigger nhẹ để làm mới UI nếu cần
+                    socketService.emit("mark_read", { conversationId: id });
                     Alert.alert("Thành công", "Đã bỏ chặn thành công.");
                   } catch (e) {
                     Alert.alert("Lỗi", "Không thể bỏ chặn vào lúc này.");
@@ -973,7 +954,6 @@ export const ChatRoomScreen = () => {
           );
         }
 
-        // Nếu người ta chặn mình
         if (isBlockedByThem) {
           return (
             <View style={{ padding: 16, alignItems: 'center', backgroundColor: COLORS.white, borderTopWidth: 1, borderColor: COLORS.borderColor, paddingBottom: Platform.OS === "ios" ? 30 : 16 }}>
@@ -982,12 +962,11 @@ export const ChatRoomScreen = () => {
           );
         }
 
-        // --- THANH NHẬP LIỆU BÌNH THƯỜNG ---
+        // Input bar
         return isRecordUIVisible ? (
           <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.white, paddingVertical: 12, paddingHorizontal: 16, borderTopWidth: 1, borderTopColor: COLORS.borderColor, minHeight: 60, justifyContent: 'space-between' }}>
 
             {audioUri ? (
-              // --- TRẠNG THÁI 3: ĐÃ THU ÂM (hiện thanh process) ---
               <>
                 <TouchableOpacity onPress={() => { cancelAudio(); setIsRecordUIVisible(false); }} style={{ padding: 8 }}>
                   <Trash2 size={24} color={COLORS.errorRed || '#FF3B30'} />
@@ -1018,7 +997,6 @@ export const ChatRoomScreen = () => {
                 </TouchableOpacity>
               </>
             ) : (
-              // --- TRẠNG THÁI 2: ĐANG CHỜ / ĐANG THU ---
               <>
                 <TouchableOpacity onPress={() => { cancelAudio(); setIsRecordUIVisible(false); }} style={{ padding: 8 }}>
                   <Text style={{ fontSize: 16, color: COLORS.textSub }}>Hủy</Text>
@@ -1084,7 +1062,6 @@ export const ChatRoomScreen = () => {
   );
 };
 
-// Audio message component
 const AudioPlayer = ({ uri, isMe }: { uri: string; isMe: boolean }) => {
   const [sound, setSound] = useState<Audio.Sound | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -1092,7 +1069,6 @@ const AudioPlayer = ({ uri, isMe }: { uri: string; isMe: boolean }) => {
   const [position, setPosition] = useState(0);
   const [barWidth, setBarWidth] = useState(0);
 
-  // Use a ref to access the latest sound object inside the callback
   const soundRef = useRef<Audio.Sound | null>(null);
 
   useEffect(() => {
@@ -1109,7 +1085,6 @@ const AudioPlayer = ({ uri, isMe }: { uri: string; isMe: boolean }) => {
       if (status.didJustFinish) {
         setIsPlaying(false);
         setPosition(0);
-        // Use ref to safely reset position to start
         if (soundRef.current) {
           soundRef.current.setPositionAsync(0);
         }
@@ -1131,7 +1106,6 @@ const AudioPlayer = ({ uri, isMe }: { uri: string; isMe: boolean }) => {
       if (isPlaying) {
         await sound.pauseAsync();
       } else {
-        // If it was at the end or reset to 0, start from beginning
         if (position >= duration && duration > 0) {
           await sound.replayAsync();
         } else {
@@ -1165,7 +1139,6 @@ const AudioPlayer = ({ uri, isMe }: { uri: string; isMe: boolean }) => {
         {isPlaying ? <Square size={20} color={isMe ? COLORS.white : COLORS.amberGold} /> : <Play size={20} color={isMe ? COLORS.white : COLORS.amberGold} />}
       </TouchableOpacity>
 
-      {/* Thanh tiến trình */}
       <View
         style={{ flex: 1, marginHorizontal: 8, height: 20, justifyContent: 'center' }}
         onLayout={(e) => setBarWidth(e.nativeEvent.layout.width)}
@@ -1176,7 +1149,6 @@ const AudioPlayer = ({ uri, isMe }: { uri: string; isMe: boolean }) => {
         </View>
       </View>
 
-      {/* Thời gian */}
       <Text style={{ fontSize: 11, color: isMe ? COLORS.white : COLORS.textMain }}>
         {formatTime(position)} / {formatTime(duration)}
       </Text>

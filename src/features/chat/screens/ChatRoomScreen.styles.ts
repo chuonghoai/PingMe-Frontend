@@ -103,7 +103,6 @@ export const styles = StyleSheet.create({
     elevation: 2,
   },
   myMessage: {
-    // Vibrant Cyan gradient feel
     backgroundColor: COLORS.primary,
     alignSelf: "flex-end",
     borderBottomRightRadius: 4,

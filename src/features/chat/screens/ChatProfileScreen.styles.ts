@@ -100,7 +100,7 @@ export const styles = StyleSheet.create({
         gap: 8,
     },
     mediaItem: {
-        width: "23%", // Hiển thị 4 hình 1 hàng
+        width: "23%",
         aspectRatio: 1,
         borderRadius: 8,
         backgroundColor: COLORS.bgDarker,

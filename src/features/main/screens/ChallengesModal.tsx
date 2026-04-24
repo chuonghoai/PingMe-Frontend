@@ -69,13 +69,11 @@ export const ChallengesModal: React.FC<Props> = ({ visible, onClose, onOpenInven
       setClaimingId(challengeId);
       const res: any = await claimChallengeReward(challengeId);
       if (res?.success) {
-        // Play anim
         Animated.sequence([
           Animated.timing(claimedAnim, { toValue: 1, duration: 400, useNativeDriver: true }),
           Animated.timing(claimedAnim, { toValue: 0, duration: 200, useNativeDriver: true }),
         ]).start();
 
-        // Refresh
         await fetchChallenges();
         alert(`🎉 Đã nhận ${res.data?.rewardQuantity}x ${res.data?.itemEmoji} ${res.data?.itemName}!`);
       }

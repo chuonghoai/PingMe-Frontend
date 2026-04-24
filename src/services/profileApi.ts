@@ -1,6 +1,5 @@
 import { apiClient } from "./apiClient";
 
-// --- 1. RESPONSE TỪ GET /users/me ---
 export interface ProfileResponse {
   userId: string;
   firstName: string;
@@ -13,20 +12,17 @@ export interface ProfileResponse {
   updatedAt: string;
 }
 
-// --- 2. REQUEST CHO PUT /users/me ---
 export interface UpdateProfileRequest {
   firstName: string;
   lastName: string;
   bio: string;
 }
 
-// --- 3. REQUEST CHO PATCH /users/avatar ---
 export interface UpdateAvatarRequest {
   avatarUrl: string;
   publicId: string;
 }
 
-// --- 4. CÁC HÀM GỌI API ---
 export const getNearbyUsers = async (lat: number, lng: number, radius: number = 2000) => {
   return await apiClient.get(`/users/nearby?lat=${lat}&lng=${lng}&radius=${radius}`);
 };
@@ -36,7 +32,6 @@ export const searchUsersGlobally = async (query: string) => {
 };
 export const profileApi = {
   getProfile: async (): Promise<ProfileResponse> => {
-    // Tự động nhận header Authorization Bearer từ apiClient
     const response = await apiClient.get<{
       success: boolean;
       data: ProfileResponse;

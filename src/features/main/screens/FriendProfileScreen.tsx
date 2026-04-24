@@ -101,7 +101,6 @@ export const FriendProfileScreen = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Phần 1: Avatar, Name, Bio */}
       <View style={styles.profileContent}>
         <View style={styles.avatarContainer}>
           <Image
@@ -115,7 +114,6 @@ export const FriendProfileScreen = () => {
         </Text>
       </View>
 
-      {/* Phần 2: Thông tin cá nhân */}
       <View style={styles.cardContainer}>
         <Text style={styles.cardTitle}>Thông tin cá nhân</Text>
         
@@ -160,7 +158,6 @@ export const FriendProfileScreen = () => {
         </View>
       </View>
 
-      {/* Phần 3: Hành động (Report, Unfriend) */}
       <View style={styles.cardContainer}>
         <Text style={styles.cardTitle}>Tùy chọn</Text>
         

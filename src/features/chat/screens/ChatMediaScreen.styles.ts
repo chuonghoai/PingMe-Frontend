@@ -2,7 +2,7 @@ import { StyleSheet, Platform, Dimensions } from "react-native";
 import { COLORS } from "./ChatProfileScreen.styles";
 
 const windowWidth = Dimensions.get('window').width;
-const itemSize = (windowWidth - 4) / 3; // 3 cột, khoảng cách 2px
+const itemSize = (windowWidth - 4) / 3;
 
 export const styles = StyleSheet.create({
   container: {
@@ -33,7 +33,7 @@ export const styles = StyleSheet.create({
   mediaItem: {
     width: itemSize,
     height: itemSize,
-    margin: 1, // Tạo khe hở lưới 2px
+    margin: 1,
     backgroundColor: COLORS.bgDarker,
   },
   mediaImage: {

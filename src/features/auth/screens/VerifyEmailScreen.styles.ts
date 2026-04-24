@@ -2,7 +2,6 @@ import { StyleSheet } from "react-native";
 
 import { PINGME_COLORS } from "@/constants/theme";
 
-// Bảng màu đồng bộ với SplashScreen và Login/Register
 export const COLORS = {
   white: PINGME_COLORS.bgWhite,
   amberGold: PINGME_COLORS.primary,
@@ -16,7 +15,6 @@ export const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: COLORS.white,
   },
-  // Styles cho Logo
   logoContainer: {
     alignItems: "center",
     marginBottom: 16,

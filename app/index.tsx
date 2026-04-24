@@ -16,12 +16,12 @@ const { height } = Dimensions.get("window");
 // ── PingMe Retro-Electronic Color Palette ──
 const COLORS = {
   white: "#FFFFFF",
-  primary: "#00C2FF",      // Vibrant Cyan
-  secondary: "#8B5CF6",    // Vibrant Purple
-  accent: "#10B981",       // Neon Emerald Green
-  bgDark: "#0A0E17",       // Deep Space
-  bgWhite: "#FFFFFF",      // Pure White
-  bgMid: "#F1F5F9",        // Midnight Panel -> Light Slate
+  primary: "#00C2FF",
+  secondary: "#8B5CF6",
+  accent: "#10B981",
+  bgDark: "#0A0E17",
+  bgWhite: "#FFFFFF",
+  bgMid: "#F1F5F9",
 };
 
 const CIRCLE_SIZE = height * 1.5;

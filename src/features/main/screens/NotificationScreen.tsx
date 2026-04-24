@@ -91,11 +91,10 @@ export const NotificationScreen = () => {
     const handleNewNotification = (data: any) => {
       const newItem = {
         ...data,
-        id: data.id || data.notificationId, // Map WS payload to match entity structure
+        id: data.id || data.notificationId,
       };
       
       setNotifications((prev) => {
-        // Prevent duplicate keys if already fetched by API
         if (prev.some(n => n.id === newItem.id)) return prev;
         return [newItem, ...prev];
       });
@@ -138,7 +137,6 @@ export const NotificationScreen = () => {
       markAsRead(item.id);
     }
     
-    // Xử lý điều hướng
     if (item.subType === "MOMENT_NEW" || item.subType === "MOMENT_REACTION") {
       router.push({
         pathname: "/(main)/home",
@@ -147,7 +145,6 @@ export const NotificationScreen = () => {
     } else if (item.subType === "PROXIMITY_MEETUP") {
       router.push("/(main)/home");
     } else if (item.subType === "NUDGE_RECEIVED") {
-      // Tương lai có thể mở hộp thoại chat
       router.push("/(main)/home");
     }
   };
@@ -166,14 +163,12 @@ export const NotificationScreen = () => {
       setRespondingIds((prev) => new Set(prev).add(notificationId));
       const res: any = await respondFriendRequest(requestId, action);
       if (res.success) {
-        // Persist responded state to backend
         try {
           await apiClient.patch(`/notifications/${notificationId}/responded`, { action });
         } catch (e) {
           console.log("Failed to persist notification response state:", e);
         }
 
-        // Update notification locally to show result
         setNotifications((prev) =>
           prev.map((n) =>
             n.id === notificationId
